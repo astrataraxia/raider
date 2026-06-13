@@ -3,8 +3,8 @@
 ## 작업 시작.
 
 - 작업 전에 `PLAN.md`, `ENGINEERING.md`, `DESIGN.md`를 읽는다.
-- 현재 Goal 문서와 `.codex-work/2026-06-11-streaming-radar-plan/context-notes.md`를 확인한다.
-- Goal 0부터 Goal 7까지 완료됐다. 후속 변경은 `PLAN.md`와 관련 Goal 문서의 완료 계약을 유지한다.
+- 현재 활성 계획이 있으면 해당 `plans/` 문서를 확인한다.
+- `v1.0.0` 완료 범위와 검증 근거는 `RELEASES.md`를 확인한다.
 - 구현 전에 성공 조건, 실패 조건, 검증 방법을 짧게 정의한다.
 - 한 번에 하나의 Task만 진행한다. WIP 제한은 1이다.
 
@@ -59,6 +59,6 @@ dotnet build --no-restore -warnaserror
 
 ## 계획 관리.
 
-- Task를 완료하면 해당 Goal 문서의 체크리스트와 결정 기록을 갱신한다.
+- 비범한 작업은 `plans/`에 활성 계획 문서 하나를 만들고 Task 체크리스트와 결정 기록을 갱신한다.
 - Goal 범위나 제품 계약이 바뀌면 구현 전에 `PLAN.md` 또는 관련 계약 문서를 갱신한다.
-- Docker 검증과 배포 작업은 Goal 7에서 수행한다.
+- 완료된 계획은 핵심 결정과 검증 결과만 `RELEASES.md`에 압축하고 활성 계획 문서를 제거한다.
