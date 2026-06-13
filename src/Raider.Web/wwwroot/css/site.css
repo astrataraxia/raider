@@ -252,6 +252,7 @@ a {
 .tag-filter {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
 }
 
@@ -273,6 +274,9 @@ a {
 
 .tag-button {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 32px;
   padding: 0 10px;
   border: 1px solid var(--color-border);
@@ -993,6 +997,9 @@ button:focus-visible {
 }
 
 .tag-drawer-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 32px;
   padding: 0 12px;
   border: 1px dashed var(--color-border);

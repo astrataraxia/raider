@@ -171,10 +171,20 @@
             var toggleBtn = document.getElementById("tag-toggle-btn");
             var drawer = document.getElementById("tag-drawer");
             if (toggleBtn && drawer) {
+                var isOpen = localStorage.getItem("tagDrawerOpen") === "true";
+                if (isOpen) {
+                    drawer.style.display = "block";
+                    toggleBtn.setAttribute("aria-expanded", "true");
+                    toggleBtn.textContent = "태그 접기 -";
+                    toggleBtn.classList.add("is-open");
+                }
+
                 toggleBtn.addEventListener("click", function() {
                     var isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
-                    toggleBtn.setAttribute("aria-expanded", !isExpanded);
-                    if (isExpanded) {
+                    isExpanded = !isExpanded;
+                    toggleBtn.setAttribute("aria-expanded", isExpanded);
+                    localStorage.setItem("tagDrawerOpen", isExpanded ? "true" : "false");
+                    if (!isExpanded) {
                         drawer.style.display = "none";
                         toggleBtn.textContent = "태그 더 보기 +";
                         toggleBtn.classList.remove("is-open");
