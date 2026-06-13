@@ -1,0 +1,25 @@
+services:
+  raider:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: raider-app
+    image: raider:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - RAIDER__CHZZK__CLIENTID=${RAIDER__CHZZK__CLIENTID}
+      - RAIDER__CHZZK__CLIENTSECRET=${RAIDER__CHZZK__CLIENTSECRET}
+      - ASPNETCORE_ENVIRONMENT=Production
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    pids_limit: 128
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
