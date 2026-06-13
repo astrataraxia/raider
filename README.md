@@ -33,9 +33,9 @@ dotnet build --no-restore -warnaserror
 
 | 문서 | 역할 |
 | --- | --- |
-| [PLAN.md](PLAN.md) | 현재 제품 범위, 기술과 운영 계약, 후속 작업 원칙. |
-| [ENGINEERING.md](ENGINEERING.md) | 아키텍처, 코드, 테스트, 보안 규칙. |
-| [DESIGN.md](DESIGN.md) | 현재 화면의 디자인 계약. |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | 단일 컨테이너 배포와 운영 절차. |
+| [PLAN.md](.agent/PLAN.md) | 현재 제품 범위, 기술과 운영 계약, 후속 작업 원칙. |
+| [ENGINEERING.md](.agent/ENGINEERING.md) | 아키텍처, 코드, 테스트, 보안 규칙. |
+| [DESIGN.md](.agent/DESIGN.md) | 현재 화면의 디자인 계약. |
+| [DEPLOYMENT.md](.agent/DEPLOYMENT.md) | 단일 컨테이너 배포와 운영 절차. |
 | [RELEASES.md](RELEASES.md) | 완료된 릴리스 범위, 결정, 검증 결과, 알려진 위험. |
-| [AGENTS.md](AGENTS.md) | 저장소에서 작업하는 AI 에이전트 지침. |
+| [AGENTS.md](.agent/AGENTS.md) | 저장소에서 작업하는 AI 에이전트 지침. |
