@@ -53,12 +53,24 @@
         </section>
 
         <section class="controls" aria-label="방송 필터와 검색" data-selected-tag="@Model.Tag">
-            <div class="controls-main">
+            <div class="controls-top">
                 <nav class="platform-filter" aria-label="플랫폼 필터">
                     <a class="filter-button @(Model.SelectedPlatform is null ? "is-active" : "")" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query">전체</a>
                     <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Chzzk ? "is-active" : "")" asp-page="/Index" asp-route-platform="chzzk" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query"><span class="platform-dot chzzk-dot" aria-hidden="true"></span>CHZZK</a>
                     <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Soop ? "is-active" : "")" asp-page="/Index" asp-route-platform="soop" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query"><span class="platform-dot soop-dot" aria-hidden="true"></span>SOOP</a>
                 </nav>
+                <form class="search-box" method="get">
+                    @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
+                    @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
+                    <span aria-hidden="true">⌕</span>
+                    <label class="visually-hidden" for="stream-search">방송인, 제목 또는 태그 검색</label>
+                    <input id="stream-search" name="q" type="search" value="@Model.Query" placeholder="방송인, 제목 또는 태그 검색" autocomplete="off" />
+                    <button type="submit">검색</button>
+                </form>
+            </div>
+
+            <div class="controls-tags">
+                <span class="tags-label">추천 태그:</span>
                 <div class="tag-filter" aria-label="인기 태그">
                     <a class="tag-button @(string.IsNullOrWhiteSpace(Model.Tag) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query">모든 태그</a>
                     @foreach (var tag in Model.PopularTags)
@@ -71,14 +83,6 @@
                         <button type="button" class="tag-drawer-toggle" id="tag-toggle-btn" aria-expanded="false" aria-controls="tag-drawer">태그 더 보기 +</button>
                     }
                 </div>
-                <form class="search-box" method="get">
-                    @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
-                    @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
-                    <span aria-hidden="true">⌕</span>
-                    <label class="visually-hidden" for="stream-search">방송인, 제목 또는 태그 검색</label>
-                    <input id="stream-search" name="q" type="search" value="@Model.Query" placeholder="방송인, 제목 또는 태그 검색" autocomplete="off" />
-                    <button type="submit">검색</button>
-                </form>
             </div>
 
             @if (Model.AllPopularTags.Length > Model.PopularTags.Length)

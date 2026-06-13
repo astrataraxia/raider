@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Raider v1.1 UI/UX Refinement Mockup</title>
+    <!-- Modern Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: dark;
+            --color-bg: #07090e;
+            --color-surface-1: #0e1118;
+            --color-surface-2: #141822;
+            --color-surface-3: #1c2230;
+            --color-border: rgba(255, 255, 255, 0.05);
+            --color-border-strong: rgba(255, 255, 255, 0.12);
+            --color-text-primary: #f4f7fb;
+            --color-text-secondary: #aab3c2;
+            --color-text-muted: #6e798a;
+            --color-brand: #8b7cff;
+            --color-brand-hover: #a397ff;
+            --color-brand-soft: rgba(139, 124, 255, 0.12);
+            --color-chzzk: #00e56b;
+            --color-soop: #2d8cff;
+            --color-live: #ff4d67;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-tile: 0 16px 36px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--color-text-primary);
+            background: 
+                radial-gradient(circle at 15% -10%, rgba(139, 124, 255, 0.14), transparent 40rem),
+                radial-gradient(circle at 85% 15%, rgba(45, 140, 255, 0.08), transparent 35rem),
+                var(--color-bg);
+            font-family: Outfit, Inter, "Noto Sans KR", system-ui, sans-serif;
+            font-size: 15px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .site-header {
+            position: sticky;
+            z-index: 100;
+            top: 0;
+            border-bottom: 1px solid var(--color-border);
+            background: rgba(7, 9, 14, 0.85);
+            backdrop-filter: blur(20px);
+        }
+
+        .header-inner, .page-shell {
+            width: min(100%, 1680px);
+            margin: 0 auto;
+        }
+
+        .header-inner {
+            min-height: 60px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .brand-block {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--color-text-primary);
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--color-brand);
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--color-brand) 0 2px, transparent 3px);
+            box-shadow: 0 0 0 5px rgba(139, 124, 255, 0.1);
+        }
+
+        .stream-count {
+            color: var(--color-text-muted);
+            font-size: 13px;
+        }
+
+        .stream-count strong {
+            color: var(--color-text-secondary);
+        }
+
+        .sync-state {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .refresh-button {
+            background: transparent;
+            border: 0;
+            padding: 6px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            display: grid;
+            place-items: center;
+            transition: all 120ms ease;
+        }
+
+        .refresh-button:hover {
+            color: var(--color-text-primary);
+            background: var(--color-surface-3);
+        }
+
+        .refresh-button svg {
+            fill: currentColor;
+            transition: transform 0.4s ease;
+        }
+
+        .refresh-button:hover svg {
+            transform: rotate(180deg);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #38d996;
+            box-shadow: 0 0 0 5px rgba(56, 217, 150, 0.15);
+        }
+
+        .sync-copy {
+            display: grid;
+        }
+
+        .sync-copy strong {
+            color: var(--color-text-secondary);
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .sync-copy span {
+            color: var(--color-text-muted);
+            font-size: 11px;
+        }
+
+        .page-shell {
+            padding: 24px 24px 64px; /* Reduced top padding from 42px to 24px */
+        }
+
+        /* Hero section spacing optimized (Marginal Breathing) */
+        .hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 32px;
+            margin-bottom: 20px; /* Reduced from 34px to 20px */
+            padding-bottom: 4px;
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+            color: var(--color-brand-hover);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: 28px; /* Slightly scaled down from giant size to feel tight and structured */
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-description {
+            margin: 6px 0 0;
+            color: var(--color-text-muted);
+            font-size: 13px;
+        }
+
+        .hero-stats {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 4px;
+            border-radius: 10px;
+            background: rgba(14, 17, 24, 0.6);
+            /* Removed thick outer borders to look seamless */
+        }
+
+        .hero-stats div {
+            min-width: 90px;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .hero-stats div + div {
+            border-left: 1px solid var(--color-border);
+        }
+
+        .hero-stats span {
+            display: block;
+            color: var(--color-text-muted);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .hero-stats strong {
+            display: block;
+            margin-top: 1px;
+            font-size: 16px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Split controls container (Sleek 2-Tier Architecture) */
+        .controls {
+            margin-bottom: 16px;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: rgba(14, 17, 24, 0.7);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .controls-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .platform-filter {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-button {
+            min-height: 36px;
+            padding: 0 14px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--color-text-secondary);
+            background: transparent;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 120ms ease;
+        }
+
+        .filter-button:hover {
+            color: var(--color-text-primary);
+            background: var(--color-surface-3);
+        }
+
+        .filter-button.is-active {
+            border-color: rgba(139, 124, 255, 0.15);
+            color: var(--color-text-primary);
+            background: var(--color-brand-soft);
+        }
+
+        .platform-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .chzzk-dot { background: var(--color-chzzk); }
+        .soop-dot { background: var(--color-soop); }
+
+        .search-box {
+            width: min(100%, 320px);
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 10px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            color: var(--color-text-muted);
+            background: var(--color-bg);
+        }
+
+        .search-box input {
+            width: 100%;
+            border: 0;
+            outline: 0;
+            color: var(--color-text-primary);
+            background: transparent;
+            font-size: 13px;
+        }
+
+        .search-box button {
+            background: var(--color-brand-soft);
+            color: var(--color-text-primary);
+            border: 0;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Controls Bottom: Tag Section */
+        .controls-tags {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            width: 100%;
+        }
+
+        .tags-label {
+            color: var(--color-text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .tag-filter {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+            padding: 0 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 999px;
+            color: var(--color-text-secondary);
+            background: transparent;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 120ms ease;
+        }
+
+        .tag-button:hover, .tag-button.is-active {
+            border-color: rgba(139, 124, 255, 0.3);
+            color: var(--color-text-primary);
+            background: var(--color-brand-soft);
+        }
+
+        .tag-drawer-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+            padding: 0 12px;
+            border: 1px dashed var(--color-border);
+            border-radius: 999px;
+            color: var(--color-text-muted);
+            background: transparent;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 120ms ease;
+        }
+
+        .tag-drawer-toggle:hover {
+            border-style: solid;
+            border-color: var(--color-brand);
+            color: var(--color-text-primary);
+            background: var(--color-brand-soft);
+        }
+
+        /* Tag Drawer Expanded Panel */
+        .tag-drawer {
+            width: 100%;
+            margin-top: 4px;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .tag-drawer-inner {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        /* Active Dismissible Filter Chips Section */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            width: 100%;
+        }
+
+        .active-filters-label {
+            color: var(--color-text-muted);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 24px;
+            padding: 0 8px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            color: var(--color-text-secondary);
+            background: var(--color-surface-2);
+            font-size: 11px;
+            text-decoration: none;
+            transition: all 120ms ease;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--color-brand);
+            color: var(--color-text-primary);
+            background: var(--color-brand-soft);
+        }
+
+        .filter-chip.chzzk { border-color: rgba(0, 229, 107, 0.25); }
+        .filter-chip.chzzk:hover { border-color: var(--color-chzzk); background: rgba(0, 229, 107, 0.08); }
+        .filter-chip.soop { border-color: rgba(45, 140, 255, 0.25); }
+        .filter-chip.soop:hover { border-color: var(--color-soop); background: rgba(45, 140, 255, 0.08); }
+
+        .chip-close {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-text-muted);
+        }
+
+        .filter-chip:hover .chip-close {
+            color: var(--color-text-primary);
+        }
+
+        .filter-clear-all {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            text-decoration: underline;
+            margin-left: 6px;
+            cursor: pointer;
+        }
+
+        .filter-clear-all:hover {
+            color: var(--color-brand-hover);
+        }
+
+        /* Heading section */
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            margin-top: 24px;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .section-heading span {
+            color: var(--color-text-muted);
+            font-size: 12px;
+        }
+
+        /* Stream Grid and Stream Card styles (Refined Density & Hashtags) */
+        .stream-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); /* Density: reduced min-width from 260px to 250px */
+            gap: 16px; /* Density: lowered grid spacing to 16px */
+        }
+
+        .stream-card {
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            color: inherit;
+            background: var(--color-surface-2);
+            text-decoration: none;
+            transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stream-card:hover {
+            border-color: var(--color-border-strong);
+            background: #191f2c;
+            box-shadow: var(--shadow-tile);
+            transform: translateY(-2px);
+        }
+
+        .thumbnail {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            background: var(--color-surface-3);
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        .platform-badge, .viewer-badge {
+            position: absolute;
+            z-index: 2;
+            top: 8px;
+            min-height: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-sm);
+            display: inline-flex;
+            align-items: center;
+            color: white;
+            background: rgba(5, 6, 9, 0.75);
+            backdrop-filter: blur(6px);
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .platform-badge {
+            left: 8px;
+            padding: 0 6px;
+        }
+
+        .platform-badge.chzzk { color: var(--color-chzzk); }
+        .platform-badge.soop { color: var(--color-soop); }
+
+        .viewer-badge {
+            right: 8px;
+            padding: 0 6px;
+            gap: 4px;
+        }
+
+        .viewer-badge span {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--color-live);
+            box-shadow: 0 0 0 3px rgba(255, 77, 103, 0.2);
+        }
+
+        /* Card copy refinement: borderless sleek hashtag chips */
+        .card-copy {
+            min-height: 80px;
+            padding: 10px 12px 12px;
+        }
+
+        .card-copy h3 {
+            min-height: 36px;
+            margin: 0 0 4px;
+            overflow: hidden;
+            color: var(--color-text-primary);
+            display: -webkit-box;
+            font-size: 14px; /* Scaled down for dense structure */
+            font-weight: 600;
+            line-height: 1.3;
+            letter-spacing: -0.015em;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .card-copy p {
+            margin: 0 0 6px;
+            overflow: hidden;
+            color: var(--color-text-secondary);
+            font-size: 12.5px;
+            font-weight: 500;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 16px;
+        }
+
+        /* Decluttering: borderless elegant hashtags instead of boxes inside boxes */
+        .card-tag-link {
+            color: var(--color-brand);
+            font-size: 11px;
+            font-weight: 650;
+            text-decoration: none;
+            transition: all 120ms ease;
+            opacity: 0.85;
+        }
+
+        .card-tag-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand-block">
+                <a class="brand" href="#" aria-label="Raider 홈">
+                    <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
+                </a>
+                <span class="stream-count"><strong>184</strong>개 방송 중</span>
+            </div>
+            <div class="sync-state">
+                <button type="button" class="refresh-button" title="즉시 새로고침" aria-label="새로고침">
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </button>
+                <span class="status-dot" aria-hidden="true"></span>
+                <span class="sync-copy"><strong>현재 스냅샷</strong><span>22:59 갱신</span></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        <!-- Slimmer Hero Area -->
+        <section class="hero" aria-labelledby="page-title">
+            <div>
+                <p class="eyebrow">LIVE RADAR</p>
+                <h1 id="page-title">지금 볼 방송을 찾아보세요.</h1>
+                <p class="hero-description">CHZZK과 SOOP의 현재 라이브 방송을 한곳에 모았습니다.</p>
+            </div>
+            <div class="hero-stats" aria-label="현재 방송 통계">
+                <div><span>검색 결과</span><strong>12</strong></div>
+                <div><span>총 시청자</span><strong>14,249</strong></div>
+            </div>
+        </section>
+
+        <!-- Structured 2-Tier controls bar -->
+        <section class="controls" aria-label="방송 필터와 검색">
+            <!-- Top Row: Segment + Search -->
+            <div class="controls-top">
+                <nav class="platform-filter" aria-label="플랫폼 필터">
+                    <button class="filter-button" type="button">전체</button>
+                    <button class="filter-button is-active" type="button"><span class="platform-dot chzzk-dot" aria-hidden="true"></span>CHZZK</button>
+                    <button class="filter-button" type="button"><span class="platform-dot soop-dot" aria-hidden="true"></span>SOOP</button>
+                </nav>
+                <form class="search-box" onsubmit="return false;">
+                    <span aria-hidden="true">⌕</span>
+                    <input id="stream-search" type="search" value="페이커" placeholder="방송인, 제목 또는 태그 검색" autocomplete="off" />
+                    <button type="button">검색</button>
+                </form>
+            </div>
+            
+            <!-- Bottom Row: Tag Row -->
+            <div class="controls-tags">
+                <span class="tags-label">추천 태그:</span>
+                <div class="tag-filter" aria-label="인기 태그">
+                    <button class="tag-button" type="button">전체 태그</button>
+                    <button class="tag-button is-active" type="button">#LeagueofLegends</button>
+                    <button class="tag-button" type="button">#솔랭</button>
+                    <button class="tag-button" type="button">#LCK</button>
+                    <button class="tag-button" type="button">#T1</button>
+                    <button class="tag-button" type="button">#미드</button>
+                    <button class="tag-drawer-toggle" id="tag-toggle-btn" type="button" aria-expanded="true">태그 접기 -</button>
+                </div>
+            </div>
+
+            <!-- Expanded Tag Drawer Mock -->
+            <div class="tag-drawer" id="tag-drawer">
+                <div class="tag-drawer-inner">
+                    <button class="tag-button" type="button">#스타크래프트</button>
+                    <button class="tag-button" type="button">#종합게임</button>
+                    <button class="tag-button" type="button">#배틀그라운드</button>
+                    <button class="tag-button" type="button">#로스트아크</button>
+                    <button class="tag-button" type="button">#마인크래프트</button>
+                    <button class="tag-button" type="button">#발로란트</button>
+                    <button class="tag-button" type="button">#소통</button>
+                    <button class="tag-button" type="button">#친목</button>
+                    <button class="tag-button" type="button">#버츄얼</button>
+                </div>
+            </div>
+
+            <!-- Dismissible Active Filter Chips -->
+            <div class="active-filters" aria-label="적용된 필터">
+                <span class="active-filters-label">적용된 필터:</span>
+                <button class="filter-chip chzzk" type="button">플랫폼: CHZZK <span class="chip-close">×</span></button>
+                <button class="filter-chip tag" type="button">태그: #LeagueofLegends <span class="chip-close">×</span></button>
+                <button class="filter-chip query" type="button">검색어: "페이커" <span class="chip-close">×</span></button>
+                <a class="filter-clear-all" href="#">초기화</a>
+            </div>
+        </section>
+
+        <!-- Live Streams Grid Section -->
+        <section class="section-heading" aria-labelledby="live-title">
+            <div>
+                <p class="eyebrow">SORTED BY VIEWERS</p>
+                <h2 id="live-title">현재 인기 방송</h2>
+            </div>
+            <span>시청자 수 높은 순</span>
+        </section>
+
+        <!-- Sleek High Density Grid (16px spacing) -->
+        <section class="stream-grid" aria-label="현재 라이브 방송">
+            <!-- Mock Stream Card 1 -->
+            <div class="stream-card">
+                <div class="thumbnail">
+                    <!-- Placeholder representing a generic sleek dark aesthetic thumbnail for mockup purposes -->
+                    <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1b173a, #0d0f14 60%, #1e1b2e); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #8b7cff70; letter-spacing: 0.1em;">T1 FAKER LIVE</div>
+                    <span class="platform-badge chzzk">CHZZK</span>
+                    <span class="viewer-badge"><span aria-hidden="true"></span>12,504</span>
+                </div>
+                <div class="card-copy">
+                    <h3>[T1 Faker] 솔로랭크 1위 도전 / Mid LCK LPL SoloQ</h3>
+                    <p>이상혁 (Faker)</p>
+                    <div class="card-tags" aria-label="방송 태그">
+                        <span class="card-tag-link">#LeagueofLegends</span>
+                        <span class="card-tag-link">#T1</span>
+                        <span class="card-tag-link">#Faker</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mock Stream Card 2 -->
+            <div class="stream-card">
+                <div class="thumbnail">
+                    <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #16242b, #090b0e 60%, #203f33); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #00e56b50; letter-spacing: 0.1em;">CHZZK LIVE MOCK</div>
+                    <span class="platform-badge chzzk">CHZZK</span>
+                    <span class="viewer-badge"><span aria-hidden="true"></span>1,249</span>
+                </div>
+                <div class="card-copy">
+                    <h3>LCK 2026 Spring 스프링 플레이오프 분석 및 리뷰</h3>
+                    <p>클템 (CloudTemplar)</p>
+                    <div class="card-tags" aria-label="방송 태그">
+                        <span class="card-tag-link">#LCK</span>
+                        <span class="card-tag-link">#롤분석</span>
+                        <span class="card-tag-link">#종합게임</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mock Stream Card 3 -->
+            <div class="stream-card">
+                <div class="thumbnail">
+                    <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #24143a, #0b0710 60%, #462c76); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #8b7cff50; letter-spacing: 0.1em;">SOOP LIVE MOCK</div>
+                    <span class="platform-badge soop">SOOP</span>
+                    <span class="viewer-badge"><span aria-hidden="true"></span>496</span>
+                </div>
+                <div class="card-copy">
+                    <h3>[생] 마인크래프트 야생 1일차 - 생존 도전기</h3>
+                    <p>도티 (Doti)</p>
+                    <div class="card-tags" aria-label="방송 태그">
+                        <span class="card-tag-link">#마인크래프트</span>
+                        <span class="card-tag-link">#야생</span>
+                        <span class="card-tag-link">#생존</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mock Stream Card 4 -->
+            <div class="stream-card">
+                <div class="thumbnail">
+                    <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #3a1c14, #120907 60%, #5d3420); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #e08c5650; letter-spacing: 0.1em;">CHZZK VALORANT MOCK</div>
+                    <span class="platform-badge chzzk">CHZZK</span>
+                    <span class="viewer-badge"><span aria-hidden="true"></span>388</span>
+                </div>
+                <div class="card-copy">
+                    <h3>[치지직] 발로란트 경쟁전 솔로랭크 배치고사 5판</h3>
+                    <p>김된모 (Doenmo)</p>
+                    <div class="card-tags" aria-label="방송 태그">
+                        <span class="card-tag-link">#발로란트</span>
+                        <span class="card-tag-link">#배치고사</span>
+                        <span class="card-tag-link">#FPS</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Simple Interactive Drawer Simulation for Mockup
+        var toggleBtn = document.getElementById("tag-toggle-btn");
+        var drawer = document.getElementById("tag-drawer");
+        if (toggleBtn && drawer) {
+            toggleBtn.addEventListener("click", function() {
+                var isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
+                toggleBtn.setAttribute("aria-expanded", !isExpanded);
+                if (isExpanded) {
+                    drawer.style.display = "none";
+                    toggleBtn.textContent = "태그 더 보기 +";
+                } else {
+                    drawer.style.display = "block";
+                    toggleBtn.textContent = "태그 접기 -";
+                }
+            });
+        }
+    </script>
+</body>
+</html>

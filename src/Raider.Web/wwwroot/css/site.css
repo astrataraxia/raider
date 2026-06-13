@@ -171,11 +171,11 @@ a {
   align-items: flex-end;
   justify-content: space-between;
   gap: 32px;
-  margin-bottom: 34px;
+  margin-bottom: 20px;
 }
 
 .eyebrow {
-  margin: 0 0 7px;
+  margin: 0 0 6px;
   color: var(--color-brand-hover);
   font-size: 11px;
   font-weight: 800;
@@ -184,30 +184,31 @@ a {
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(25px, 3vw, 38px);
+  font-size: clamp(24px, 2.8vw, 30px);
   line-height: 1.18;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.04em;
 }
 
 .hero-description {
-  margin: 10px 0 0;
+  margin: 6px 0 0;
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .hero-stats {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
   gap: 2px;
-  padding: 5px;
-  border: 1px solid var(--color-border);
-  border-radius: 13px;
-  background: #10131abf;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(14, 17, 24, 0.6);
 }
 
 .hero-stats div {
-  min-width: 106px;
-  padding: 10px 14px;
-  border-radius: 9px;
+  min-width: 90px;
+  padding: 8px 12px;
+  border-radius: 8px;
 }
 
 .hero-stats div + div {
@@ -217,48 +218,46 @@ a {
 .hero-stats span {
   display: block;
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .hero-stats strong {
   display: block;
   margin-top: 1px;
-  font-size: 18px;
+  font-size: 16px;
   font-variant-numeric: tabular-nums;
 }
 
 .controls {
-  margin-bottom: 14px;
-  padding: 11px;
+  margin-bottom: 16px;
+  padding: 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: #10131acc;
+  background: rgba(14, 17, 24, 0.7);
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
-.controls-main {
-  width: 100%;
+.controls-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  width: 100%;
 }
 
 .platform-filter {
-  gap: 4px;
-}
-
-.tag-filter {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
 }
 
 .filter-button {
-  min-height: 40px;
-  padding: 0 15px;
+  min-height: 36px;
+  padding: 0 14px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   display: inline-flex;
@@ -267,33 +266,10 @@ a {
   color: var(--color-text-secondary);
   background: transparent;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
   text-decoration: none;
-}
-
-.tag-button {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  color: var(--color-text-secondary);
-  background: transparent;
-  font-size: 12px;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.tag-button:hover,
-.tag-button.is-active {
-  border-color: #8b7cff45;
-  color: var(--color-text-primary);
-  background: var(--color-brand-soft);
+  transition: all 120ms ease;
 }
 
 .filter-button:hover {
@@ -302,14 +278,14 @@ a {
 }
 
 .filter-button.is-active {
-  border-color: #8b7cff2c;
+  border-color: rgba(139, 124, 255, 0.15);
   color: var(--color-text-primary);
   background: var(--color-brand-soft);
 }
 
 .platform-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
 }
 
@@ -321,11 +297,63 @@ a {
   background: var(--color-soop);
 }
 
+/* Controls Bottom: Tag Section */
+.controls-tags {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  width: 100%;
+}
+
+.tags-label {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.tag-button:hover,
+.tag-button.is-active {
+  border-color: rgba(139, 124, 255, 0.3);
+  color: var(--color-text-primary);
+  background: var(--color-brand-soft);
+}
+  background: var(--color-soop);
+}
+
 .search-box {
-  width: min(100%, 360px);
-  min-height: 40px;
-  gap: 9px;
-  padding: 0 11px;
+  width: min(100%, 320px);
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
@@ -702,27 +730,25 @@ button:focus-visible {
 }
 
 .card-tags {
-  min-height: 20px;
-  margin-top: 8px;
   display: flex;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 16px;
+  margin-top: 8px;
 }
 
-.card-tags span,
 .card-tag-link {
-  padding: 2px 7px;
-  border-radius: 999px;
-  color: var(--color-text-muted);
-  background: var(--color-surface-3);
+  color: var(--color-brand);
   font-size: 11px;
+  font-weight: 650;
   text-decoration: none;
   transition: all 120ms ease;
+  opacity: 0.85;
 }
 
 .card-tag-link:hover {
-  color: var(--color-text-primary);
-  background: var(--color-brand-soft);
-  box-shadow: 0 0 0 1px #8b7cff30;
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .empty-state {
@@ -911,28 +937,29 @@ button:focus-visible {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border);
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  width: 100%;
 }
 
 .active-filters-label {
   color: var(--color-text-muted);
-  font-size: 12px;
-  margin-right: 4px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 26px;
-  padding: 0 10px;
+  min-height: 24px;
+  padding: 0 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-secondary);
   background: var(--color-surface-2);
-  font-size: 12px;
+  font-size: 11px;
   text-decoration: none;
   cursor: pointer;
   transition: all 120ms ease;
@@ -945,23 +972,23 @@ button:focus-visible {
 }
 
 .filter-chip.chzzk {
-  border-color: #00e56b30;
+  border-color: rgba(0, 229, 107, 0.25);
 }
 .filter-chip.chzzk:hover {
   border-color: var(--color-chzzk);
-  background: #00e56b15;
+  background: rgba(0, 229, 107, 0.08);
 }
 
 .filter-chip.soop {
-  border-color: #2d8cff30;
+  border-color: rgba(45, 140, 255, 0.25);
 }
 .filter-chip.soop:hover {
   border-color: var(--color-soop);
-  background: #2d8cff15;
+  background: rgba(45, 140, 255, 0.08);
 }
 
 .chip-close {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-text-muted);
 }
@@ -971,7 +998,7 @@ button:focus-visible {
 }
 
 .filter-clear-all {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-muted);
   text-decoration: underline;
   cursor: pointer;
@@ -985,9 +1012,11 @@ button:focus-visible {
 /* 태그 드로어 */
 .tag-drawer {
   width: 100%;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border);
+  margin-top: 4px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .tag-drawer-inner {
@@ -1000,11 +1029,11 @@ button:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
+  min-height: 28px;
   padding: 0 12px;
   border: 1px dashed var(--color-border);
   border-radius: 999px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   background: transparent;
   font-size: 12px;
   cursor: pointer;
@@ -1029,7 +1058,7 @@ button:focus-visible {
     align-self: flex-start;
   }
 
-  .controls-main {
+  .controls-top {
     align-items: stretch;
     flex-direction: column;
   }
@@ -1064,7 +1093,7 @@ button:focus-visible {
   }
 
   .hero {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
 
   .hero h1 {
@@ -1091,6 +1120,12 @@ button:focus-visible {
     flex: 1;
     justify-content: center;
     padding: 0 9px;
+  }
+
+  .controls-tags {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .notice-banner {
