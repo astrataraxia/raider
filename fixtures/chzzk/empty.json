@@ -1,0 +1,10 @@
+{
+  "code": 200,
+  "message": null,
+  "content": {
+    "data": [],
+    "page": {
+      "next": null
+    }
+  }
+}

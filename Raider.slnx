@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Raider.Web/Raider.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Raider.Web.Tests/Raider.Web.Tests.csproj" />
+  </Folder>
+</Solution>

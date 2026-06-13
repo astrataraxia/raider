@@ -1,0 +1,32 @@
+{
+  "total_cnt": 1,
+  "cnt": 1,
+  "broad": [
+    {
+      "broad_no": 2001,
+      "user_id": "fixture-user-1",
+      "user_nick": "Fixture streamer one",
+      "broad_title": "Fixture live one",
+      "broad_thumb": "//example.invalid/soop/thumbnail-1.jpg",
+      "current_view_cnt": 321,
+      "total_view_cnt": 1234,
+      "auto_hashtags": [
+        "Fixture auto"
+      ],
+      "category_tags": [
+        "Fixture category tag"
+      ],
+      "hash_tags": [
+        "Fixture hash"
+      ],
+      "lang_tags": [
+        "Fixture language"
+      ],
+      "category_name": "Fixture category",
+      "broad_grade": "0",
+      "is_password": "0"
+    }
+  ],
+  "time": 0,
+  "is_wp": 0
+}

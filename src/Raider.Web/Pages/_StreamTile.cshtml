@@ -1,0 +1,29 @@
+@* 단일 라이브 방송을 안전한 외부 링크 타일로 표시한다. *@
+@model Raider.Web.Live.LiveStream
+@{
+    var platform = Model.Platform.ToString().ToUpperInvariant();
+    var platformClass = Model.Platform.ToString().ToLowerInvariant();
+    var alt = $"{Model.StreamerName}의 방송 썸네일";
+}
+<a class="stream-card" href="@Model.WatchUrl" target="_blank" rel="noopener noreferrer" data-broadcast-id="@Model.BroadcastId" aria-label="@Model.StreamerName 방송 보기, 외부 링크">
+    <div class="thumbnail">
+        @if (Model.ThumbnailUrl is not null)
+        {
+            <img src="@Model.ThumbnailUrl" alt="@alt" loading="lazy" decoding="async" />
+        }
+        else
+        {
+            <div class="thumbnail-placeholder" role="img" aria-label="@alt" data-default-thumbnail="true"><span>RAIDER</span></div>
+        }
+        <span class="platform-badge @platformClass">@platform</span>
+        <span class="viewer-badge"><span aria-hidden="true"></span>@Model.ViewerCount.ToString("N0")</span>
+    </div>
+    <div class="card-copy">
+        <h3>@Model.Title</h3>
+        <p>@Model.StreamerName</p>
+        @if (!Model.Tags.IsEmpty)
+        {
+            <div class="card-tags" aria-label="방송 태그">@foreach (var tag in Model.Tags.Take(3)) { <span>@tag</span> }</div>
+        }
+    </div>
+</a>

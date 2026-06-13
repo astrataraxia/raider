@@ -1,0 +1,64 @@
+# Raider 단일 컨테이너 배포.
+
+현재 릴리스 버전은 `v1.0.0`이다.
+
+## 권장 환경.
+
+- Linux `amd64` 또는 호환 컨테이너 호스트.
+- Docker Engine `29.5.2` 이상.
+- 초기 자원 상한은 CPU `1`, 메모리 `256MB`, PID `128`이다.
+- 영구 볼륨과 데이터베이스는 사용하지 않는다.
+
+실제 CHZZK·SOOP 전체 수집과 홈 부하를 동시에 실행한 최종 결과 메모리는 약 `73MB`였고, 수집 중 홈 p95는 약 `35ms`였다. 최초 cold-start 홈 요청은 약 `90ms`였다.
+
+## 이미지 빌드.
+
+```text
+docker build --tag raider:local .
+```
+
+이미지는 .NET 10 SDK 빌드 단계와 ASP.NET Core runtime 단계를 분리하고, runtime에서 비루트 `app` 사용자로 실행한다.
+
+## 비밀값 주입.
+
+저장소 파일과 이미지에는 비밀값을 넣지 않는다. 운영 환경의 secret manager 또는 서비스 관리자가 다음 환경 변수를 컨테이너에 주입해야 한다.
+
+```text
+RAIDER__CHZZK__CLIENTID
+RAIDER__CHZZK__CLIENTSECRET
+```
+
+SOOP은 현재 공식 발급 키 없이 검증된 공개 웹 JSON을 사용한다.
+
+## 실행 계약.
+
+운영 실행은 다음 제한을 적용한다.
+
+```text
+--read-only
+--tmpfs /tmp:rw,noexec,nosuid,size=64m
+--memory 256m
+--cpus 1
+--pids-limit 128
+--security-opt no-new-privileges
+--publish 127.0.0.1:8080:8080
+```
+
+외부 공개가 필요하면 호스트의 reverse proxy가 `127.0.0.1:8080`으로 전달한다. 컨테이너에는 볼륨을 연결하지 않는다.
+
+## 상태 확인.
+
+- `/health/live`: 프로세스가 HTTP 요청을 처리할 수 있는지 확인한다.
+- `/health/ready`: CHZZK과 SOOP의 첫 수집 시도가 모두 완료됐는지 확인한다.
+- 이미지 healthcheck는 `/health/live`를 사용한다.
+
+## 출시 검증.
+
+Windows에서는 WSL2 Ubuntu Docker Engine에서 다음을 실행한다.
+
+```text
+bash scripts/test_container_image.sh raider:local
+bash scripts/test_container_release.sh raider:local /secure/path/raider-container.env
+```
+
+`test_container_release.sh`의 env 파일은 검증 중에만 사용하고 즉시 제거한다. 스크립트는 비루트, 읽기 전용 루트, 무볼륨, 상태 전환, 정상 종료, 재생성 복구, 자원 제한, 실제 API, 성능, 로그와 HTML의 비밀값 비노출을 검증한다.

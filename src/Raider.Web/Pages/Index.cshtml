@@ -1,0 +1,108 @@
+@* 현재 라이브 방송을 필터링 가능한 타일 화면으로 표시한다. *@
+@page
+@model Raider.Web.Pages.IndexModel
+@{
+    ViewData["Title"] = "Raider - Live Radar";
+}
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand-block">
+                <a class="brand" asp-page="/Index" aria-label="Raider 홈">
+                    <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
+                </a>
+                <span class="stream-count"><strong>@Model.TotalResultCount.ToString("N0")</strong>개 방송 중</span>
+            </div>
+            <div class="sync-state">
+                <span class="status-dot @(Model.HasPartialFailure || Model.HasInitialFailure || Model.IsStale ? "is-warning" : "")" aria-hidden="true"></span>
+                <span class="sync-copy"><strong>@(Model.HasPartialFailure || Model.HasInitialFailure ? "일부 수집 지연" : "현재 스냅샷")</strong><span>@Model.Snapshot.ObservedAt.ToLocalTime().ToString("HH:mm") 갱신</span></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero" aria-labelledby="page-title">
+            <div><p class="eyebrow">LIVE RADAR</p><h1 id="page-title">지금 볼 방송을 찾아보세요.</h1><p class="hero-description">CHZZK과 SOOP의 현재 라이브를 한곳에 모았습니다.</p></div>
+            <div class="hero-stats" aria-label="현재 방송 통계"><div><span>검색 결과</span><strong>@Model.TotalResultCount.ToString("N0")</strong></div><div><span>총 시청자</span><strong>@Model.TotalViewers.ToString("N0")</strong></div></div>
+        </section>
+
+        <section class="controls" aria-label="방송 필터와 검색" data-selected-tag="@Model.Tag">
+            <nav class="platform-filter" aria-label="플랫폼 필터">
+                <a class="filter-button @(Model.SelectedPlatform is null ? "is-active" : "")" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query">전체</a>
+                <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Chzzk ? "is-active" : "")" asp-page="/Index" asp-route-platform="chzzk" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query"><span class="platform-dot chzzk-dot" aria-hidden="true"></span>CHZZK</a>
+                <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Soop ? "is-active" : "")" asp-page="/Index" asp-route-platform="soop" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query"><span class="platform-dot soop-dot" aria-hidden="true"></span>SOOP</a>
+            </nav>
+            <div class="tag-filter" aria-label="인기 태그">
+                <a class="tag-button @(string.IsNullOrWhiteSpace(Model.Tag) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query">모든 태그</a>
+                @foreach (var tag in Model.PopularTags)
+                {
+                    <a class="tag-button @(string.Equals(Model.Tag, tag, StringComparison.OrdinalIgnoreCase) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@tag" asp-route-q="@Model.Query">@tag</a>
+                }
+            </div>
+            <form class="search-box" method="get">
+                @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
+                @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
+                <span aria-hidden="true">⌕</span>
+                <label class="visually-hidden" for="stream-search">방송인, 제목 또는 태그 검색</label>
+                <input id="stream-search" name="q" type="search" value="@Model.Query" placeholder="방송인, 제목 또는 태그 검색" autocomplete="off" />
+                <button type="submit">검색</button>
+            </form>
+        </section>
+
+        @if (Model.HasPartialFailure)
+        {
+            <aside class="notice-banner" role="status"><strong>일부 플랫폼 갱신이 지연되고 있습니다.</strong><span>마지막 정상 목록을 표시하며 자동으로 재시도 중입니다.</span></aside>
+        }
+        @if (Model.IsStale)
+        {
+            <aside class="notice-banner" role="status"><strong>방송 목록이 오래되었습니다.</strong><span>플랫폼 갱신을 기다리고 있습니다.</span></aside>
+        }
+
+        <section class="section-heading" aria-labelledby="live-title"><div><p class="eyebrow">SORTED BY VIEWERS</p><h2 id="live-title">현재 인기 방송</h2></div><span>시청자 수 높은 순</span></section>
+
+        @if (Model.IsInitialCollection)
+        {
+            <section class="state-panel"><h2>첫 방송 목록을 수집하고 있습니다.</h2><p>CHZZK과 SOOP의 현재 라이브를 확인하는 중입니다.</p><div class="skeleton-grid" aria-hidden="true">@for (var i = 0; i < 8; i++) { <span></span> }</div></section>
+        }
+        else if (Model.HasInitialFailure)
+        {
+            <section class="state-panel"><h2>첫 방송 목록을 가져오지 못했습니다.</h2><p>플랫폼 연결을 자동으로 재시도 중입니다.</p></section>
+        }
+        else if (Model.Streams.IsEmpty)
+        {
+            <section class="state-panel"><h2>현재 방송을 찾지 못했습니다.</h2><p>다른 플랫폼, 태그 또는 검색어를 사용해 보세요.</p></section>
+        }
+        else
+        {
+            <section class="stream-grid" aria-label="현재 라이브 방송">
+                @foreach (var stream in Model.Streams)
+                {
+                    <partial name="_StreamTile" model="stream" />
+                }
+            </section>
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="pagination" aria-label="방송 목록 페이지">
+                    @if (Model.PageNumber > 1)
+                    {
+                        <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, p = Model.PageNumber - 1 })">이전</a>
+                    }
+                    <span>@Model.PageNumber / @Model.TotalPages</span>
+                    @if (Model.PageNumber < Model.TotalPages)
+                    {
+                        <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, p = Model.PageNumber + 1 })">다음</a>
+                    }
+                </nav>
+            }
+        }
+    </main>
+</body>
+</html>

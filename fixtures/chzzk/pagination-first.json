@@ -1,0 +1,19 @@
+{
+  "code": 200,
+  "message": null,
+  "content": {
+    "data": [
+      {
+        "liveId": 1001,
+        "liveTitle": "Fixture live one",
+        "liveThumbnailImageUrl": "https://example.invalid/chzzk/thumbnail-1.jpg",
+        "concurrentUserCount": 321,
+        "channelId": "fixture-channel-1",
+        "channelName": "Fixture streamer one"
+      }
+    ],
+    "page": {
+      "next": "fixture-next-token"
+    }
+  }
+}

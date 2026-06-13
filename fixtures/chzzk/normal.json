@@ -1,0 +1,26 @@
+{
+  "code": 200,
+  "message": null,
+  "content": {
+    "data": [
+      {
+        "liveId": 1001,
+        "liveTitle": "Fixture live one",
+        "liveThumbnailImageUrl": "https://example.invalid/chzzk/thumbnail-1.jpg",
+        "concurrentUserCount": 321,
+        "tags": [
+          "Fixture tag 1",
+          "Fixture tag 2"
+        ],
+        "categoryType": "GAME",
+        "liveCategory": "fixture-category-1",
+        "liveCategoryValue": "Fixture category 1",
+        "channelId": "fixture-channel-1",
+        "channelName": "Fixture streamer one"
+      }
+    ],
+    "page": {
+      "next": null
+    }
+  }
+}

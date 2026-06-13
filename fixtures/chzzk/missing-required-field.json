@@ -1,0 +1,18 @@
+{
+  "code": 200,
+  "message": null,
+  "content": {
+    "data": [
+      {
+        "liveId": 1003,
+        "liveThumbnailImageUrl": null,
+        "concurrentUserCount": 42,
+        "channelId": "fixture-channel-3",
+        "channelName": "Fixture streamer three"
+      }
+    ],
+    "page": {
+      "next": null
+    }
+  }
+}

@@ -1,0 +1,132 @@
+# 통합 스트리밍 레이더 결정 기록.
+
+2026-06-12 기술 스택 전환 이전의 Rust 관련 기록은 당시 조사 이력이며 현재 구현 계약이 아니다. 현재 계약은 `PLAN.md`, `ENGINEERING.md`, `DESIGN.md`, 각 Goal 문서를 따른다.
+
+## 2026-06-11.
+
+- 저장소에는 구현 코드가 없고 `ideas.md`와 Serena 메타데이터만 있다.
+- Serena MCP 도구는 현재 세션에 노출되지 않아 로컬 파일 탐색으로 대체했다.
+- CHZZK 공식 Open API는 Client 인증을 통한 전체 라이브 목록 조회를 제공한다.
+- SOOP 공식 개발자 페이지는 개인 개발자 API가 준비 중이며 Open API는 파트너 등록이 필요하다고 안내한다.
+- 사용자 요구 범위는 CHZZK과 SOOP 전용이며 기타 플랫폼은 포함하지 않는다.
+- 관심 채널 기반이 아니라 CHZZK과 SOOP의 현재 라이브 목록을 통합 탐색하는 것이 제품 목표다.
+- 화면은 타일형 그리드이며 기본 정렬은 시청자 수 내림차순이다.
+- 타일 필수 정보는 플랫폼, 방송인 이름, 시청자 수, 제목, 썸네일, 원본 방송 URL이다.
+- 방송 타일 클릭 시 앱 내부 재생 없이 원본 플랫폼 방송 페이지로 이동한다.
+- 오프라인 채널, 시청 기록, 통계는 MVP 범위가 아니다.
+- SOOP은 선택 기능이 아닌 필수 기능이므로 실제 수집 경로 검증이 첫 번째 구현 게이트다.
+- 외부 장애를 빈 라이브 목록으로 오인하지 않도록 실패한 동기화는 마지막 정상 목록을 덮어쓰지 않는다.
+- 과거 방송 정보는 저장하지 않으며 영구 데이터베이스와 볼륨을 사용하지 않는다.
+- Rust, Tokio, Axum, Reqwest, Serde, Askama, ArcSwap 조합의 단일 바이너리를 사용하기로 결정했다.
+- 웹 요청 경로에서는 외부 API를 호출하지 않고 원자적으로 교체되는 현재 메모리 스냅샷만 읽는다.
+- 개인 서버에서는 단일 컨테이너로 실행하고 재시작 시 즉시 다시 수집한다.
+- 컨테이너 healthcheck, 정상 종료, 비루트 실행, 읽기 전용 파일시스템, 메모리 제한 검증을 운영 기준에 포함한다.
+- CHZZK과 SOOP 수집은 독립 Tokio 태스크로 실행해 한 플랫폼 지연이 다른 수집이나 화면 응답을 막지 않게 한다.
+- 화면은 Askama 서버 렌더링과 CSS 중심으로 만들며 반응형 타일, 스켈레톤, 썸네일 지연 로딩, 플랫폼 뱃지를 디자인 기준으로 삼는다.
+- 홈 화면 p95 100ms 미만을 초기 성능 목표로 두되 실제 개인 서버 컨테이너에서 측정해 확정한다.
+- 단일 `PLAN.md`의 상세 계획을 상위 인덱스와 7개의 Goal 문서로 분리했다.
+- Goal 순서는 수집 가능성, Rust 기반, CHZZK 어댑터, SOOP 어댑터, 수집 오케스트레이션, 타일 UI, 컨테이너 출시다.
+- 모든 구현 Goal은 실패 테스트 확인, 최소 구현, 리팩터링, 관련 회귀 검증 순서를 Task 수준에서 명시한다.
+- 실제 외부 API 호출은 자동 테스트가 아니라 fixture 확보 스파이크와 출시 전 스모크 테스트로 관리한다.
+- UI는 다크 모드 전용으로 확정하고 루트 `DESIGN.md`를 Goal 6의 디자인 계약으로 사용한다.
+- Raider 브랜드는 중립적인 보라색 `#8B7CFF`, 배경은 `#090B10`으로 정했다.
+- CHZZK과 SOOP 색상은 플랫폼 뱃지와 필터 표시에만 제한적으로 사용한다.
+- 외부 폰트 CDN 없이 시스템 폰트 스택을 사용한다.
+- `prototype/` 정적 HTML/CSS 화면을 작성하고 브라우저에서 1280px 데스크톱과 375px 모바일을 검증했다.
+- SOOP 필터는 샘플 6개, 이어진 `감스트` 검색은 1개 타일로 축소되는 것을 확인했다.
+- 구현 전 반복 결정을 줄이기 위해 루트 `ENGINEERING.md`에 TDD, 애자일, 아키텍처, 명명, 오류, 동시성, HTTP, 설정, 로그, 의존성, 보안, 성능 계약을 작성했다.
+- 모든 세부 사항을 미리 고정하지 않고 현재 Task를 차단하는 결정과 스파이크 또는 측정 후 결정할 항목을 분리한다.
+- 개발 환경에는 Rust 1.96.0, Cargo 1.96.0, rustfmt, Clippy, Docker 29.5.2가 설치되어 있다.
+- Docker Compose는 설치되어 있지 않지만 단일 컨테이너 운영이므로 필수 조건이 아니다.
+- 현재 디렉터리는 아직 Git 저장소가 아니며 실제 구현 시작 직전에 초기화한다.
+- `rustup check` 결과 2026-06-12 기준 stable Rust 1.96.0과 rustup 1.29.0은 최신 상태다.
+- rust-analyzer가 설치되어 있다.
+- Visual Studio C++ Build Tools 설치가 완료되지 않아 Windows 로컬 개발 툴체인을 `stable-x86_64-pc-windows-gnu`로 전환했다.
+- WinLibs POSIX UCRT GCC 16.1.0을 설치했으며 빈 Cargo 프로젝트의 `cargo test`, `cargo fmt --check`, Clippy, 실행이 모두 성공했다.
+- `cargo-watch`, `cargo-audit`, `cargo-llvm-cov`, `llvm-tools-preview`를 설치했다.
+- Windows GNU stable에는 `profiler_builtins`가 없어 `cargo llvm-cov` 실행이 실패한다. 커버리지 검증은 Linux CI에서 수행한다.
+- `cargo-nextest` 설치는 crate 빌드 오류로 실패했고 `cargo-deny` 설치는 Windows 애플리케이션 실행 정책으로 차단됐다. 두 도구는 구현 시작 필수 조건이 아니며 필요하면 Linux CI에서 도입한다.
+- 현재 Codex 셸에 `CARGO_NET_OFFLINE=true`가 주입되므로 새 crate 의존성 확보와 Cargo 도구 설치 시 명령 단위로 `CARGO_NET_OFFLINE=false`를 사용한다.
+- Docker CLI는 설치되어 있지만 Docker daemon은 현재 실행 중이 아니다.
+- 구현 전 가장 큰 제품 결정은 SOOP 비공식 수집 위험을 감수할지와 전체 목록 수집 범위를 제한할 수 있는지 여부다.
+
+## 2026-06-12.
+
+- Goal 1 Task 1.1에서 공통 라이브 필드를 `platform`, `broadcast_id`, `channel_id`, `streamer_name`, `title`, `viewer_count`, `thumbnail_url`, `watch_url`로 확정했다.
+- `thumbnail_url`만 선택 필드이며, 나머지 필드가 누락되거나 유효하지 않으면 해당 방송만 제외하고 안전한 구조화 경고와 제외 수를 기록한다.
+- CHZZK 공식 Live API와 SOOP 공식 Open API 문서를 근거로 플랫폼별 필드 매핑과 원본 시청 URL 조립 규칙을 기록했다.
+- SOOP 공식 `broad/list` 계약은 파트너 `client_id`가 필요하므로 실제 접근 가능 여부와 응답 형태는 Task 1.3에서 검증한다.
+- CHZZK 공식 문서에서 라이브 목록 endpoint, 최대 페이지 크기 20, `content.page.next` 페이지네이션, Client 인증 헤더, 공통 오류 응답을 확인했다.
+- 2026-06-12 무인증 CHZZK 라이브 목록 실제 요청은 HTTP `401`과 `code: 401`, 클라이언트 인증 필요 메시지를 반환했다.
+- 현재 프로세스, 사용자, 시스템 환경 범위에 `RAIDER_CHZZK_CLIENT_ID`와 `RAIDER_CHZZK_CLIENT_SECRET`이 없어 인증 성공 호출과 전체 목록 측정은 보류됐다.
+- 인증정보가 주입되면 전체 목록을 순회하고 익명 fixture와 측정 결과를 생성하는 `scripts/chzzk_live_spike.ps1`을 추가했다.
+- 공식 계약 기반 CHZZK 정상, 빈 목록, 페이지네이션, 필수 필드 누락 fixture와 실제 무인증 `401` fixture를 추가했다.
+- 합성 Client 인증 헤더로 CHZZK 운영 endpoint를 호출했을 때 HTTP `401`, `message: "INVALID_CLIENT"` 응답을 확인하고 fixture로 기록했다.
+- `scripts/test_chzzk_live_spike.ps1` 로컬 HTTP 검증에서 두 페이지, 방송 3건, 중복 방송 1건 측정과 생성 fixture 익명화를 확인했다.
+- 유효 CHZZK Client 인증정보가 없어 운영 endpoint의 성공 응답, 실제 전체 페이지 수, 방송 수, 총 응답 시간은 아직 측정하지 못했다.
+- 사용자는 CHZZK 인증정보를 지금 준비할 수 없어 Task 1.2 운영 검증을 보류하고 SOOP 검증을 먼저 진행하기로 했다.
+- SOOP 공식 `broad/list`는 Client ID가 필수다. 무인증 요청은 `result: -1100`, 합성 Client ID 요청은 `result: -1104`를 반환했다.
+- SOOP 웹 앱의 `/live/all`은 `https://live.sooplive.com/api/main_broad_list_api.php` 공개 JSON을 사용한다.
+- 공개 웹 JSON은 로그인, API 키, 요청 쿠키 없이 전체 목록을 페이지당 60건 제공한다. 응답의 지역 판별 쿠키는 저장하거나 재전송할 필요가 없었다.
+- 시청자 수 순 `view_cnt` 전체 순회 비교 측정은 순회당 중복 5건에서 7건을 만들었다. 수집 정렬은 더 안정적인 방송 시작순 `broad_start`로 결정하고 화면 정렬은 수집 후 수행한다.
+- 2026-06-12 `broad_start` 공개 웹 JSON 전체 순회를 세 번 실행했다. 모두 22페이지, 보고 및 페이지 항목 1,274건이었고 고유 방송은 1,274건, 1,274건, 1,273건이었다.
+- 세 실행의 중복은 0건, 0건, 1건이고 총 응답 시간은 994ms, 921ms, 887ms였다. 방송 시작순도 동적 목록이므로 한 번의 페이지 순회는 완전히 일관된 스냅샷을 보장하지 않는다.
+- 공개 웹 JSON의 `current_view_cnt`가 현재 시청자 수다. 실제 첫 페이지의 모든 방송에서 `total_view_cnt`와 값이 달랐다.
+- 정적 JSON은 상위 80건만 제공하고 `/live/all` HTML은 방송 목록을 포함하지 않아 전체 수집 경로에서 제외했다.
+- 비공식 공개 웹 JSON의 변경 또는 차단 위험을 개인 서버 MVP에서 낮은 빈도로 호출하고 계약 오류를 수집 실패로 노출하는 조건으로 수용했다.
+- `scripts/soop_live_spike.ps1`, `scripts/test_soop_live_spike.ps1`, 익명 SOOP fixture를 추가했다.
+
+## 2026-06-12 기술 스택 전환.
+
+- 실제 구현 시작 전 기술 스택을 Rust에서 .NET 10과 ASP.NET Core로 전환하기로 결정했다.
+- Razor Pages, `BackgroundService`, `IHttpClientFactory`, `System.Text.Json`, `ImmutableArray`, `FrozenDictionary`, `Interlocked.Exchange`, xUnit, Playwright for .NET을 기본 구성으로 정했다.
+- 영구 데이터베이스, Redis, 외부 검색 엔진, Entity Framework Core, SignalR, MediatR는 현재 요구에 필요하지 않아 도입하지 않는다.
+- 방송 태그를 공통 모델에 추가하고 방송인 이름, 제목, 태그를 정규화한 부분 문자열 검색과 태그 인덱스를 사용하기로 했다.
+- CHZZK 내부 웹 JSON도 인증 없이 전체 라이브, 태그, 카테고리를 제공함을 확인했다. 동일 목적의 공식 Open API가 있으므로 최종 운영은 공식 API 우선을 유지하고 내부 JSON은 조사와 fixture 보강에만 사용한다.
+- SOOP 공식 API는 Client ID가 필요하므로 현재 검증된 공개 웹 JSON을 MVP 운영 경로로 유지한다.
+- 프로젝트의 핵심 품질 원칙으로 단순하고 우아한 코드를 추가했다. 적은 개념, 명확한 이름, 직접적인 데이터 흐름, 불필요한 계층과 패키지 제거를 리뷰 기준으로 사용한다.
+- 현재 로컬 환경에는 .NET SDK가 설치되어 있지 않다. Goal 2 구현 전에 .NET 10 SDK 설치와 빈 ASP.NET Core 프로젝트 품질 게이트 검증이 필요하다.
+- 전체 문서 일관성 점검에서 `ideas.md`, Serena 메모리, 정적 프로토타입에 남은 이전 계획을 새 C#·메모리 스냅샷·태그 검색 방향으로 갱신했다.
+- 정적 프로토타입에 태그 표시, 태그 필터, 태그 검색 동작을 추가했다. 태그 디자인의 사용자 승인은 여전히 Goal 0의 미완료 항목이다.
+- Microsoft 공식 설치 스크립트로 사용자 계정의 `C:\Users\astra\.dotnet`에 .NET 10 SDK `10.0.301`을 설치하고 사용자 `PATH`와 `DOTNET_ROOT`에 등록했다.
+- 임시 Razor Pages와 xUnit 솔루션에서 테스트 1개, `dotnet format --verify-no-changes`, `dotnet build --no-restore -warnaserror`, HTTP 실행 응답 `200`을 확인했다.
+- 기존 시스템 .NET 런타임 경로보다 먼저 검색되는 `C:\Users\astra\.local\bin\dotnet.cmd`가 사용자 SDK를 실행하도록 구성해 일반 `dotnet` 명령에서도 SDK `10.0.301`을 확인했다.
+- Playwright for .NET `1.60.0`과 Chromium `1223`을 설치하고 임시 Razor Pages 앱을 대상으로 실제 xUnit E2E 테스트를 실행했다.
+- Playwright E2E에서 HTTP `200`, 페이지 제목, 375×812 viewport의 가로 스크롤 없음 조건을 검증했고 테스트 1개가 통과했다.
+- 비밀값 관리는 로컬 개발에서 .NET User Secrets, 운영과 Docker에서 `RAIDER__` 계층형 환경 변수를 사용하기로 결정했다. 실제 비밀값이 담긴 `.env` 파일과 dotenv 패키지는 사용하지 않는다.
+- 실제 웹 프로젝트 생성 전 CHZZK PowerShell 스파이크만 기존 `RAIDER_CHZZK_CLIENT_ID`, `RAIDER_CHZZK_CLIENT_SECRET` 환경 변수를 계속 사용한다.
+- 2026-06-13 유효 Client 인증으로 CHZZK 공식 전체 라이브 목록을 두 번 순회했다. 모두 163페이지였고 페이지 항목은 3,240건과 3,225건, 고유 방송은 3,208건과 3,225건, 총 응답 시간은 5,161ms와 4,981ms였다.
+- CHZZK 공식 응답의 태그 포함률은 86.7%와 86.9%, 카테고리 포함률은 95.4%와 95.3%였다. 첫 실행의 중복 32건은 동적 시청자 수 정렬에 따른 페이지 경계 이동으로 판단한다.
+- CHZZK과 SOOP 초기 폴링 주기를 각각 10분으로 정했다. 요청별 timeout은 5초, 전체 순회 timeout은 CHZZK 60초와 SOOP 30초다. 네트워크, `408`, `5xx`는 페이지당 한 번만 재시도하고 `429`는 즉시 재시도하지 않는다.
+- Git 저장소를 초기화하고 Goal 2 Task 2.1을 시작했다. `Raider.slnx`, 최소 `src/Raider.Web`, `tests/Raider.Web.Tests` 프로젝트를 생성했다.
+- `/health/live` 통합 테스트가 엔드포인트 부재로 `404 NotFound` 실패하는 Red를 확인한 뒤 최소 `200 OK` 엔드포인트를 구현했다.
+- 웹 프로젝트 User Secrets에 `Raider:Chzzk:ClientId`, `Raider:Chzzk:ClientSecret` 키를 설정했다. 값은 저장소와 로그에 기록하지 않았다.
+- Task 2.1에서 `dotnet test`, `dotnet format Raider.slnx --verify-no-changes`, `dotnet build Raider.slnx --no-restore -warnaserror`, 실제 HTTP `200`을 확인했다.
+- Goal 2에서 `Platform`, `LiveStream`, `LiveSnapshot`, 태그 인덱스, 부분 문자열 검색, `ILiveSource`, `PlatformError`, `ChzzkOptions`를 최소 구현했다.
+- Goal 2 완료 시점에 테스트 20개가 통과했고 포맷과 경고 오류 빌드가 통과했다. 다음 WIP 1은 Goal 3 CHZZK 어댑터다.
+- Goal 3에서 CHZZK typed `HttpClient`, 내부 DTO, 태그와 카테고리 변환, cursor 순회, 중복 제거, 부분 실패 폐기, 안전한 오류 매핑을 구현했다.
+- CHZZK 계약 테스트 13개와 전체 회귀 테스트 31개가 통과했다. 최종 .NET 어댑터 실제 스모크는 방송 3,235건, 태그 또는 카테고리 포함 방송 3,165건을 7,405ms에 수집했다.
+- Goal 3을 완료했고 다음 WIP 1은 Goal 4 SOOP 어댑터다.
+- Goal 4에서 SOOP typed `HttpClient`, 내부 DTO, `current_view_cnt`, 5개 태그 출처, `broad_start` 페이지 순회, 무쿠키 요청, 계약 변경과 차단 감지를 구현했다.
+- SOOP 계약 테스트 10개가 통과했다. 최종 .NET 어댑터 실제 스모크는 방송 2,439건을 2,325ms에 수집했고 모든 방송에 태그 또는 카테고리가 있었다.
+- 2026-06-13 SOOP 전체 순회 두 번은 모두 2,440건, 41페이지, 중복 0건, 필수 필드 누락 0건, 태그 포함 2,440건이었고 3,194ms와 3,241ms가 걸렸다.
+- Goal 4를 완료했고 다음 WIP 1은 Goal 5 수집 오케스트레이션이다.
+- Goal 5에서 플랫폼별 독립 `BackgroundService`, 제한 재시도, 중복 실행 방지, 마지막 정상 목록 유지, 플랫폼 오류 상태, `Interlocked.Exchange` 기반 `SnapshotStore`를 구현했다.
+- 실제 Development 앱 실행에서 `/health/ready`가 `503`에서 두 플랫폼 첫 수집 시도 후 `200`으로 전환됐고 로그에 CHZZK Secret이 없었다.
+- 대표 방송 5,000건과 태그 100개에서 플랫폼·태그·검색 조합의 p95는 `0.216ms`였다.
+- Goal 5를 완료했고 다음 WIP 1은 Goal 6 웹 UI다.
+- Goal 6에서 Razor Pages 홈 화면, 라이브 타일 partial, 플랫폼·태그·검색 조합, 상태 화면, 반응형 단일 CSS를 구현했다.
+- 실제 라이브 5,738개를 한 번에 렌더링하면 HTML 약 6.12MB와 p95 248.41ms가 측정되어 페이지당 120개 서버 측 페이지네이션을 도입했다.
+- 페이지네이션 후 실제 홈 화면 HTML은 약 133KB, p95는 40.28ms였다. 수집과 readiness 전환 중 요청 25회의 p95는 99.6ms였고 최초 Razor 컴파일 요청 최대값은 1,748.41ms였다.
+- CHZZK 공식 API 썸네일의 `{type}` 템플릿을 `480`으로 치환해 실제 브라우저에서 깨진 이미지 0개를 확인했다.
+- Playwright 실제 브라우저 검수에서 1440×900 4열, 375×812 1열, 모바일 가로 스크롤 없음, 조합 필터와 페이지 query 유지, 콘솔 오류 0개를 확인했다.
+- Goal 6 완료 시 전체 테스트 57개, 포맷 검사, 경고 오류 빌드가 통과했다. 다음 WIP 1은 Goal 7 단일 컨테이너 출시 준비다.
+- 사용자가 현재 C# 구조와 문서 전환을 승인하고 실제 태그 UI 검증 진행을 승인한 대화 근거로 Goal 0 태그 UI와 Goal 0.5 운영 계약 승인 항목을 완료 처리했다.
+- Goal 7에서 .NET 10 다단계 Dockerfile, 비루트 `app`, `/health/live` healthcheck, 읽기 전용·무볼륨 출시 스모크, 실제 API 출시 스모크, `DEPLOYMENT.md`를 추가했다.
+- WSL2 Ubuntu 24.04 Docker Engine 29.5.2에서 최종 이미지 크기는 98,355,853 bytes였다. 초기 운영 상한은 CPU 1, 메모리 256MB, PID 128로 확정했다.
+- 최종 컨테이너 측정은 유휴 메모리 약 33MB, 전체 수집 후 약 67MB, cold-start 홈 235.941ms, 수집 중 홈 p50/p95 2.918ms/44.432ms, 준비 완료 후 p50/p95 7.952ms/13.244ms였다.
+- 실제 출시 스모크에서 readiness 503→200, 두 플랫폼 성공 로그, 비밀값·쿠키·원본 JSON·사용자 검색어 비노출, 재생성 후 무상태 복구를 확인했다.
+- 별도 실제 어댑터 스모크는 CHZZK 5,818건 중 태그 포함 5,709건을 8,559ms, SOOP 4,123건 모두 태그 포함을 5,185ms에 수집했다.
+- 완료 감사에서 실제 Kestrel과 Chromium을 사용하는 `HomePagePlaywrightTests`를 추가해 데스크톱 검색, 모바일 375px 1열, 가로 스크롤 없음을 자동 회귀에 포함했다.
+- 최종 Docker 빌드 컨텍스트는 웹 프로젝트 파일만 복사하도록 축소했다. 최종 이미지 크기는 98,355,855 bytes이고, 유휴 메모리 약 33MB, 전체 수집 후 약 73MB, cold-start 홈 89.553ms, 수집 중 p50/p95 4.361ms/35.321ms, 준비 완료 후 p50/p95 6.459ms/10.034ms였다.
+- 최종 전체 테스트 59개, 포맷 검사, 경고 오류 빌드, Docker 이미지와 출시 스모크가 통과했다.

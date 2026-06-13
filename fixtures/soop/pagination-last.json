@@ -1,0 +1,19 @@
+{
+  "total_cnt": 61,
+  "cnt": 1,
+  "broad": [
+    {
+      "broad_no": 2002,
+      "user_id": "fixture-user-2",
+      "user_nick": "Fixture streamer two",
+      "broad_title": "Fixture live two",
+      "broad_thumb": "//example.invalid/soop/thumbnail-2.jpg",
+      "current_view_cnt": 123,
+      "total_view_cnt": 456,
+      "broad_grade": "0",
+      "is_password": "0"
+    }
+  ],
+  "time": 0,
+  "is_wp": 0
+}

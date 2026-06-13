@@ -1,0 +1,19 @@
+{
+  "code": 200,
+  "message": null,
+  "content": {
+    "data": [
+      {
+        "liveId": 1002,
+        "liveTitle": "Fixture live two",
+        "liveThumbnailImageUrl": "https://example.invalid/chzzk/thumbnail-2.jpg",
+        "concurrentUserCount": 123,
+        "channelId": "fixture-channel-2",
+        "channelName": "Fixture streamer two"
+      }
+    ],
+    "page": {
+      "next": null
+    }
+  }
+}

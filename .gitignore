@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.vs/
+.idea/
+TestResults/
+playwright-report/
+.codex-work/**
+!.codex-work/2026-06-11-streaming-radar-plan/
+!.codex-work/2026-06-11-streaming-radar-plan/checklist.md
+!.codex-work/2026-06-11-streaming-radar-plan/context-notes.md
