@@ -7,7 +7,7 @@ using Raider.Web.Live;
 
 namespace Raider.Web.Pages;
 
-public sealed class IndexModel(SnapshotStore snapshots, TimeProvider timeProvider) : PageModel
+public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry registry, TimeProvider timeProvider) : PageModel
 {
     private const int PageSize = 120;
     private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(20);
@@ -27,6 +27,8 @@ public sealed class IndexModel(SnapshotStore snapshots, TimeProvider timeProvide
     public ImmutableArray<LiveStream> Streams { get; private set; } = [];
 
     public ImmutableArray<string> PopularTags { get; private set; } = [];
+
+    public ImmutableArray<string> AllPopularTags { get; private set; } = [];
 
     public CollectionSnapshot Snapshot { get; private set; } = null!;
 
@@ -50,6 +52,8 @@ public sealed class IndexModel(SnapshotStore snapshots, TimeProvider timeProvide
         .Where(state => state.LastSuccessAt is not null)
         .Any(state => timeProvider.GetUtcNow() - state.LastSuccessAt > StaleAfter);
 
+    public bool IsRefreshing => registry.IsAnyCollecting;
+
     public void OnGet()
     {
         Snapshot = snapshots.Current;
@@ -68,6 +72,18 @@ public sealed class IndexModel(SnapshotStore snapshots, TimeProvider timeProvide
             .Take(8)
             .Select(pair => pair.Key)
             .ToImmutableArray();
+        AllPopularTags = Snapshot.Live.StreamsByTag
+            .OrderByDescending(pair => pair.Value.Length)
+            .ThenBy(pair => pair.Key, StringComparer.Ordinal)
+            .Take(30)
+            .Select(pair => pair.Key)
+            .ToImmutableArray();
+    }
+
+    public IActionResult OnPostRefresh()
+    {
+        registry.TriggerCollectAll();
+        return RedirectToPage("/Index", new { platform = Platform, tag = Tag, q = Query });
     }
 
     private static Raider.Web.Live.Platform? ParsePlatform(string? value)

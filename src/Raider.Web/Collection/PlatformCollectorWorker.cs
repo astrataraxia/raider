@@ -5,14 +5,33 @@ using Microsoft.Extensions.Logging;
 
 namespace Raider.Web.Collection;
 
-public sealed class PlatformCollectorWorker(
-    ILiveSource source,
-    SnapshotStore snapshots,
-    CollectionOptions options,
-    TimeProvider timeProvider,
-    ILogger<PlatformCollectorWorker> logger) : BackgroundService
+public sealed class PlatformCollectorWorker : BackgroundService
 {
+    private readonly ILiveSource source;
+    private readonly SnapshotStore snapshots;
+    private readonly CollectionOptions options;
+    private readonly TimeProvider timeProvider;
+    private readonly ILogger<PlatformCollectorWorker> logger;
     private readonly SemaphoreSlim execution = new(1, 1);
+
+    public PlatformCollectorWorker(
+        ILiveSource source,
+        SnapshotStore snapshots,
+        CollectionOptions options,
+        CollectionRegistry registry,
+        TimeProvider timeProvider,
+        ILogger<PlatformCollectorWorker> logger)
+    {
+        this.source = source;
+        this.snapshots = snapshots;
+        this.options = options;
+        this.timeProvider = timeProvider;
+        this.logger = logger;
+
+        registry.Register(this);
+    }
+
+    public bool IsCollecting => execution.CurrentCount == 0;
 
     public async Task CollectOnceAsync(CancellationToken cancellationToken)
     {

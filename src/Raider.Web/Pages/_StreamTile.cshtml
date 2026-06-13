@@ -23,7 +23,14 @@
         <p>@Model.StreamerName</p>
         @if (!Model.Tags.IsEmpty)
         {
-            <div class="card-tags" aria-label="방송 태그">@foreach (var tag in Model.Tags.Take(3)) { <span>@tag</span> }</div>
+            <div class="card-tags" aria-label="방송 태그">
+                @foreach (var tag in Model.Tags.Take(3))
+                {
+                    <object>
+                        <a class="card-tag-link" href="@Url.Page("/Index", new { platform = Model.Platform.ToString().ToLowerInvariant(), tag = tag })">@tag</a>
+                    </object>
+                }
+            </div>
         }
     </div>
 </a>

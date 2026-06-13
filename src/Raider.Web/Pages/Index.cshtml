@@ -22,8 +22,26 @@
                 <span class="stream-count"><strong>@Model.TotalResultCount.ToString("N0")</strong>개 방송 중</span>
             </div>
             <div class="sync-state">
-                <span class="status-dot @(Model.HasPartialFailure || Model.HasInitialFailure || Model.IsStale ? "is-warning" : "")" aria-hidden="true"></span>
-                <span class="sync-copy"><strong>@(Model.HasPartialFailure || Model.HasInitialFailure ? "일부 수집 지연" : "현재 스냅샷")</strong><span>@Model.Snapshot.ObservedAt.ToLocalTime().ToString("HH:mm") 갱신</span></span>
+                @if (Model.IsRefreshing)
+                {
+                    <span class="refresh-spinner" title="수집 진행 중"></span>
+                    <span class="sync-copy"><strong>수집 진행 중</strong><span>새 방송을 확인하고 있습니다...</span></span>
+                }
+                else
+                {
+                    <form method="post" asp-page-handler="Refresh">
+                        @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
+                        @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
+                        @if (!string.IsNullOrWhiteSpace(Model.Query)) { <input type="hidden" name="q" value="@Model.Query" /> }
+                        <button type="submit" class="refresh-button" title="즉시 새로고침" aria-label="새로고침">
+                            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                            </svg>
+                        </button>
+                    </form>
+                    <span class="status-dot @(Model.HasPartialFailure || Model.HasInitialFailure || Model.IsStale ? "is-warning" : "")" aria-hidden="true"></span>
+                    <span class="sync-copy"><strong>@(Model.HasPartialFailure || Model.HasInitialFailure ? "일부 수집 지연" : "현재 스냅샷")</strong><span>@Model.Snapshot.ObservedAt.ToLocalTime().ToString("HH:mm") 갱신</span></span>
+                }
             </div>
         </div>
     </header>
@@ -35,26 +53,70 @@
         </section>
 
         <section class="controls" aria-label="방송 필터와 검색" data-selected-tag="@Model.Tag">
-            <nav class="platform-filter" aria-label="플랫폼 필터">
-                <a class="filter-button @(Model.SelectedPlatform is null ? "is-active" : "")" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query">전체</a>
-                <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Chzzk ? "is-active" : "")" asp-page="/Index" asp-route-platform="chzzk" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query"><span class="platform-dot chzzk-dot" aria-hidden="true"></span>CHZZK</a>
-                <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Soop ? "is-active" : "")" asp-page="/Index" asp-route-platform="soop" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query"><span class="platform-dot soop-dot" aria-hidden="true"></span>SOOP</a>
-            </nav>
-            <div class="tag-filter" aria-label="인기 태그">
-                <a class="tag-button @(string.IsNullOrWhiteSpace(Model.Tag) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query">모든 태그</a>
-                @foreach (var tag in Model.PopularTags)
-                {
-                    <a class="tag-button @(string.Equals(Model.Tag, tag, StringComparison.OrdinalIgnoreCase) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@tag" asp-route-q="@Model.Query">@tag</a>
-                }
+            <div class="controls-main">
+                <nav class="platform-filter" aria-label="플랫폼 필터">
+                    <a class="filter-button @(Model.SelectedPlatform is null ? "is-active" : "")" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query">전체</a>
+                    <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Chzzk ? "is-active" : "")" asp-page="/Index" asp-route-platform="chzzk" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query"><span class="platform-dot chzzk-dot" aria-hidden="true"></span>CHZZK</a>
+                    <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Soop ? "is-active" : "")" asp-page="/Index" asp-route-platform="soop" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query"><span class="platform-dot soop-dot" aria-hidden="true"></span>SOOP</a>
+                </nav>
+                <div class="tag-filter" aria-label="인기 태그">
+                    <a class="tag-button @(string.IsNullOrWhiteSpace(Model.Tag) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query">모든 태그</a>
+                    @foreach (var tag in Model.PopularTags)
+                    {
+                        var isActive = string.Equals(Model.Tag, tag, StringComparison.OrdinalIgnoreCase);
+                        <a class="tag-button @(isActive ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@(isActive ? "" : tag)" asp-route-q="@Model.Query">@tag</a>
+                    }
+                    @if (Model.AllPopularTags.Length > Model.PopularTags.Length)
+                    {
+                        <button type="button" class="tag-drawer-toggle" id="tag-toggle-btn" aria-expanded="false" aria-controls="tag-drawer">태그 더 보기 +</button>
+                    }
+                </div>
+                <form class="search-box" method="get">
+                    @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
+                    @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
+                    <span aria-hidden="true">⌕</span>
+                    <label class="visually-hidden" for="stream-search">방송인, 제목 또는 태그 검색</label>
+                    <input id="stream-search" name="q" type="search" value="@Model.Query" placeholder="방송인, 제목 또는 태그 검색" autocomplete="off" />
+                    <button type="submit">검색</button>
+                </form>
             </div>
-            <form class="search-box" method="get">
-                @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
-                @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
-                <span aria-hidden="true">⌕</span>
-                <label class="visually-hidden" for="stream-search">방송인, 제목 또는 태그 검색</label>
-                <input id="stream-search" name="q" type="search" value="@Model.Query" placeholder="방송인, 제목 또는 태그 검색" autocomplete="off" />
-                <button type="submit">검색</button>
-            </form>
+
+            @if (Model.AllPopularTags.Length > Model.PopularTags.Length)
+            {
+                <div class="tag-drawer" id="tag-drawer" style="display: none;">
+                    <div class="tag-drawer-inner">
+                        @foreach (var tag in Model.AllPopularTags)
+                        {
+                            var isActive = string.Equals(Model.Tag, tag, StringComparison.OrdinalIgnoreCase);
+                            <a class="tag-button @(isActive ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@(isActive ? "" : tag)" asp-route-q="@Model.Query">@tag</a>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (Model.SelectedPlatform is not null || !string.IsNullOrWhiteSpace(Model.Tag) || !string.IsNullOrWhiteSpace(Model.Query))
+            {
+                <div class="active-filters" aria-label="적용된 필터">
+                    <span class="active-filters-label">적용된 필터:</span>
+                    @if (Model.SelectedPlatform == Raider.Web.Live.Platform.Chzzk)
+                    {
+                        <a class="filter-chip chzzk" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" aria-label="치지직 플랫폼 필터 해제">플랫폼: CHZZK <span class="chip-close">×</span></a>
+                    }
+                    @if (Model.SelectedPlatform == Raider.Web.Live.Platform.Soop)
+                    {
+                        <a class="filter-chip soop" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" aria-label="숲 플랫폼 필터 해제">플랫폼: SOOP <span class="chip-close">×</span></a>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Tag))
+                    {
+                        <a class="filter-chip tag" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query" aria-label="태그 필터 해제">태그: @Model.Tag <span class="chip-close">×</span></a>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Query))
+                    {
+                        <a class="filter-chip query" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" aria-label="검색어 필터 해제">검색어: "@Model.Query" <span class="chip-close">×</span></a>
+                    }
+                    <a class="filter-clear-all" asp-page="/Index" aria-label="모든 필터 초기화">초기화</a>
+                </div>
+            }
         </section>
 
         @if (Model.HasPartialFailure)
@@ -104,5 +166,48 @@
             }
         }
     </main>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var toggleBtn = document.getElementById("tag-toggle-btn");
+            var drawer = document.getElementById("tag-drawer");
+            if (toggleBtn && drawer) {
+                toggleBtn.addEventListener("click", function() {
+                    var isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
+                    toggleBtn.setAttribute("aria-expanded", !isExpanded);
+                    if (isExpanded) {
+                        drawer.style.display = "none";
+                        toggleBtn.textContent = "태그 더 보기 +";
+                        toggleBtn.classList.remove("is-open");
+                    } else {
+                        drawer.style.display = "block";
+                        toggleBtn.textContent = "태그 접기 -";
+                        toggleBtn.classList.add("is-open");
+                    }
+                });
+            }
+        });
+    </script>
+    @if (Model.IsRefreshing)
+    {
+        <script>
+            (function() {
+                function checkStatus() {
+                    fetch('/api/refresh/status')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.isRefreshing) {
+                                window.location.reload();
+                            } else {
+                                setTimeout(checkStatus, 2000);
+                            }
+                        })
+                        .catch(() => {
+                            setTimeout(checkStatus, 3000);
+                        });
+                }
+                setTimeout(checkStatus, 2000);
+            })();
+        </script>
+    }
 </body>
 </html>

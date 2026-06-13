@@ -10,6 +10,7 @@ builder.Services
     .AddOptions<ChzzkOptions>()
     .Bind(builder.Configuration.GetSection(ChzzkOptions.SectionName));
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<CollectionRegistry>();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient<ChzzkClient>(client =>
 {
@@ -33,6 +34,7 @@ builder.Services.AddSingleton<IHostedService>(services => new PlatformCollectorW
     services.GetRequiredService<ChzzkClient>(),
     services.GetRequiredService<SnapshotStore>(),
     services.GetRequiredService<IConfiguration>().GetSection("Raider:Collection:Chzzk").Get<CollectionOptions>() ?? new(),
+    services.GetRequiredService<CollectionRegistry>(),
     services.GetRequiredService<TimeProvider>(),
     services.GetRequiredService<ILogger<PlatformCollectorWorker>>()));
 builder.Services.AddSingleton<IHostedService>(services => new PlatformCollectorWorker(
@@ -42,6 +44,7 @@ builder.Services.AddSingleton<IHostedService>(services => new PlatformCollectorW
     {
         CollectionTimeout = TimeSpan.FromSeconds(30),
     },
+    services.GetRequiredService<CollectionRegistry>(),
     services.GetRequiredService<TimeProvider>(),
     services.GetRequiredService<ILogger<PlatformCollectorWorker>>()));
 
@@ -52,6 +55,7 @@ app.MapRazorPages();
 app.MapGet("/health/live", () => Results.Ok());
 app.MapGet("/health/ready", (SnapshotStore snapshots) =>
     snapshots.Current.IsReady ? Results.Ok() : Results.StatusCode(StatusCodes.Status503ServiceUnavailable));
+app.MapGet("/api/refresh/status", (CollectionRegistry registry) => Results.Json(new { isRefreshing = registry.IsAnyCollecting }));
 
 app.Run();
 

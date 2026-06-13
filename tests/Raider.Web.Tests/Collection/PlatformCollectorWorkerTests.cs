@@ -100,6 +100,7 @@ public sealed class PlatformCollectorWorkerTests
                 RetryMinimumDelay = TimeSpan.Zero,
                 RetryMaximumDelay = TimeSpan.Zero,
             },
+            new CollectionRegistry(),
             TimeProvider.System,
             logger ?? NullLogger<PlatformCollectorWorker>.Instance);
     }
