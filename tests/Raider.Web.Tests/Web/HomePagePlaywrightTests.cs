@@ -1,8 +1,5 @@
 // 실제 Chromium에서 홈 화면의 핵심 반응형 탐색 흐름을 검증한다.
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using Raider.Web.Collection;
@@ -15,18 +12,7 @@ public sealed class HomePagePlaywrightTests
     [Fact]
     public async Task DesktopSearchAndMobileLayoutWorkInChromium()
     {
-        await using var application = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureAppConfiguration(configuration =>
-                {
-                    configuration.AddInMemoryCollection(new Dictionary<string, string?>
-                    {
-                        ["Raider:Collection:Chzzk:Enabled"] = "false",
-                        ["Raider:Collection:Soop:Enabled"] = "false",
-                    });
-                });
-            });
+        await using var application = new TestApplicationFactory();
         application.UseKestrel(0);
         using var client = application.CreateClient();
         var snapshots = application.Services.GetRequiredService<SnapshotStore>();

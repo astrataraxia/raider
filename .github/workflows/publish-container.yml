@@ -39,14 +39,17 @@ jobs:
             exit 1
           }
 
+      - name: Build
+        run: dotnet build Raider.slnx --no-restore -warnaserror
+
+      - name: Install Playwright Chromium
+        run: pwsh tests/Raider.Web.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
       - name: Test
-        run: dotnet test Raider.slnx --no-restore
+        run: dotnet test Raider.slnx --no-restore --no-build
 
       - name: Check formatting
         run: dotnet format Raider.slnx --verify-no-changes --no-restore
-
-      - name: Build
-        run: dotnet build Raider.slnx --no-restore -warnaserror
 
   publish:
     name: Publish GHCR image

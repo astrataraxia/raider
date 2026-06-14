@@ -1,8 +1,6 @@
 // Raider 생존 상태 엔드포인트의 HTTP 계약을 검증한다.
 using System.Net;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Raider.Web.Collection;
 using Raider.Web.Live;
@@ -16,18 +14,7 @@ public sealed class HealthEndpointTests : IDisposable
 
     public HealthEndpointTests()
     {
-        application = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureAppConfiguration(configuration =>
-                {
-                    configuration.AddInMemoryCollection(new Dictionary<string, string?>
-                    {
-                        ["Raider:Collection:Chzzk:Enabled"] = "false",
-                        ["Raider:Collection:Soop:Enabled"] = "false",
-                    });
-                });
-            });
+        application = new TestApplicationFactory();
         client = application.CreateClient();
     }
 

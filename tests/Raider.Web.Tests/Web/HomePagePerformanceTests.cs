@@ -1,9 +1,6 @@
 // 대표 방송 목록의 홈 화면 응답 성능과 HTML 크기 계약을 검증한다.
 using System.Collections.Immutable;
 using System.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Raider.Web.Collection;
 using Raider.Web.Live;
@@ -15,18 +12,7 @@ public sealed class HomePagePerformanceTests
     [Fact]
     public async Task RepresentativeHomePageP95StaysBelowOneHundredMilliseconds()
     {
-        await using var application = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureAppConfiguration(configuration =>
-                {
-                    configuration.AddInMemoryCollection(new Dictionary<string, string?>
-                    {
-                        ["Raider:Collection:Chzzk:Enabled"] = "false",
-                        ["Raider:Collection:Soop:Enabled"] = "false",
-                    });
-                });
-            });
+        await using var application = new TestApplicationFactory();
         using var client = application.CreateClient();
         var snapshots = application.Services.GetRequiredService<SnapshotStore>();
         var streams = Enumerable.Range(0, 500)
