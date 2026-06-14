@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+COPY Directory.Build.props .
 COPY src/Raider.Web/Raider.Web.csproj src/Raider.Web/
 RUN dotnet restore src/Raider.Web/Raider.Web.csproj
 COPY src/Raider.Web/ src/Raider.Web/

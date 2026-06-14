@@ -37,6 +37,8 @@ docker compose ps
 docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 ```
 
+`v1.1.0` 형태의 Git 태그를 push하면 GitHub Actions가 테스트 후 Private GHCR 이미지를 자동 게시한다. 자세한 절차는 [DEPLOYMENT.md](.agent/DEPLOYMENT.md)를 따른다.
+
 ## 검증.
 
 ```text

@@ -22,7 +22,7 @@
 `.env`의 `RAIDER_IMAGE`에는 레지스트리에 게시한 이미지 주소를 입력한다.
 
 ```text
-RAIDER_IMAGE=ghcr.io/your-github-id/raider:1.1.0
+RAIDER_IMAGE=ghcr.io/astrataraxia/raider:1.1.0
 RAIDER_BIND_ADDRESS=127.0.0.1
 RAIDER_PORT=8080
 RAIDER__CHZZK__CLIENTID=실제-client-id
@@ -44,6 +44,27 @@ docker compose down
 ```
 
 `RAIDER_BIND_ADDRESS=127.0.0.1`은 로컬 호스트에서만 접근 가능하다. 외부 네트워크에 직접 공개해야 할 때만 `0.0.0.0`으로 변경한다.
+
+## GHCR 이미지 게시.
+
+`.github/workflows/publish-container.yml`은 `v1.1.0` 형태의 Git 태그가 GitHub에 push되면 실행된다.
+
+1. 전체 테스트, 포맷 검사, 경고 오류 빌드를 실행한다.
+2. 검증이 통과하면 저장소의 `GITHUB_TOKEN`으로 GHCR에 로그인한다.
+3. `ghcr.io/astrataraxia/raider:1.1.0`, `:1.1`, `:latest` 태그를 게시한다.
+
+별도 Personal Access Token을 GitHub Actions Secret에 저장하지 않는다. 워크플로의 `packages: write` 권한만 사용한다.
+
+GHCR 이미지를 수동으로 먼저 게시했다면 GitHub package의 `Package settings`에서 저장소 `astrataraxia/raider`를 연결하고 Actions 접근 권한을 부여한다. 이 연결이 없으면 워크플로의 `GITHUB_TOKEN`이 기존 Private package를 갱신하지 못할 수 있다.
+
+릴리스 게시 명령.
+
+```text
+git tag -a v1.1.0 -m "Raider v1.1.0"
+git push origin v1.1.0
+```
+
+첫 게시 후 GitHub의 package 설정에서 이미지 공개 범위가 Private인지 확인한다. 다른 컴퓨터에서 Private 이미지를 받을 때만 `read:packages` 권한의 토큰으로 `docker login ghcr.io`를 수행한다.
 
 ## 로컬 이미지 빌드.
 
