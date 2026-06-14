@@ -580,8 +580,6 @@ a {
   color: var(--color-text-primary);
   background: var(--color-brand-soft);
 }
-  background: var(--color-soop);
-}
 
 .search-box {
   width: min(100%, 320px);
