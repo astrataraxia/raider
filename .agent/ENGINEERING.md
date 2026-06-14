@@ -57,11 +57,11 @@ Definition of Done.
 - `ImmutableArray<T>` 기반 읽기 모델과 `Interlocked.Exchange` 기반 원자 스냅샷 교체.
 - `FrozenDictionary<string, ImmutableArray<int>>` 기반 태그 인덱스.
 - xUnit, ASP.NET Core `TestServer` 또는 로컬 HTTP 서버, Playwright for .NET.
-- 단일 Linux 컨테이너. 영구 데이터베이스와 영구 볼륨 없음.
+- 단일 Linux 컨테이너. 공용 즐겨찾기 SQLite 외 영구 데이터베이스와 영구 볼륨 없음.
 
 도입하지 않는 기본 기술.
 
-- Entity Framework Core, PostgreSQL, SQLite, Redis.
+- Entity Framework Core, PostgreSQL, Redis.
 - Elasticsearch, OpenSearch, 외부 검색 서비스.
 - SignalR, 메시지 브로커, 마이크로서비스.
 - 별도 DI 컨테이너와 별도 로깅 프레임워크.
@@ -94,6 +94,7 @@ Program
 | `Platforms.Soop` | SOOP HTTP 계약과 공통 모델 변환. | CHZZK 규칙, 화면 표현. |
 | `Collection` | 독립 주기 실행, 실패 격리, 병합, 스냅샷 교체. | HTML 렌더링, 플랫폼 응답 직접 해석. |
 | `Web` | 스냅샷 한 번 읽기, 필터, 검색, Razor 렌더링, 헬스 엔드포인트. | 외부 플랫폼 호출, 수집 실행. |
+| `Favorites` | 공용 즐겨찾기 SQLite 저장과 현재 스냅샷 기반 라이브 상태 결합. | 사용자 계정, 외부 플랫폼 호출, 수집 worker 쓰기. |
 | `Program` | 설정과 의존성 조립, 시작, 정상 종료. | 도메인 규칙과 응답 파싱. |
 
 인터페이스는 안정적인 테스트 경계가 필요하거나 두 구현이 실제 존재할 때만 만든다. 플랫폼 어댑터의 공통 수집 계약은 필요하지만 모든 클래스에 인터페이스를 붙이지 않는다.
@@ -188,6 +189,7 @@ CHZZK은 공식 Open API를 운영 경로로 사용한다. SOOP은 공개 웹 JS
 - 성공한 플랫폼 결과만 교체하며 실패 플랫폼의 마지막 정상 목록은 유지한다.
 - 플랫폼 상태를 병합해 완성된 `LiveSnapshot`을 만든 뒤 `Interlocked.Exchange`로 참조를 교체한다.
 - 웹 요청은 현재 스냅샷 참조를 한 번 읽고 외부 I/O나 잠금을 기다리지 않는다.
+- 즐겨찾기 API의 SQLite I/O는 라이브 수집 및 기본 홈 화면과 실패를 격리한다.
 - 종료 토큰을 존중하고 진행 중 요청에 제한 시간을 적용한다.
 
 ## 10. 오류와 로그.
@@ -231,6 +233,19 @@ retry_attempt
 - Razor 기본 HTML encoding을 유지한다.
 - 외부 링크 URL은 도메인 생성 시 검증한다.
 - 화면에는 비밀값, 원본 응답, 내부 오류 상세를 포함하지 않는다.
+- 즐겨찾기 PUT은 현재 스냅샷에 존재하는 canonical `(Platform, ChannelId)`만 허용한다.
+- 즐겨찾기 쓰기 API는 antiforgery 검증을 적용한다.
+
+## 11.1. 공용 즐겨찾기 계약.
+
+- 단일 SQLite 파일을 서버 호스트 bind mount에 저장한다.
+- 기본 키는 `(platform, channel_id)`이며 방송별 `BroadcastId`는 저장 식별자로 사용하지 않는다.
+- 오프라인 표시를 위해 마지막 확인 방송인 이름만 저장한다.
+- 라이브 여부와 방송 URL은 현재 메모리 스냅샷에서 결합한다.
+- 최신 수집 성공 목록에 있으면 라이브, 없으면 오프라인이다.
+- 플랫폼 수집 실패 또는 오래된 상태에서는 라이브 여부를 `상태 확인 지연`으로 표시한다.
+- 연결은 작업마다 짧게 열고 닫으며 busy timeout과 제한된 재시도를 사용한다.
+- 초기화, 잠금, 손상, 권한 오류는 즐겨찾기 기능에만 격리한다.
 
 ## 12. 설정과 비밀값.
 

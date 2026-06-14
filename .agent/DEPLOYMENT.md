@@ -1,6 +1,6 @@
 # Raider 단일 컨테이너 배포.
 
-현재 릴리스 버전은 `v1.1.1`이다.
+현재 릴리스 버전은 `v1.2.0`이다.
 
 ## 권장 환경.
 
@@ -8,7 +8,7 @@
 - Docker Engine `29.5.2` 이상.
 - Docker Compose v2.
 - 초기 자원 상한은 CPU `1`, 메모리 `256MB`, PID `128`이다.
-- 영구 볼륨과 데이터베이스는 사용하지 않는다.
+- 공용 즐겨찾기 SQLite를 위한 서버 호스트 데이터 디렉터리를 사용한다.
 
 실제 CHZZK·SOOP 전체 수집과 홈 부하를 동시에 실행한 최종 결과 메모리는 약 `73MB`였고, 수집 중 홈 p95는 약 `35ms`였다. 최초 cold-start 홈 요청은 약 `90ms`였다.
 
@@ -18,13 +18,15 @@
 
 - `docker-compose.yml`.
 - `.env.example`을 복사해 실제 값을 입력한 `.env`.
+- Raider 컨테이너 사용자가 쓸 수 있는 서버 호스트 데이터 디렉터리.
 
 `.env`의 `RAIDER_IMAGE`에는 레지스트리에 게시한 이미지 주소를 입력한다.
 
 ```text
-RAIDER_IMAGE=ghcr.io/astrataraxia/raider:1.1.1
+RAIDER_IMAGE=ghcr.io/astrataraxia/raider:1.2.0
 RAIDER_BIND_ADDRESS=127.0.0.1
 RAIDER_PORT=8080
+RAIDER_DATA_PATH=./data
 RAIDER__CHZZK__CLIENTID=실제-client-id
 RAIDER__CHZZK__CLIENTSECRET=실제-client-secret
 ```
@@ -99,7 +101,31 @@ SOOP은 현재 공식 발급 키 없이 검증된 공개 웹 JSON을 사용한�
 --publish 127.0.0.1:8080:8080
 ```
 
-외부 공개가 필요하면 호스트의 reverse proxy가 `127.0.0.1:8080`으로 전달한다. 컨테이너에는 볼륨을 연결하지 않는다.
+외부 공개가 필요하면 호스트의 reverse proxy가 `127.0.0.1:8080`으로 전달한다. 즐겨찾기 DB를 위해 서버 호스트의 `RAIDER_DATA_PATH`만 컨테이너 `/data`에 bind mount하며 나머지 루트 파일시스템은 읽기 전용을 유지한다.
+
+## 즐겨찾기 데이터.
+
+- 기본 서버 경로는 Compose 파일 기준 `./data`다.
+- 운영에서는 백업 위치가 명확한 절대 경로를 `RAIDER_DATA_PATH`로 지정할 수 있다.
+- 데이터 디렉터리는 비루트 컨테이너 사용자에게 쓰기 권한이 있어야 한다.
+- 실행 중 단순 파일 복사 대신 SQLite 일관성이 보장되는 백업 절차를 사용한다.
+- 외부 공개 시 reverse proxy 인증을 적용하고 Raider 직접 포트 접근을 차단한다.
+
+이미지를 pull한 뒤 첫 실행 전에 호스트 데이터 디렉터리 권한을 준비한다.
+
+```text
+bash scripts/prepare_data_dir.sh "$RAIDER_DATA_PATH" "$RAIDER_IMAGE"
+```
+
+가장 단순한 일관성 백업은 짧게 컨테이너를 중지한 뒤 DB 파일을 복사하는 것이다.
+
+```text
+docker compose stop raider
+cp "$RAIDER_DATA_PATH/raider.db" "/secure/backup/raider-$(date +%Y%m%d).db"
+docker compose start raider
+```
+
+복구 시 컨테이너를 중지하고 백업 DB를 `RAIDER_DATA_PATH/raider.db`로 되돌린 뒤 `prepare_data_dir.sh`를 다시 실행해 파일 권한을 맞추고 시작한다.
 
 ## 상태 확인.
 
@@ -116,4 +142,4 @@ bash scripts/test_container_image.sh raider:local
 bash scripts/test_container_release.sh raider:local /secure/path/raider-container.env
 ```
 
-`test_container_release.sh`의 env 파일은 검증 중에만 사용하고 즉시 제거한다. 스크립트는 비루트, 읽기 전용 루트, 무볼륨, 상태 전환, 정상 종료, 재생성 복구, 자원 제한, 실제 API, 성능, 로그와 HTML의 비밀값 비노출을 검증한다.
+`test_container_release.sh`의 env 파일은 검증 중에만 사용하고 즉시 제거한다. 스크립트는 비루트, 읽기 전용 루트, 즐겨찾기 데이터 bind mount, 상태 전환, 정상 종료, 재생성 복구, 자원 제한, 실제 API, 성능, 로그와 HTML의 비밀값 비노출을 검증한다.

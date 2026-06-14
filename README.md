@@ -4,9 +4,9 @@ CHZZK과 SOOP의 현재 라이브 방송을 한 화면에서 검색하고 탐색
 
 ## 현재 릴리스.
 
-- 버전: `v1.1.1`.
+- 버전: `v1.2.0`.
 - 런타임: .NET 10과 ASP.NET Core Razor Pages.
-- 저장 방식: 영구 저장소 없는 불변 메모리 스냅샷.
+- 저장 방식: 라이브는 불변 메모리 스냅샷, 공용 즐겨찾기는 서버 호스트 SQLite.
 - 배포 방식: 단일 Docker 컨테이너.
 
 ## 시작하기.
@@ -32,6 +32,8 @@ docker compose ps
 ```
 
 기본 접속 주소는 `http://localhost:8080`이다. 같은 저장소에서 이미지를 직접 빌드해 실행할 때는 다음 override를 사용한다.
+
+모든 접속 기기는 하나의 공용 즐겨찾기 목록을 사용한다. SQLite 파일은 `RAIDER_DATA_PATH`로 지정한 서버 호스트 디렉터리에 저장되며 컨테이너 재생성과 이미지 업데이트 뒤에도 유지된다.
 
 ```text
 docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
