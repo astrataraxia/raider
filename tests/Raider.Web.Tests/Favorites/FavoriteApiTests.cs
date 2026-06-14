@@ -43,6 +43,8 @@ public sealed class FavoriteApiTests : IDisposable
         Assert.Equal("Alpha", favorite.StreamerName);
         Assert.Equal("live", favorite.Status);
         Assert.Equal("https://example.invalid/live", favorite.WatchUrl);
+        Assert.Equal(1, favorite.ViewerCount);
+        Assert.Equal("기본", favorite.Category);
     }
 
     [Fact]
@@ -107,6 +109,33 @@ public sealed class FavoriteApiTests : IDisposable
         response.EnsureSuccessStatusCode();
     }
 
+    [Fact]
+    public async Task UpdateCategoryUpdatesCategoryAndIsProtectedByAntiforgery()
+    {
+        snapshots.ApplySuccess(Platform.Chzzk, [Stream("live", "channel-1", "Alpha")], DateTimeOffset.UtcNow);
+        snapshots.ApplySuccess(Platform.Soop, [], DateTimeOffset.UtcNow.AddTicks(1));
+        var token = await AntiForgeryTokenAsync();
+        await PutFavoriteAsync("channel-1", token);
+
+        // Try updating category without antiforgery token
+        using var noTokenRequest = new HttpRequestMessage(HttpMethod.Put, "/api/favorites/chzzk/channel-1/category");
+        noTokenRequest.Content = JsonContent.Create(new { category = "Gaming" });
+        using var noTokenResponse = await client.SendAsync(noTokenRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, noTokenResponse.StatusCode);
+
+        // Update with antiforgery token
+        using var request = new HttpRequestMessage(HttpMethod.Put, "/api/favorites/chzzk/channel-1/category");
+        request.Headers.Add("RequestVerificationToken", token);
+        request.Content = JsonContent.Create(new { category = "Gaming" });
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        // Verify it was updated
+        var favorites = await client.GetFromJsonAsync<FavoriteResponse[]>("/api/favorites");
+        var favorite = Assert.Single(favorites!);
+        Assert.Equal("Gaming", favorite.Category);
+    }
+
     public void Dispose()
     {
         client.Dispose();
@@ -128,5 +157,5 @@ public sealed class FavoriteApiTests : IDisposable
             DateTimeOffset.UtcNow);
     }
 
-    private sealed record FavoriteResponse(string StreamerName, string Status, string? WatchUrl);
+    private sealed record FavoriteResponse(string StreamerName, string Status, string? WatchUrl, int? ViewerCount, string Category);
 }

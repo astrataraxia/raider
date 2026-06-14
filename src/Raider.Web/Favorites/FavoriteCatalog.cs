@@ -59,11 +59,20 @@ public sealed class FavoriteCatalog(FavoriteStore store, SnapshotStore snapshots
             favorite.ChannelId,
             favorite.StreamerName,
             status.ToString().ToLowerInvariant(),
-            status == FavoriteStatus.Live ? stream?.WatchUrl.ToString() : null);
+            status == FavoriteStatus.Live ? stream?.WatchUrl.ToString() : null,
+            status == FavoriteStatus.Live ? stream?.ViewerCount : null,
+            favorite.Category);
     }
 }
 
-public sealed record FavoriteView(string Platform, string ChannelId, string StreamerName, string Status, string? WatchUrl);
+public sealed record FavoriteView(
+    string Platform,
+    string ChannelId,
+    string StreamerName,
+    string Status,
+    string? WatchUrl,
+    int? ViewerCount,
+    string Category);
 
 internal enum FavoriteStatus
 {

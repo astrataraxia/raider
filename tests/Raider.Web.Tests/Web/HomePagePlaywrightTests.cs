@@ -41,7 +41,7 @@ public sealed class HomePagePlaywrightTests
         await page.GetByRole(AriaRole.Button, new() { Name = "즐겨찾기 열기", Exact = true }).ClickAsync();
         await Assertions.Expect(page.Locator(".favorites-sidebar")).ToHaveClassAsync(new Regex("is-mobile-open"));
         await page.SetViewportSizeAsync(1440, 900);
-        Assert.False(await page.EvaluateAsync<bool>("() => document.querySelector('.page-shell').inert"));
+        await page.WaitForFunctionAsync("() => !document.querySelector('.page-shell').inert");
         await page.SetViewportSizeAsync(375, 812);
         await page.GetByRole(AriaRole.Button, new() { Name = "즐겨찾기 열기", Exact = true }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "즐겨찾기 배경 닫기", Exact = true }).ClickAsync();

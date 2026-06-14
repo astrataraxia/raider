@@ -1,6 +1,7 @@
 // 라이브 홈 화면의 타일, 필터, 검색, 상태 HTML 계약을 검증한다.
 using System.Collections.Immutable;
 using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Raider.Web.Collection;
@@ -138,6 +139,38 @@ public sealed class HomePageTests : IDisposable
         Assert.Contains("q=streamer", firstPage, StringComparison.Ordinal);
         Assert.Contains("p=2", firstPage, StringComparison.Ordinal);
         Assert.Contains("data-broadcast-id=\"stream-124\"", secondPage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task FavoritesOnlyFilterShowsOnlyFavoritedStreams()
+    {
+        snapshots.ApplySuccess(
+            Platform.Chzzk,
+            [
+                Stream("alpha", Platform.Chzzk, "Alpha Streamer", "Game Title", 100, []),
+                Stream("beta", Platform.Chzzk, "Beta Streamer", "Game Title 2", 50, []),
+            ],
+            DateTimeOffset.UtcNow);
+        snapshots.ApplySuccess(Platform.Soop, [], DateTimeOffset.UtcNow.AddTicks(1));
+
+        var token = await AntiForgeryTokenAsync();
+        using var request = new HttpRequestMessage(HttpMethod.Put, "/api/favorites/chzzk/channel-alpha");
+        request.Headers.Add("RequestVerificationToken", token);
+        using var response = await client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/?fav=true", CancellationToken.None));
+
+        Assert.Contains("data-broadcast-id=\"alpha\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("data-broadcast-id=\"beta\"", html, StringComparison.Ordinal);
+        Assert.Contains("fav=true", html, StringComparison.Ordinal);
+    }
+
+    private async Task<string> AntiForgeryTokenAsync()
+    {
+        var html = await client.GetStringAsync("/", CancellationToken.None);
+        var match = Regex.Match(html, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"");
+        return WebUtility.HtmlDecode(Assert.IsType<Match>(match).Groups[1].Value);
     }
 
     public void Dispose()

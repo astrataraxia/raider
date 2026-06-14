@@ -3,11 +3,12 @@ using System.Collections.Immutable;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Raider.Web.Collection;
+using Raider.Web.Favorites;
 using Raider.Web.Live;
 
 namespace Raider.Web.Pages;
 
-public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry registry, TimeProvider timeProvider) : PageModel
+public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry registry, FavoriteStore favoriteStore, TimeProvider timeProvider) : PageModel
 {
     private const int PageSize = 120;
     private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(20);
@@ -23,6 +24,9 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
 
     [BindProperty(Name = "p", SupportsGet = true)]
     public int PageNumber { get; set; } = 1;
+
+    [BindProperty(Name = "fav", SupportsGet = true)]
+    public bool FavoritesOnly { get; set; }
 
     public ImmutableArray<LiveStream> Streams { get; private set; } = [];
 
@@ -54,11 +58,29 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
 
     public bool IsRefreshing => registry.IsAnyCollecting;
 
-    public void OnGet()
+    public async Task OnGetAsync()
     {
         Snapshot = snapshots.Current;
         SelectedPlatform = ParsePlatform(Platform);
         var results = Snapshot.Live.Search(SelectedPlatform, Tag, Query);
+
+        if (FavoritesOnly)
+        {
+            try
+            {
+                var favorites = await favoriteStore.ListAsync(HttpContext.RequestAborted);
+                var favKeys = favorites.Select(f => (f.Platform, f.ChannelId)).ToHashSet();
+                results = results
+                    .Where(stream => favKeys.Contains((stream.Platform, stream.ChannelId)))
+                    .ToImmutableArray();
+            }
+            catch (Exception)
+            {
+                // Isolate SQLite failure
+                results = [];
+            }
+        }
+
         TotalResultCount = results.Length;
         TotalViewers = results.Sum(stream => (long)stream.ViewerCount);
         PageNumber = Math.Clamp(PageNumber, 1, TotalPages);
@@ -83,7 +105,7 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
     public IActionResult OnPostRefresh()
     {
         registry.TriggerCollectAll();
-        return RedirectToPage("/Index", new { platform = Platform, tag = Tag, q = Query });
+        return RedirectToPage("/Index", new { platform = Platform, tag = Tag, q = Query, fav = FavoritesOnly ? "true" : null });
     }
 
     private static Raider.Web.Live.Platform? ParsePlatform(string? value)

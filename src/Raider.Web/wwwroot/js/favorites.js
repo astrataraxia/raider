@@ -75,28 +75,141 @@
     }
 
     status.textContent = favorites.size + "명";
-    favorites.forEach(function (favorite) {
-      var item = document.createElement(favorite.watchUrl ? "a" : "div");
-      item.className = "favorite-item is-" + favorite.status;
-      if (favorite.watchUrl) {
-        item.href = favorite.watchUrl;
-        item.target = "_blank";
-        item.rel = "noopener noreferrer";
+
+    var grouped = {};
+    var allCategories = new Set(["기본"]);
+    favorites.forEach(function (fav) {
+      var cat = fav.category || "기본";
+      allCategories.add(cat);
+      if (!grouped[cat]) {
+        grouped[cat] = [];
+      }
+      grouped[cat].push(fav);
+    });
+
+    var categoriesList = Array.from(allCategories).sort(function (a, b) {
+      if (a === "기본") return -1;
+      if (b === "기본") return 1;
+      return a.localeCompare(b);
+    });
+
+    categoriesList.forEach(function (cat) {
+      var items = grouped[cat];
+      if (!items || items.length === 0) {
+        return;
       }
 
-      var copy = document.createElement("span");
-      copy.className = "favorite-item-copy";
-      var name = document.createElement("strong");
-      name.textContent = favorite.streamerName;
-      var state = document.createElement("span");
-      state.textContent = favorite.status === "live" ? "라이브" : favorite.status === "delayed" ? "상태 확인 지연" : "오프라인";
-      copy.append(name, state);
-      var dot = document.createElement("span");
-      dot.className = "favorite-state-dot";
-      dot.setAttribute("aria-hidden", "true");
-      item.append(dot, copy);
-      list.append(item);
+      var groupDiv = document.createElement("div");
+      groupDiv.className = "favorites-category";
+
+      var headerDiv = document.createElement("div");
+      headerDiv.className = "category-header";
+      headerDiv.textContent = "📁 " + cat;
+      groupDiv.append(headerDiv);
+
+      var itemsDiv = document.createElement("div");
+      itemsDiv.className = "category-items";
+
+      items.forEach(function (fav) {
+        var item = document.createElement(fav.watchUrl ? "a" : "div");
+        item.className = "favorite-item is-" + fav.status;
+        if (fav.watchUrl) {
+          item.href = fav.watchUrl;
+          item.target = "_blank";
+          item.rel = "noopener noreferrer";
+        }
+
+        var dot = document.createElement("span");
+        dot.className = "favorite-state-dot";
+        dot.setAttribute("aria-hidden", "true");
+
+        var copy = document.createElement("span");
+        copy.className = "favorite-item-copy";
+        var name = document.createElement("strong");
+        name.textContent = fav.streamerName;
+        var state = document.createElement("span");
+        state.textContent = fav.status === "live" ? "라이브" : fav.status === "delayed" ? "상태 확인 지연" : "오프라인";
+        copy.append(name, state);
+
+        item.append(dot, copy);
+
+        var select = document.createElement("select");
+        select.className = "favorite-category-select";
+        select.setAttribute("aria-label", "카테고리 변경");
+        
+        select.addEventListener("click", function (e) {
+          e.stopPropagation();
+          e.preventDefault();
+        });
+
+        categoriesList.forEach(function (c) {
+          var opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          opt.selected = (c === cat);
+          select.append(opt);
+        });
+
+        var newOpt = document.createElement("option");
+        newOpt.value = "__NEW__";
+        newOpt.textContent = "➕ 새 카테고리...";
+        select.append(newOpt);
+
+        select.addEventListener("change", function (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          var targetVal = select.value;
+          if (targetVal === "__NEW__") {
+            var newCat = prompt("새 카테고리 이름을 입력하세요:");
+            if (newCat) {
+              newCat = newCat.trim();
+              if (newCat && newCat.length > 0 && newCat.length <= 100) {
+                void updateCategory(fav.platform, fav.channelId, newCat);
+              } else {
+                select.value = cat;
+              }
+            } else {
+              select.value = cat;
+            }
+          } else if (targetVal !== cat) {
+            void updateCategory(fav.platform, fav.channelId, targetVal);
+          }
+        });
+
+        item.append(select);
+
+        if (fav.status === "live" && fav.viewerCount !== undefined && fav.viewerCount !== null) {
+          var viewerSpan = document.createElement("span");
+          viewerSpan.className = "favorite-viewer";
+          viewerSpan.textContent = fav.viewerCount.toLocaleString();
+          item.append(viewerSpan);
+        }
+
+        itemsDiv.append(item);
+      });
+
+      groupDiv.append(itemsDiv);
+      list.append(groupDiv);
     });
+  }
+
+  async function updateCategory(platform, channelId, newCategory) {
+    try {
+      var response = await fetch("/api/favorites/" + encodeURIComponent(platform) + "/" + encodeURIComponent(channelId) + "/category", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          RequestVerificationToken: token
+        },
+        body: JSON.stringify({ category: newCategory })
+      });
+      if (!response.ok) {
+        throw new Error("category update failed");
+      }
+      await load();
+    } catch {
+      status.textContent = "카테고리를 변경하지 못했습니다.";
+    }
   }
 
   async function load() {

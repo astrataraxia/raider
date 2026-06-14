@@ -3,4 +3,4 @@ using Raider.Web.Live;
 
 namespace Raider.Web.Favorites;
 
-public sealed record Favorite(Platform Platform, string ChannelId, string StreamerName);
+public sealed record Favorite(Platform Platform, string ChannelId, string StreamerName, string Category = "기본");

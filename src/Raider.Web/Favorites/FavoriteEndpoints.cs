@@ -12,6 +12,7 @@ public static class FavoriteEndpoints
         app.MapGet("/api/favorites", GetAsync);
         app.MapPut("/api/favorites/{platform}/{channelId}", PutAsync);
         app.MapDelete("/api/favorites/{platform}/{channelId}", DeleteAsync);
+        app.MapPut("/api/favorites/{platform}/{channelId}/category", UpdateCategoryAsync);
     }
 
     private static async Task<IResult> GetAsync(
@@ -121,4 +122,43 @@ public static class FavoriteEndpoints
     {
         return exception is SqliteException or IOException or UnauthorizedAccessException;
     }
+
+    private static async Task<IResult> UpdateCategoryAsync(
+        string platform,
+        string channelId,
+        CategoryUpdateRequest request,
+        HttpContext context,
+        IAntiforgery antiforgery,
+        FavoriteStore store,
+        ILogger<FavoriteStore> logger,
+        CancellationToken cancellationToken)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Category))
+        {
+            return Results.BadRequest();
+        }
+
+        if (!await IsValidAntiForgeryRequestAsync(context, antiforgery))
+        {
+            return Results.BadRequest();
+        }
+
+        if (!FavoriteStore.TryParsePlatform(platform, out var parsedPlatform) || !IsValidChannelId(channelId))
+        {
+            return Results.BadRequest();
+        }
+
+        try
+        {
+            await store.UpdateCategoryAsync(parsedPlatform, channelId, request.Category, cancellationToken);
+            return Results.NoContent();
+        }
+        catch (Exception exception) when (IsStoreFailure(exception))
+        {
+            logger.LogError(exception, "Favorite category update failed.");
+            return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+        }
+    }
 }
+
+public sealed record CategoryUpdateRequest(string Category);
