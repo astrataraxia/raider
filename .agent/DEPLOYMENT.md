@@ -1,6 +1,6 @@
-# Raider 단일 컨테이너 배포.
+# Raider 단일 앱 컨테이너 배포.
 
-현재 릴리스 버전은 `v1.2.0`이다.
+현재 릴리스 버전은 `v1.2.1`이다.
 
 ## 권장 환경.
 
@@ -18,12 +18,12 @@
 
 - `docker-compose.yml`.
 - `.env.example`을 복사해 실제 값을 입력한 `.env`.
-- Raider 컨테이너 사용자가 쓸 수 있는 서버 호스트 데이터 디렉터리.
+- 공용 즐겨찾기 SQLite를 저장할 서버 호스트 데이터 디렉터리.
 
 `.env`의 `RAIDER_IMAGE`에는 레지스트리에 게시한 이미지 주소를 입력한다.
 
 ```text
-RAIDER_IMAGE=ghcr.io/astrataraxia/raider:1.2.0
+RAIDER_IMAGE=ghcr.io/astrataraxia/raider:1.2.1
 RAIDER_BIND_ADDRESS=127.0.0.1
 RAIDER_PORT=8080
 RAIDER_DATA_PATH=./data
@@ -107,15 +107,9 @@ SOOP은 현재 공식 발급 키 없이 검증된 공개 웹 JSON을 사용한�
 
 - 기본 서버 경로는 Compose 파일 기준 `./data`다.
 - 운영에서는 백업 위치가 명확한 절대 경로를 `RAIDER_DATA_PATH`로 지정할 수 있다.
-- 데이터 디렉터리는 비루트 컨테이너 사용자에게 쓰기 권한이 있어야 한다.
+- Compose의 일회성 `raider-data-init` 서비스가 앱 시작 전에 데이터 디렉터리와 기존 DB 파일의 쓰기 권한을 자동으로 맞춘다.
 - 실행 중 단순 파일 복사 대신 SQLite 일관성이 보장되는 백업 절차를 사용한다.
 - 외부 공개 시 reverse proxy 인증을 적용하고 Raider 직접 포트 접근을 차단한다.
-
-이미지를 pull한 뒤 첫 실행 전에 호스트 데이터 디렉터리 권한을 준비한다.
-
-```text
-bash scripts/prepare_data_dir.sh "$RAIDER_DATA_PATH" "$RAIDER_IMAGE"
-```
 
 가장 단순한 일관성 백업은 짧게 컨테이너를 중지한 뒤 DB 파일을 복사하는 것이다.
 
@@ -125,7 +119,7 @@ cp "$RAIDER_DATA_PATH/raider.db" "/secure/backup/raider-$(date +%Y%m%d).db"
 docker compose start raider
 ```
 
-복구 시 컨테이너를 중지하고 백업 DB를 `RAIDER_DATA_PATH/raider.db`로 되돌린 뒤 `prepare_data_dir.sh`를 다시 실행해 파일 권한을 맞추고 시작한다.
+복구 시 컨테이너를 중지하고 백업 DB를 `RAIDER_DATA_PATH/raider.db`로 되돌린 뒤 Compose를 시작하면 권한 초기화 서비스가 파일 권한을 자동으로 맞춘다.
 
 ## 상태 확인.
 
