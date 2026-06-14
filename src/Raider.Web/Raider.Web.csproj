@@ -7,4 +7,8 @@
     <UserSecretsId>1a81ac42-a709-444f-a72e-a8d5800e775c</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
+  </ItemGroup>
+
 </Project>

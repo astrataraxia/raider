@@ -2,6 +2,7 @@
 using Raider.Web.Chzzk;
 using Raider.Web.Collection;
 using Raider.Web.Configuration;
+using Raider.Web.Favorites;
 using Raider.Web.Live;
 using Raider.Web.Soop;
 
@@ -12,6 +13,11 @@ builder.Services
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<CollectionRegistry>();
 builder.Services.AddRazorPages();
+builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
+builder.Services.AddSingleton(services => new FavoriteStore(
+    builder.Configuration["Raider:Favorites:DatabasePath"] ?? Path.Combine(AppContext.BaseDirectory, "data", "raider.db")));
+builder.Services.AddSingleton<FavoriteCatalog>();
+builder.Services.AddSingleton<IHostedService, FavoriteStoreInitializer>();
 builder.Services.AddHttpClient<ChzzkClient>(client =>
 {
     client.BaseAddress = new Uri("https://openapi.chzzk.naver.com/");
@@ -51,7 +57,9 @@ builder.Services.AddSingleton<IHostedService>(services => new PlatformCollectorW
 var app = builder.Build();
 
 app.UseStaticFiles();
+app.UseAntiforgery();
 app.MapRazorPages();
+app.MapFavoriteEndpoints();
 app.MapGet("/health/live", () => Results.Ok());
 app.MapGet("/health/ready", (SnapshotStore snapshots) =>
     snapshots.Current.IsReady ? Results.Ok() : Results.StatusCode(StatusCodes.Status503ServiceUnavailable));

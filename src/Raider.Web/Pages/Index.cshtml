@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
 </head>
 <body>
+    <div class="visually-hidden" data-antiforgery-token>@Html.AntiForgeryToken()</div>
     <header class="site-header">
         <div class="header-inner">
             <div class="brand-block">
@@ -46,6 +47,17 @@
         </div>
     </header>
 
+    <button type="button" class="favorites-mobile-toggle" aria-label="즐겨찾기 열기" aria-expanded="false" aria-controls="favorites-sidebar">즐겨찾기</button>
+    <button type="button" class="favorites-backdrop" aria-label="즐겨찾기 배경 닫기"></button>
+    <div class="app-layout">
+    <aside class="favorites-sidebar" id="favorites-sidebar" aria-label="즐겨찾기 방송인">
+        <div class="favorites-heading">
+            <strong>즐겨찾기</strong>
+            <button type="button" class="favorites-collapse" aria-label="즐겨찾기 접기" aria-expanded="true" aria-controls="favorites-list">‹</button>
+        </div>
+        <p class="favorites-status" role="status">불러오는 중...</p>
+        <div class="favorites-list" id="favorites-list"></div>
+    </aside>
     <main class="page-shell">
         <section class="hero" aria-labelledby="page-title">
             <div><p class="eyebrow">LIVE RADAR</p><h1 id="page-title">지금 볼 방송을 찾아보세요.</h1><p class="hero-description">CHZZK과 SOOP의 현재 라이브를 한곳에 모았습니다.</p></div>
@@ -170,6 +182,8 @@
             }
         }
     </main>
+    </div>
+    <script src="/js/favorites.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var toggleBtn = document.getElementById("tag-toggle-btn");

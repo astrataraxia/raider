@@ -39,6 +39,10 @@ public sealed class HomePageTests : IDisposable
         Assert.Contains("loading=\"lazy\"", html, StringComparison.Ordinal);
         Assert.Contains("alt=\"Alpha의 방송 썸네일\"", html, StringComparison.Ordinal);
         Assert.Contains("rel=\"noopener noreferrer\"", html, StringComparison.Ordinal);
+        Assert.Contains("class=\"favorite-toggle\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-channel-id=\"channel-alpha\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Alpha 즐겨찾기 추가\"", html, StringComparison.Ordinal);
+        Assert.Contains("class=\"favorites-sidebar\"", html, StringComparison.Ordinal);
         Assert.Contains(">one<", html, StringComparison.Ordinal);
         Assert.Contains(">three<", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">four<", html, StringComparison.Ordinal);

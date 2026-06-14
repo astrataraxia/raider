@@ -38,11 +38,49 @@ public sealed class HomePagePlaywrightTests
 
         await page.SetViewportSizeAsync(375, 812);
         await page.GotoAsync(client.BaseAddress.ToString());
+        await page.GetByRole(AriaRole.Button, new() { Name = "즐겨찾기 열기", Exact = true }).ClickAsync();
+        await Assertions.Expect(page.Locator(".favorites-sidebar")).ToHaveClassAsync(new Regex("is-mobile-open"));
+        await page.SetViewportSizeAsync(1440, 900);
+        Assert.False(await page.EvaluateAsync<bool>("() => document.querySelector('.page-shell').inert"));
+        await page.SetViewportSizeAsync(375, 812);
+        await page.GetByRole(AriaRole.Button, new() { Name = "즐겨찾기 열기", Exact = true }).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new() { Name = "즐겨찾기 배경 닫기", Exact = true }).ClickAsync();
+        await Assertions.Expect(page.Locator(".favorites-sidebar")).Not.ToHaveClassAsync(new Regex("is-mobile-open"));
         var layout = await page.EvaluateAsync<int[]>(
             "() => [document.documentElement.scrollWidth, window.innerWidth, getComputedStyle(document.querySelector('.stream-grid')).gridTemplateColumns.split(' ').length]");
 
         Assert.True(layout[0] <= layout[1], $"Expected no horizontal scroll, measured {layout[0]}px > {layout[1]}px.");
         Assert.Equal(1, layout[2]);
+    }
+
+    [Fact]
+    public async Task FavoriteIsSharedAcrossBrowserContextsAndSidebarCanCollapse()
+    {
+        await using var application = new TestApplicationFactory();
+        application.UseKestrel(0);
+        using var client = application.CreateClient();
+        var snapshots = application.Services.GetRequiredService<SnapshotStore>();
+        snapshots.ApplySuccess(
+            Platform.Chzzk,
+            [Stream("alpha", Platform.Chzzk, "Alpha", "Special Game", 100, ["game"])],
+            DateTimeOffset.UtcNow);
+        snapshots.ApplySuccess(Platform.Soop, [], DateTimeOffset.UtcNow.AddTicks(1));
+
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+        await using var firstContext = await browser.NewContextAsync();
+        var first = await firstContext.NewPageAsync();
+        await first.GotoAsync(client.BaseAddress!.ToString());
+
+        await first.GetByRole(AriaRole.Button, new() { Name = "Alpha 즐겨찾기 추가" }).ClickAsync();
+        await Assertions.Expect(first.Locator(".favorite-item")).ToContainTextAsync("Alpha");
+        await first.GetByRole(AriaRole.Button, new() { Name = "즐겨찾기 접기" }).ClickAsync();
+        await Assertions.Expect(first.Locator(".favorites-sidebar")).ToHaveClassAsync(new Regex("is-collapsed"));
+
+        await using var secondContext = await browser.NewContextAsync();
+        var second = await secondContext.NewPageAsync();
+        await second.GotoAsync(client.BaseAddress.ToString());
+        await Assertions.Expect(second.Locator(".favorite-item")).ToContainTextAsync("Alpha");
     }
 
     private static LiveStream Stream(

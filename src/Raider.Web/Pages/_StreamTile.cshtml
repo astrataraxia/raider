@@ -5,8 +5,12 @@
     var platformClass = Model.Platform.ToString().ToLowerInvariant();
     var alt = $"{Model.StreamerName}의 방송 썸네일";
 }
-<a class="stream-card" href="@Model.WatchUrl" target="_blank" rel="noopener noreferrer" data-broadcast-id="@Model.BroadcastId" aria-label="@Model.StreamerName 방송 보기, 외부 링크">
-    <div class="thumbnail">
+<article class="stream-card" data-broadcast-id="@Model.BroadcastId" data-platform="@platformClass" data-channel-id="@Model.ChannelId" data-streamer-name="@Model.StreamerName">
+    <button type="button" class="favorite-toggle" aria-label="@Model.StreamerName 즐겨찾기 추가" aria-pressed="false" title="즐겨찾기 추가">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.92 1.06-6.2L3 9.53l6.22-.9L12 3z"/></svg>
+    </button>
+    <a class="stream-card-link" href="@Model.WatchUrl" target="_blank" rel="noopener noreferrer" aria-label="@Model.StreamerName 방송 보기, 외부 링크">
+        <div class="thumbnail">
         @if (Model.ThumbnailUrl is not null)
         {
             <img src="@Model.ThumbnailUrl" alt="@alt" loading="lazy" decoding="async" />
@@ -17,8 +21,8 @@
         }
         <span class="platform-badge @platformClass">@platform</span>
         <span class="viewer-badge"><span aria-hidden="true"></span>@Model.ViewerCount.ToString("N0")</span>
-    </div>
-    <div class="card-copy">
+        </div>
+        <div class="card-copy">
         <h3>@Model.Title</h3>
         <p>@Model.StreamerName</p>
         @if (!Model.Tags.IsEmpty)
@@ -32,5 +36,6 @@
                 }
             </div>
         }
-    </div>
-</a>
+        </div>
+    </a>
+</article>
