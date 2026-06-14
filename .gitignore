@@ -6,5 +6,6 @@ TestResults/
 playwright-report/
 .codex-work/**
 .env
+data/
 *.env
 .env.*

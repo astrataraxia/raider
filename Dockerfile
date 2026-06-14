@@ -18,6 +18,8 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_EnableDiagnostics=0
 
 COPY --from=build /app/publish .
+USER root
+RUN mkdir -p /data && chown app:app /data
 
 USER app
 EXPOSE 8080

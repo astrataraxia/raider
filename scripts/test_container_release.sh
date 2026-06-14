@@ -10,18 +10,24 @@ memory_limit="${RAIDER_CONTAINER_MEMORY:-256m}"
 name="raider-release-test-$$"
 log_file="$(mktemp)"
 timings="$(mktemp)"
+data_dir="$(mktemp -d)"
 
 cleanup() {
   docker rm -f "$name" >/dev/null 2>&1 || true
   rm -f "$log_file" "$log_file.html" "$timings"
+  rm -rf "$data_dir"
 }
 trap cleanup EXIT
+
+docker run --rm --user root --volume "$data_dir:/data" --entrypoint chown "$image" app:app /data
 
 start_container() {
   docker run --detach --rm \
     --name "$name" \
     --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+    --volume "$data_dir:/data" \
+    --env RAIDER__FAVORITES__DATABASEPATH=/data/raider.db \
     --memory "$memory_limit" \
     --cpus "$cpu_limit" \
     --pids-limit 128 \
@@ -109,7 +115,8 @@ echo "ready-home-p50-seconds=${p50} ready-home-p95-seconds=${p95}"
 stats="$(docker stats "$name" --no-stream --format '{{.MemUsage}}|{{.CPUPerc}}')"
 health="$(docker inspect "$name" --format '{{.State.Health.Status}}')"
 test "$health" = "healthy"
-test "$(docker inspect "$name" --format '{{len .Mounts}}')" = "0"
+test "$(docker inspect "$name" --format '{{len .Mounts}}')" = "1"
+test -f "$data_dir/raider.db"
 
 docker logs "$name" >"$log_file" 2>&1
 grep --quiet 'Platform: Chzzk' "$log_file"

@@ -5,12 +5,16 @@ set -euo pipefail
 image="${1:-raider:local}"
 port="${RAIDER_CONTAINER_TEST_PORT:-18085}"
 name="raider-image-test-$$"
+data_dir="$(mktemp -d)"
 
 cleanup() {
   docker rm -f "$name" >/dev/null 2>&1 || true
   rm -f "/tmp/${name}.html" "/tmp/${name}.css"
+  rm -rf "$data_dir"
 }
 trap cleanup EXIT
+
+docker run --rm --user root --volume "$data_dir:/data" --entrypoint chown "$image" app:app /data
 
 user="$(docker image inspect "$image" --format '{{.Config.User}}')"
 if [[ -z "$user" || "$user" == "0" || "$user" == "root" ]]; then
@@ -22,6 +26,8 @@ docker run --detach --rm \
   --name "$name" \
   --read-only \
   --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+  --volume "$data_dir:/data" \
+  --env RAIDER__FAVORITES__DATABASEPATH=/data/raider.db \
   --publish "127.0.0.1:${port}:8080" \
   --env RAIDER__CHZZK__CLIENTID=fixture-id \
   --env RAIDER__CHZZK__CLIENTSECRET=fixture-secret \
@@ -43,7 +49,8 @@ curl --fail --silent "http://127.0.0.1:${port}/css/site.css" >"/tmp/${name}.css"
 grep --quiet -- '--color-brand' "/tmp/${name}.css"
 
 mount_count="$(docker inspect "$name" --format '{{len .Mounts}}')"
-test "$mount_count" = "0"
+test "$mount_count" = "1"
+test -f "$data_dir/raider.db"
 
 for _ in {1..20}; do
   health="$(docker inspect "$name" --format '{{.State.Health.Status}}')"
