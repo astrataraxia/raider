@@ -1,0 +1,7 @@
+services:
+  raider:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: raider:local
+    pull_policy: never

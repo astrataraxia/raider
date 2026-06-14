@@ -4,7 +4,7 @@ CHZZK과 SOOP의 현재 라이브 방송을 한 화면에서 검색하고 탐색
 
 ## 현재 릴리스.
 
-- 버전: `v1.0.0`.
+- 버전: `v1.1.0`.
 - 런타임: .NET 10과 ASP.NET Core Razor Pages.
 - 저장 방식: 영구 저장소 없는 불변 메모리 스냅샷.
 - 배포 방식: 단일 Docker 컨테이너.
@@ -20,6 +20,22 @@ dotnet run --project src/Raider.Web
 ```
 
 앱 실행 후 `http://localhost:5094` 또는 실행 로그에 표시된 주소를 연다. SOOP은 별도 인증정보 없이 공개 웹 JSON을 사용한다.
+
+## Docker Compose 실행.
+
+Docker Compose v2를 사용한다. 이미지가 레지스트리에 게시된 후 다른 컴퓨터에는 `docker-compose.yml`과 `.env`만 있으면 된다. `.env.example`을 `.env`로 복사하고 이미지 주소와 CHZZK 인증정보를 입력한다.
+
+```text
+docker compose pull
+docker compose up -d
+docker compose ps
+```
+
+기본 접속 주소는 `http://localhost:8080`이다. 같은 저장소에서 이미지를 직접 빌드해 실행할 때는 다음 override를 사용한다.
+
+```text
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
 
 ## 검증.
 

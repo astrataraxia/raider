@@ -1,20 +1,54 @@
 # Raider 단일 컨테이너 배포.
 
-현재 릴리스 버전은 `v1.0.0`이다.
+현재 릴리스 버전은 `v1.1.0`이다.
 
 ## 권장 환경.
 
 - Linux `amd64` 또는 호환 컨테이너 호스트.
 - Docker Engine `29.5.2` 이상.
+- Docker Compose v2.
 - 초기 자원 상한은 CPU `1`, 메모리 `256MB`, PID `128`이다.
 - 영구 볼륨과 데이터베이스는 사용하지 않는다.
 
 실제 CHZZK·SOOP 전체 수집과 홈 부하를 동시에 실행한 최종 결과 메모리는 약 `73MB`였고, 수집 중 홈 p95는 약 `35ms`였다. 최초 cold-start 홈 요청은 약 `90ms`였다.
 
-## 이미지 빌드.
+## Docker Compose 배포.
+
+다른 컴퓨터에서는 다음 파일만 준비한다.
+
+- `docker-compose.yml`.
+- `.env.example`을 복사해 실제 값을 입력한 `.env`.
+
+`.env`의 `RAIDER_IMAGE`에는 레지스트리에 게시한 이미지 주소를 입력한다.
 
 ```text
-docker build --tag raider:local .
+RAIDER_IMAGE=ghcr.io/your-github-id/raider:1.1.0
+RAIDER_BIND_ADDRESS=127.0.0.1
+RAIDER_PORT=8080
+RAIDER__CHZZK__CLIENTID=실제-client-id
+RAIDER__CHZZK__CLIENTSECRET=실제-client-secret
+```
+
+실행과 업데이트.
+
+```text
+docker compose pull
+docker compose up -d
+docker compose ps
+```
+
+종료.
+
+```text
+docker compose down
+```
+
+`RAIDER_BIND_ADDRESS=127.0.0.1`은 로컬 호스트에서만 접근 가능하다. 외부 네트워크에 직접 공개해야 할 때만 `0.0.0.0`으로 변경한다.
+
+## 로컬 이미지 빌드.
+
+```text
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 ```
 
 이미지는 .NET 10 SDK 빌드 단계와 ASP.NET Core runtime 단계를 분리하고, runtime에서 비루트 `app` 사용자로 실행한다.
