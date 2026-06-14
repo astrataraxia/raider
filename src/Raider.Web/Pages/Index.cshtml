@@ -55,7 +55,10 @@
     <aside class="favorites-sidebar" id="favorites-sidebar" aria-label="즐겨찾기 방송인">
         <div class="favorites-heading">
             <strong>즐겨찾기</strong>
-            <button type="button" class="favorites-collapse" aria-label="즐겨찾기 접기" aria-expanded="true" aria-controls="favorites-list">‹</button>
+            <div class="favorites-heading-actions" style="display: flex; gap: 4px;">
+                <button type="button" class="favorites-add-category" title="새 카테고리 추가" aria-label="새 카테고리 추가">➕</button>
+                <button type="button" class="favorites-collapse" aria-label="즐겨찾기 접기" aria-expanded="true" aria-controls="favorites-list">‹</button>
+            </div>
         </div>
         <p class="favorites-status" role="status">불러오는 중...</p>
         <div class="favorites-list" id="favorites-list"></div>

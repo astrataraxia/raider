@@ -70,14 +70,32 @@
     });
 
     if (favorites.size === 0) {
-      status.textContent = "즐겨찾기한 방송인이 없습니다.";
-      return;
+      var customCategories = [];
+      try {
+        customCategories = JSON.parse(localStorage.getItem("raider.favorites.customCategories") || "[]");
+      } catch (err) {}
+      if (customCategories.length === 0) {
+        status.textContent = "즐겨찾기한 방송인이 없습니다.";
+        return;
+      }
     }
 
     status.textContent = favorites.size + "명";
 
     var grouped = {};
     var allCategories = new Set(["기본"]);
+
+    var customCategories = [];
+    try {
+      customCategories = JSON.parse(localStorage.getItem("raider.favorites.customCategories") || "[]");
+    } catch (err) {}
+    customCategories.forEach(function (cat) {
+      allCategories.add(cat);
+      if (!grouped[cat]) {
+        grouped[cat] = [];
+      }
+    });
+
     favorites.forEach(function (fav) {
       var cat = fav.category || "기본";
       allCategories.add(cat);
@@ -87,106 +105,223 @@
       grouped[cat].push(fav);
     });
 
+    var orderMap = {};
+    var categoryOrder = [];
+    try {
+      categoryOrder = JSON.parse(localStorage.getItem("raider.favorites.categoryOrder") || "[]");
+    } catch (e) {}
+    categoryOrder.forEach(function (c, i) {
+      orderMap[c] = i;
+    });
+
     var categoriesList = Array.from(allCategories).sort(function (a, b) {
+      var idxA = orderMap[a] !== undefined ? orderMap[a] : 999999;
+      var idxB = orderMap[b] !== undefined ? orderMap[b] : 999999;
+      if (idxA !== idxB) {
+        return idxA - idxB;
+      }
       if (a === "기본") return -1;
       if (b === "기본") return 1;
       return a.localeCompare(b);
     });
 
+    var collapsedCategories = new Set();
+    try {
+      var storedCollapsed = JSON.parse(localStorage.getItem("raider.favorites.collapsedCategories") || "[]");
+      storedCollapsed.forEach(function (c) { collapsedCategories.add(c); });
+    } catch (e) {}
+
     categoriesList.forEach(function (cat) {
       var items = grouped[cat];
-      if (!items || items.length === 0) {
+      if ((!items || items.length === 0) && !customCategories.includes(cat)) {
         return;
       }
 
+      var isCollapsed = collapsedCategories.has(cat);
+
       var groupDiv = document.createElement("div");
       groupDiv.className = "favorites-category";
+      groupDiv.dataset.category = cat;
+      if (isCollapsed) {
+        groupDiv.classList.add("is-collapsed");
+      }
 
+      // 1. COLLAPSIBLE HEADER
       var headerDiv = document.createElement("div");
       headerDiv.className = "category-header";
-      headerDiv.textContent = "📁 " + cat;
+      headerDiv.draggable = true;
+      headerDiv.dataset.category = cat;
+
+      var toggleSpan = document.createElement("span");
+      toggleSpan.className = "category-toggle-icon";
+      toggleSpan.textContent = isCollapsed ? "▶" : "▼";
+      
+      var iconFolderSpan = document.createElement("span");
+      iconFolderSpan.textContent = "📁 " + cat;
+
+      headerDiv.append(toggleSpan, iconFolderSpan);
       groupDiv.append(headerDiv);
 
+      headerDiv.addEventListener("click", function (e) {
+        if (collapsedCategories.has(cat)) {
+          collapsedCategories.delete(cat);
+        } else {
+          collapsedCategories.add(cat);
+        }
+        localStorage.setItem("raider.favorites.collapsedCategories", JSON.stringify(Array.from(collapsedCategories)));
+        render();
+      });
+
+      // DRAG AND DROP FOR CATEGORY REORDERING
+      headerDiv.addEventListener("dragstart", function (e) {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ type: "category", category: cat }));
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      headerDiv.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        headerDiv.classList.add("category-drag-over");
+      });
+
+      headerDiv.addEventListener("dragenter", function (e) {
+        e.preventDefault();
+        headerDiv.classList.add("category-drag-over");
+      });
+
+      headerDiv.addEventListener("dragleave", function () {
+        headerDiv.classList.remove("category-drag-over");
+      });
+
+      headerDiv.addEventListener("drop", function (e) {
+        e.preventDefault();
+        headerDiv.classList.remove("category-drag-over");
+        try {
+          var data = JSON.parse(e.dataTransfer.getData("text/plain") || "{}");
+          if (data.type === "category" && data.category !== cat) {
+            var currentOrder = Array.from(categoriesList);
+            var fromIdx = currentOrder.indexOf(data.category);
+            var toIdx = currentOrder.indexOf(cat);
+            if (fromIdx > -1 && toIdx > -1) {
+              currentOrder.splice(fromIdx, 1);
+              currentOrder.splice(toIdx, 0, data.category);
+              localStorage.setItem("raider.favorites.categoryOrder", JSON.stringify(currentOrder));
+              render();
+            }
+          }
+        } catch (err) {}
+      });
+
+      // DRAG AND DROP FOR STREAMERS DROPPED ON CATEGORY
+      groupDiv.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        groupDiv.classList.add("drag-over");
+      });
+
+      groupDiv.addEventListener("dragenter", function (e) {
+        e.preventDefault();
+        groupDiv.classList.add("drag-over");
+      });
+
+      groupDiv.addEventListener("dragleave", function () {
+        groupDiv.classList.remove("drag-over");
+      });
+
+      groupDiv.addEventListener("drop", function (e) {
+        e.preventDefault();
+        groupDiv.classList.remove("drag-over");
+        try {
+          var data = JSON.parse(e.dataTransfer.getData("text/plain") || "{}");
+          if (data.type === "streamer" && data.sourceCategory !== cat) {
+            var customCats = [];
+            try {
+              customCats = JSON.parse(localStorage.getItem("raider.favorites.customCategories") || "[]");
+            } catch (err) {}
+            var idx = customCats.indexOf(cat);
+            if (idx > -1) {
+              customCats.splice(idx, 1);
+              localStorage.setItem("raider.favorites.customCategories", JSON.stringify(customCats));
+            }
+            void updateCategory(data.platform, data.channelId, cat);
+          }
+        } catch (err) {}
+      });
+
+      // 2. ITEMS CONTAINER
       var itemsDiv = document.createElement("div");
       itemsDiv.className = "category-items";
 
-      items.forEach(function (fav) {
-        var item = document.createElement(fav.watchUrl ? "a" : "div");
-        item.className = "favorite-item is-" + fav.status;
-        if (fav.watchUrl) {
-          item.href = fav.watchUrl;
-          item.target = "_blank";
-          item.rel = "noopener noreferrer";
-        }
-
-        var dot = document.createElement("span");
-        dot.className = "favorite-state-dot";
-        dot.setAttribute("aria-hidden", "true");
-
-        var copy = document.createElement("span");
-        copy.className = "favorite-item-copy";
-        var name = document.createElement("strong");
-        name.textContent = fav.streamerName;
-        var state = document.createElement("span");
-        state.textContent = fav.status === "live" ? "라이브" : fav.status === "delayed" ? "상태 확인 지연" : "오프라인";
-        copy.append(name, state);
-
-        item.append(dot, copy);
-
-        var select = document.createElement("select");
-        select.className = "favorite-category-select";
-        select.setAttribute("aria-label", "카테고리 변경");
-        
-        select.addEventListener("click", function (e) {
-          e.stopPropagation();
-          e.preventDefault();
-        });
-
-        categoriesList.forEach(function (c) {
-          var opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          opt.selected = (c === cat);
-          select.append(opt);
-        });
-
-        var newOpt = document.createElement("option");
-        newOpt.value = "__NEW__";
-        newOpt.textContent = "➕ 새 카테고리...";
-        select.append(newOpt);
-
-        select.addEventListener("change", function (e) {
-          e.stopPropagation();
-          e.preventDefault();
-          var targetVal = select.value;
-          if (targetVal === "__NEW__") {
-            var newCat = prompt("새 카테고리 이름을 입력하세요:");
-            if (newCat) {
-              newCat = newCat.trim();
-              if (newCat && newCat.length > 0 && newCat.length <= 100) {
-                void updateCategory(fav.platform, fav.channelId, newCat);
-              } else {
-                select.value = cat;
-              }
-            } else {
-              select.value = cat;
-            }
-          } else if (targetVal !== cat) {
-            void updateCategory(fav.platform, fav.channelId, targetVal);
+      if (items && items.length > 0) {
+        // Sort items by status (live first) and viewerCount descending, then streamerName
+        items.sort(function (a, b) {
+          var aLive = a.status === "live" ? 1 : 0;
+          var bLive = b.status === "live" ? 1 : 0;
+          if (aLive !== bLive) {
+            return bLive - aLive;
           }
+          if (a.status === "live") {
+            var aView = a.viewerCount || 0;
+            var bView = b.viewerCount || 0;
+            if (aView !== bView) {
+              return bView - aView;
+            }
+          }
+          return a.streamerName.localeCompare(b.streamerName);
         });
 
-        item.append(select);
+        items.forEach(function (fav) {
+          var item = document.createElement(fav.watchUrl ? "a" : "div");
+          item.className = "favorite-item is-" + fav.status;
+          item.draggable = true;
+          if (fav.watchUrl) {
+            item.href = fav.watchUrl;
+            item.target = "_blank";
+            item.rel = "noopener noreferrer";
+          }
 
-        if (fav.status === "live" && fav.viewerCount !== undefined && fav.viewerCount !== null) {
-          var viewerSpan = document.createElement("span");
-          viewerSpan.className = "favorite-viewer";
-          viewerSpan.textContent = fav.viewerCount.toLocaleString();
-          item.append(viewerSpan);
-        }
+          item.addEventListener("dragstart", function (e) {
+            e.dataTransfer.setData("text/plain", JSON.stringify({
+              type: "streamer",
+              platform: fav.platform,
+              channelId: fav.channelId,
+              sourceCategory: cat
+            }));
+            e.dataTransfer.effectAllowed = "move";
+            item.classList.add("is-dragging");
+          });
 
-        itemsDiv.append(item);
-      });
+          item.addEventListener("dragend", function () {
+            item.classList.remove("is-dragging");
+          });
+
+          var dot = document.createElement("span");
+          dot.className = "favorite-state-dot";
+          dot.setAttribute("aria-hidden", "true");
+
+          var copy = document.createElement("span");
+          copy.className = "favorite-item-copy";
+          var name = document.createElement("strong");
+          name.textContent = fav.streamerName;
+          var state = document.createElement("span");
+          state.textContent = fav.status === "live" ? "라이브" : fav.status === "delayed" ? "상태 확인 지연" : "오프라인";
+          copy.append(name, state);
+
+          item.append(dot, copy);
+
+          if (fav.status === "live" && fav.viewerCount !== undefined && fav.viewerCount !== null) {
+            var viewerSpan = document.createElement("span");
+            viewerSpan.className = "favorite-viewer";
+            viewerSpan.textContent = fav.viewerCount.toLocaleString();
+            item.append(viewerSpan);
+          }
+
+          itemsDiv.append(item);
+        });
+      } else {
+        var emptyPlaceholder = document.createElement("div");
+        emptyPlaceholder.className = "favorite-item-empty-placeholder";
+        emptyPlaceholder.textContent = "여기에 스트리머를 드래그하세요.";
+        itemsDiv.append(emptyPlaceholder);
+      }
 
       groupDiv.append(itemsDiv);
       list.append(groupDiv);
@@ -253,6 +388,7 @@
   document.querySelectorAll(".favorite-toggle").forEach(function (button) {
     button.addEventListener("click", function () { void toggle(button); });
   });
+
   collapse.addEventListener("click", function () {
     if (mobileQuery.matches) {
       setMobileOpen(false);
@@ -260,6 +396,7 @@
       setCollapsed(!sidebar.classList.contains("is-collapsed"));
     }
   });
+
   mobileToggle.addEventListener("click", function () { setMobileOpen(!sidebar.classList.contains("is-mobile-open")); });
   backdrop.addEventListener("click", function () { setMobileOpen(false); });
   mobileQuery.addEventListener("change", syncViewport);
@@ -268,6 +405,28 @@
       setMobileOpen(false);
     }
   });
+
+  var addCategoryBtn = document.querySelector(".favorites-add-category");
+  if (addCategoryBtn) {
+    addCategoryBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var newCat = prompt("새 카테고리 이름을 입력하세요:");
+      if (newCat) {
+        newCat = newCat.trim();
+        if (newCat && newCat.length > 0 && newCat.length <= 100) {
+          var customCategories = [];
+          try {
+            customCategories = JSON.parse(localStorage.getItem("raider.favorites.customCategories") || "[]");
+          } catch (err) {}
+          if (!customCategories.includes(newCat)) {
+            customCategories.push(newCat);
+            localStorage.setItem("raider.favorites.customCategories", JSON.stringify(customCategories));
+            render();
+          }
+        }
+      }
+    });
+  }
 
   setCollapsed(localStorage.getItem("raider.favorites.sidebarCollapsed") === "true");
   syncViewport();

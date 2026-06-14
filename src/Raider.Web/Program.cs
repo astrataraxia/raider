@@ -60,6 +60,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorPages();
 app.MapFavoriteEndpoints();
+app.MapGet("/favicon.ico", (IWebHostEnvironment env) => Results.File(Path.Combine(env.WebRootPath, "favicon.svg"), "image/svg+xml"));
 app.MapGet("/health/live", () => Results.Ok());
 app.MapGet("/health/ready", (SnapshotStore snapshots) =>
     snapshots.Current.IsReady ? Results.Ok() : Results.StatusCode(StatusCodes.Status503ServiceUnavailable));
