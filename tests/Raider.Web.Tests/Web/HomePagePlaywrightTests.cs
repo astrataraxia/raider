@@ -72,6 +72,30 @@ public sealed class HomePagePlaywrightTests
         var first = await firstContext.NewPageAsync();
         await first.GotoAsync(client.BaseAddress!.ToString());
 
+        var geometry = await first.Locator(".favorite-toggle").First.EvaluateAsync<double[]>(
+            """
+            button => {
+                const card = button.closest(".stream-card");
+                const cardRect = card.getBoundingClientRect();
+                const buttonRect = button.getBoundingClientRect();
+                const iconRect = button.querySelector("svg").getBoundingClientRect();
+                const overlapsTags = [...card.querySelectorAll(".card-tag-link")].some(tag => {
+                    const tagsRect = tag.getBoundingClientRect();
+                    return buttonRect.left < tagsRect.right &&
+                        buttonRect.right > tagsRect.left &&
+                        buttonRect.top < tagsRect.bottom &&
+                        buttonRect.bottom > tagsRect.top;
+                });
+
+                return [buttonRect.width, iconRect.width, cardRect.right - buttonRect.right, overlapsTags ? 1 : 0];
+            }
+            """);
+
+        Assert.True(geometry[0] >= 44);
+        Assert.True(geometry[1] <= 20);
+        Assert.InRange(geometry[2], 0, 2);
+        Assert.Equal(0, geometry[3]);
+
         await first.GetByRole(AriaRole.Button, new() { Name = "Alpha 즐겨찾기 추가" }).ClickAsync();
         await Assertions.Expect(first.Locator(".favorite-item")).ToContainTextAsync("Alpha");
         await first.GetByRole(AriaRole.Button, new() { Name = "즐겨찾기 접기" }).ClickAsync();

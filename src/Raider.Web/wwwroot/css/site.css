@@ -640,20 +640,33 @@ a {
 .favorite-toggle {
   position: absolute;
   z-index: 4;
-  left: 10px;
-  bottom: 10px;
-  width: 36px;
-  height: 36px;
-  padding: 8px;
-  border: 1px solid #ffffff20;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   color: white;
-  background: #050609c9;
+  background: transparent;
   cursor: pointer;
+  place-items: center;
+}
+
+.favorite-toggle::before {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ffffff20;
+  border-radius: 50%;
+  background: #050609c9;
+  content: "";
 }
 
 .favorite-toggle svg {
-  width: 100%;
+  position: relative;
+  width: 18px;
   fill: transparent;
   stroke: currentColor;
   stroke-width: 1.8;
@@ -864,7 +877,7 @@ button:focus-visible {
 
 .card-copy {
   min-height: 84px;
-  padding: 10px 12px 12px 12px;
+  padding: 10px 12px 12px;
 }
 
 .card-copy h3 {
@@ -897,6 +910,7 @@ button:focus-visible {
   gap: 6px;
   min-height: 16px;
   margin-top: 8px;
+  padding-right: 36px;
 }
 
 .card-tag-link {

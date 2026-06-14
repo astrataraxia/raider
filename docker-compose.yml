@@ -1,9 +1,26 @@
 services:
+  raider-data-init:
+    image: ${RAIDER_IMAGE:-raider:local}
+    pull_policy: always
+    user: root
+    entrypoint: ["bash", "-c", "chown app:app /data; [ ! -e /data/raider.db ] || chown app:app /data/raider.db; exit 0"]
+    volumes:
+      - "${RAIDER_DATA_PATH:-./data}:/data"
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 16
+    cpus: 0.25
+    mem_limit: 32m
+
   raider:
     container_name: raider-app
     image: ${RAIDER_IMAGE:-raider:local}
     restart: unless-stopped
     pull_policy: always
+    depends_on:
+      raider-data-init:
+        condition: service_completed_successfully
     ports:
       - "${RAIDER_BIND_ADDRESS:-127.0.0.1}:${RAIDER_PORT:-8080}:8080"
     environment:

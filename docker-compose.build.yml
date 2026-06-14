@@ -1,4 +1,8 @@
 services:
+  raider-data-init:
+    image: raider:local
+    pull_policy: never
+
   raider:
     build:
       context: .
