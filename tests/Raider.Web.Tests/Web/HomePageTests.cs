@@ -166,6 +166,50 @@ public sealed class HomePageTests : IDisposable
         Assert.Contains("fav=true", html, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task FavoritesCategoryFilterShowsOnlyCategoryStreamers()
+    {
+        snapshots.ApplySuccess(
+            Platform.Chzzk,
+            [
+                Stream("alpha", Platform.Chzzk, "Alpha Streamer", "Game Title", 100, []),
+                Stream("beta", Platform.Chzzk, "Beta Streamer", "Game Title 2", 50, []),
+            ],
+            DateTimeOffset.UtcNow);
+        snapshots.ApplySuccess(Platform.Soop, [], DateTimeOffset.UtcNow.AddTicks(1));
+
+        var token = await AntiForgeryTokenAsync();
+        // Add both to favorites
+        await PutFavoriteAsync("channel-alpha", token);
+        await PutFavoriteAsync("channel-beta", token);
+
+        // Update alpha category to "Gaming"
+        using var updateCatRequest = new HttpRequestMessage(HttpMethod.Put, "/api/favorites/chzzk/channel-alpha/category");
+        updateCatRequest.Headers.Add("RequestVerificationToken", token);
+        updateCatRequest.Content = System.Net.Http.Json.JsonContent.Create(new { category = "Gaming" });
+        using var updateCatResponse = await client.SendAsync(updateCatRequest);
+        updateCatResponse.EnsureSuccessStatusCode();
+
+        // 1. Fetch /?fav=true&cat=Gaming
+        var categoryFilteredHtml = WebUtility.HtmlDecode(await client.GetStringAsync("/?fav=true&cat=Gaming", CancellationToken.None));
+        Assert.Contains("data-broadcast-id=\"alpha\"", categoryFilteredHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("data-broadcast-id=\"beta\"", categoryFilteredHtml, StringComparison.Ordinal);
+        Assert.Contains("cat=Gaming", categoryFilteredHtml, StringComparison.Ordinal);
+
+        // 2. Fetch /?fav=true
+        var allFavoritesHtml = WebUtility.HtmlDecode(await client.GetStringAsync("/?fav=true", CancellationToken.None));
+        Assert.Contains("data-broadcast-id=\"alpha\"", allFavoritesHtml, StringComparison.Ordinal);
+        Assert.Contains("data-broadcast-id=\"beta\"", allFavoritesHtml, StringComparison.Ordinal);
+    }
+
+    private async Task PutFavoriteAsync(string channelId, string token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/favorites/chzzk/{channelId}");
+        request.Headers.Add("RequestVerificationToken", token);
+        using var response = await client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+    }
+
     private async Task<string> AntiForgeryTokenAsync()
     {
         var html = await client.GetStringAsync("/", CancellationToken.None);

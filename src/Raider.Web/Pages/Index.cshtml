@@ -11,7 +11,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1.3.2" />
+    <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg?v=1.3.2" />
 </head>
 <body>
     <div class="visually-hidden" data-antiforgery-token>@Html.AntiForgeryToken()</div>
@@ -36,6 +37,7 @@
                         @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
                         @if (!string.IsNullOrWhiteSpace(Model.Query)) { <input type="hidden" name="q" value="@Model.Query" /> }
                         @if (Model.FavoritesOnly) { <input type="hidden" name="fav" value="true" /> }
+                        @if (!string.IsNullOrWhiteSpace(Model.SelectedCategory)) { <input type="hidden" name="cat" value="@Model.SelectedCategory" /> }
                         <button type="submit" class="refresh-button" title="즉시 새로고침" aria-label="새로고침">
                             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                                 <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
@@ -73,14 +75,15 @@
             <div class="controls-top">
                 <nav class="platform-filter" aria-label="플랫폼 필터">
                     <a class="filter-button @(Model.SelectedPlatform is null && !Model.FavoritesOnly ? "is-active" : "")" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query">전체</a>
-                    <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Chzzk ? "is-active" : "")" asp-page="/Index" asp-route-platform="chzzk" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")"><span class="platform-dot chzzk-dot" aria-hidden="true"></span>CHZZK</a>
-                    <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Soop ? "is-active" : "")" asp-page="/Index" asp-route-platform="soop" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")"><span class="platform-dot soop-dot" aria-hidden="true"></span>SOOP</a>
-                    <a class="filter-button @(Model.FavoritesOnly ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "" : "true")"><span class="platform-dot fav-dot" aria-hidden="true"></span>즐겨찾기</a>
+                    <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Chzzk ? "is-active" : "")" asp-page="/Index" asp-route-platform="chzzk" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory"><span class="platform-dot chzzk-dot" aria-hidden="true"></span>CHZZK</a>
+                    <a class="filter-button @(Model.SelectedPlatform == Raider.Web.Live.Platform.Soop ? "is-active" : "")" asp-page="/Index" asp-route-platform="soop" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory"><span class="platform-dot soop-dot" aria-hidden="true"></span>SOOP</a>
+                    <a class="filter-button @(Model.FavoritesOnly ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "" : "true")" asp-route-cat=""><span class="platform-dot fav-dot" aria-hidden="true"></span>즐겨찾기</a>
                 </nav>
                 <form class="search-box" method="get">
                     @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
                     @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
                     @if (Model.FavoritesOnly) { <input type="hidden" name="fav" value="true" /> }
+                    @if (!string.IsNullOrWhiteSpace(Model.SelectedCategory)) { <input type="hidden" name="cat" value="@Model.SelectedCategory" /> }
                     <span aria-hidden="true">⌕</span>
                     <label class="visually-hidden" for="stream-search">방송인, 제목 또는 태그 검색</label>
                     <input id="stream-search" name="q" type="search" value="@Model.Query" placeholder="방송인, 제목 또는 태그 검색" autocomplete="off" />
@@ -91,11 +94,11 @@
             <div class="controls-tags">
                 <span class="tags-label">추천 태그:</span>
                 <div class="tag-filter" aria-label="인기 태그">
-                    <a class="tag-button @(string.IsNullOrWhiteSpace(Model.Tag) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")">모든 태그</a>
+                    <a class="tag-button @(string.IsNullOrWhiteSpace(Model.Tag) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory">모든 태그</a>
                     @foreach (var tag in Model.PopularTags)
                     {
                         var isActive = string.Equals(Model.Tag, tag, StringComparison.OrdinalIgnoreCase);
-                        <a class="tag-button @(isActive ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@(isActive ? "" : tag)" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")">@tag</a>
+                        <a class="tag-button @(isActive ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@(isActive ? "" : tag)" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory">@tag</a>
                     }
                     @if (Model.AllPopularTags.Length > Model.PopularTags.Length)
                     {
@@ -111,35 +114,54 @@
                         @foreach (var tag in Model.AllPopularTags)
                         {
                             var isActive = string.Equals(Model.Tag, tag, StringComparison.OrdinalIgnoreCase);
-                            <a class="tag-button @(isActive ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@(isActive ? "" : tag)" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")">@tag</a>
+                            <a class="tag-button @(isActive ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@(isActive ? "" : tag)" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory">@tag</a>
                         }
                     </div>
                 </div>
             }
 
-            @if (Model.SelectedPlatform is not null || !string.IsNullOrWhiteSpace(Model.Tag) || !string.IsNullOrWhiteSpace(Model.Query) || Model.FavoritesOnly)
+            @if (Model.FavoritesOnly && Model.FavoriteCategories.Length > 0)
+            {
+                <div class="controls-tags" style="margin-top: 8px;">
+                    <span class="tags-label">카테고리 필터:</span>
+                    <div class="tag-filter" aria-label="즐겨찾기 카테고리">
+                        <a class="tag-button @(string.IsNullOrWhiteSpace(Model.SelectedCategory) ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="true">전체 카테고리</a>
+                        @foreach (var cat in Model.FavoriteCategories)
+                        {
+                            var isActive = string.Equals(Model.SelectedCategory, cat, StringComparison.OrdinalIgnoreCase);
+                            <a class="tag-button @(isActive ? "is-active" : "")" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="true" asp-route-cat="@(isActive ? "" : cat)">@cat</a>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (Model.SelectedPlatform is not null || !string.IsNullOrWhiteSpace(Model.Tag) || !string.IsNullOrWhiteSpace(Model.Query) || Model.FavoritesOnly || !string.IsNullOrWhiteSpace(Model.SelectedCategory))
             {
                 <div class="active-filters" aria-label="적용된 필터">
                     <span class="active-filters-label">적용된 필터:</span>
                     @if (Model.SelectedPlatform == Raider.Web.Live.Platform.Chzzk)
                     {
-                        <a class="filter-chip chzzk" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" aria-label="치지직 플랫폼 필터 해제">플랫폼: CHZZK <span class="chip-close">×</span></a>
+                        <a class="filter-chip chzzk" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory" aria-label="치지직 플랫폼 필터 해제">플랫폼: CHZZK <span class="chip-close">×</span></a>
                     }
                     @if (Model.SelectedPlatform == Raider.Web.Live.Platform.Soop)
                     {
-                        <a class="filter-chip soop" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" aria-label="숲 플랫폼 필터 해제">플랫폼: SOOP <span class="chip-close">×</span></a>
+                        <a class="filter-chip soop" asp-page="/Index" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory" aria-label="숲 플랫폼 필터 해제">플랫폼: SOOP <span class="chip-close">×</span></a>
                     }
                     @if (!string.IsNullOrWhiteSpace(Model.Tag))
                     {
-                        <a class="filter-chip tag" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" aria-label="태그 필터 해제">태그: @Model.Tag <span class="chip-close">×</span></a>
+                        <a class="filter-chip tag" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-q="@Model.Query" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory" aria-label="태그 필터 해제">태그: @Model.Tag <span class="chip-close">×</span></a>
                     }
                     @if (!string.IsNullOrWhiteSpace(Model.Query))
                     {
-                        <a class="filter-chip query" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" aria-label="검색어 필터 해제">검색어: "@Model.Query" <span class="chip-close">×</span></a>
+                        <a class="filter-chip query" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-fav="@(Model.FavoritesOnly ? "true" : "")" asp-route-cat="@Model.SelectedCategory" aria-label="검색어 필터 해제">검색어: "@Model.Query" <span class="chip-close">×</span></a>
                     }
                     @if (Model.FavoritesOnly)
                     {
-                        <a class="filter-chip fav" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" aria-label="즐겨찾기 필터 해제">즐겨찾기만 <span class="chip-close">×</span></a>
+                        <a class="filter-chip fav" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-cat="" aria-label="즐겨찾기 필터 해제">즐겨찾기만 <span class="chip-close">×</span></a>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.SelectedCategory))
+                    {
+                        <a class="filter-chip category" asp-page="/Index" asp-route-platform="@Model.Platform" asp-route-tag="@Model.Tag" asp-route-q="@Model.Query" asp-route-fav="true" asp-route-cat="" aria-label="카테고리 필터 해제">카테고리: @Model.SelectedCategory <span class="chip-close">×</span></a>
                     }
                     <a class="filter-clear-all" asp-page="/Index" aria-label="모든 필터 초기화">초기화</a>
                 </div>
@@ -182,12 +204,12 @@
                 <nav class="pagination" aria-label="방송 목록 페이지">
                     @if (Model.PageNumber > 1)
                     {
-                        <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, fav = Model.FavoritesOnly ? "true" : null, p = Model.PageNumber - 1 })">이전</a>
+                        <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, fav = Model.FavoritesOnly ? "true" : null, cat = Model.SelectedCategory, p = Model.PageNumber - 1 })">이전</a>
                     }
                     <span>@Model.PageNumber / @Model.TotalPages</span>
                     @if (Model.PageNumber < Model.TotalPages)
                     {
-                        <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, fav = Model.FavoritesOnly ? "true" : null, p = Model.PageNumber + 1 })">다음</a>
+                        <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, fav = Model.FavoritesOnly ? "true" : null, cat = Model.SelectedCategory, p = Model.PageNumber + 1 })">다음</a>
                     }
                 </nav>
             }

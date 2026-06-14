@@ -28,11 +28,16 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
     [BindProperty(Name = "fav", SupportsGet = true)]
     public bool FavoritesOnly { get; set; }
 
+    [BindProperty(Name = "cat", SupportsGet = true)]
+    public string? SelectedCategory { get; set; }
+
     public ImmutableArray<LiveStream> Streams { get; private set; } = [];
 
     public ImmutableArray<string> PopularTags { get; private set; } = [];
 
     public ImmutableArray<string> AllPopularTags { get; private set; } = [];
+
+    public ImmutableArray<string> FavoriteCategories { get; private set; } = [];
 
     public CollectionSnapshot Snapshot { get; private set; } = null!;
 
@@ -69,10 +74,33 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
             try
             {
                 var favorites = await favoriteStore.ListAsync(HttpContext.RequestAborted);
-                var favKeys = favorites.Select(f => (f.Platform, f.ChannelId)).ToHashSet();
-                results = results
-                    .Where(stream => favKeys.Contains((stream.Platform, stream.ChannelId)))
+                FavoriteCategories = favorites
+                    .Select(f => f.Category)
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(c => c == "기본" ? 0 : 1)
+                    .ThenBy(c => c, StringComparer.OrdinalIgnoreCase)
                     .ToImmutableArray();
+
+                var favKeys = favorites.Select(f => (f.Platform, f.ChannelId)).ToHashSet();
+
+                if (!string.IsNullOrWhiteSpace(SelectedCategory))
+                {
+                    var favsInCat = favorites
+                        .Where(f => string.Equals(f.Category, SelectedCategory, StringComparison.OrdinalIgnoreCase))
+                        .Select(f => (f.Platform, f.ChannelId))
+                        .ToHashSet();
+
+                    results = results
+                        .Where(stream => favsInCat.Contains((stream.Platform, stream.ChannelId)))
+                        .ToImmutableArray();
+                }
+                else
+                {
+                    results = results
+                        .Where(stream => favKeys.Contains((stream.Platform, stream.ChannelId)))
+                        .ToImmutableArray();
+                }
             }
             catch (Exception)
             {
@@ -105,7 +133,7 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
     public IActionResult OnPostRefresh()
     {
         registry.TriggerCollectAll();
-        return RedirectToPage("/Index", new { platform = Platform, tag = Tag, q = Query, fav = FavoritesOnly ? "true" : null });
+        return RedirectToPage("/Index", new { platform = Platform, tag = Tag, q = Query, fav = FavoritesOnly ? "true" : null, cat = SelectedCategory });
     }
 
     private static Raider.Web.Live.Platform? ParsePlatform(string? value)
