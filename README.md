@@ -39,7 +39,9 @@ docker compose ps
 docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 ```
 
-`v1.1.0` 형태의 Git 태그를 push하면 GitHub Actions가 테스트 후 Private GHCR 이미지를 자동 게시한다. 자세한 절차는 [DEPLOYMENT.md](.agent/DEPLOYMENT.md)를 따른다.
+Traefik을 사용하는 운영 환경에서는 앱을 외부 proxy 네트워크에 연결하고 호스트 포트 공개를 생략할 수 있다. 이 경우에도 `raider-data-init`, `/data` 볼륨, `RAIDER__FAVORITES__DATABASEPATH=/data/raider.db` 설정은 유지해야 한다.
+
+`v1.2.1` 형태의 Git 태그를 push하면 GitHub Actions가 테스트 후 Private GHCR 이미지를 자동 게시한다. 자세한 일반 Compose와 Traefik 배포 절차는 [DEPLOYMENT.md](.agent/DEPLOYMENT.md)를 따른다.
 
 ## 검증.
 
@@ -56,6 +58,6 @@ dotnet build --no-restore -warnaserror
 | [PLAN.md](.agent/PLAN.md) | 현재 제품 범위, 기술과 운영 계약, 후속 작업 원칙. |
 | [ENGINEERING.md](.agent/ENGINEERING.md) | 아키텍처, 코드, 테스트, 보안 규칙. |
 | [DESIGN.md](.agent/DESIGN.md) | 현재 화면의 디자인 계약. |
-| [DEPLOYMENT.md](.agent/DEPLOYMENT.md) | 단일 컨테이너 배포와 운영 절차. |
+| [DEPLOYMENT.md](.agent/DEPLOYMENT.md) | 일반 Compose와 Traefik 배포 및 운영 절차. |
 | [RELEASES.md](RELEASES.md) | 완료된 릴리스 범위, 결정, 검증 결과, 알려진 위험. |
 | [AGENTS.md](.agent/AGENTS.md) | 저장소에서 작업하는 AI 에이전트 지침. |

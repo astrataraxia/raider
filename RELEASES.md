@@ -6,6 +6,21 @@
 - Compose가 앱 시작 전에 호스트 데이터 디렉터리 권한을 자동 준비해 기본 Docker 배포에서도 SQLite 즐겨찾기를 쓸 수 있게 했다.
 - 실제 Chromium 클릭과 배치 조건, Compose 데이터 초기화 계약을 회귀 테스트로 추가했다.
 
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 자동 테스트 | 로컬과 GitHub Actions에서 68개 통과. |
+| 코드 포맷 | `dotnet format Raider.slnx --verify-no-changes --no-restore` 통과. |
+| 빌드 및 경고 | `dotnet build Raider.slnx --no-restore -warnaserror` 경고 0개, 오류 0개. |
+| 실제 브라우저 | 즐겨찾기 추가·삭제·사이드바 반영, 44px 클릭 영역, 태그 비겹침 확인. |
+| 컨테이너 게시 | GitHub Actions에서 `1.2.1`, `1.2`, `latest` GHCR 이미지 게시 성공. |
+
+## v1.2.1 이후 운영 정리.
+
+- GitHub Actions가 Node.js 24 런타임을 사용하는 최신 메이저 액션을 사용하도록 갱신했다.
+- Traefik 배포에서도 데이터 초기화 서비스와 즐겨찾기 SQLite 경로 설정을 유지하도록 운영 문서를 보강했다.
+
 ## v1.2.0. 2026-06-14.
 
 ### 제공 기능.
