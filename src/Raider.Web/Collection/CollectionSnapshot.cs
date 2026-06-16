@@ -10,7 +10,8 @@ public sealed record PlatformCollectionState(
     ImmutableArray<LiveStream> Streams,
     DateTimeOffset? LastSuccessAt,
     DateTimeOffset? LastAttemptAt,
-    PlatformError? Error)
+    PlatformError? Error,
+    bool IsPartial)
 {
     public bool AttemptCompleted => LastAttemptAt is not null;
 }
@@ -18,7 +19,8 @@ public sealed record PlatformCollectionState(
 public sealed record CollectionSnapshot(
     LiveSnapshot Live,
     FrozenDictionary<Platform, PlatformCollectionState> Platforms,
-    DateTimeOffset ObservedAt)
+    DateTimeOffset ObservedAt,
+    long Version)
 {
     public bool IsReady => Platforms.Count > 0 && Platforms.Values.All(state => state.AttemptCompleted);
 }

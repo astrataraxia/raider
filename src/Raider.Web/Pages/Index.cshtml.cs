@@ -49,7 +49,8 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
 
     public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalResultCount / (double)PageSize));
 
-    public bool IsInitialCollection => Snapshot.Platforms.Values.All(state => !state.AttemptCompleted);
+    public bool IsInitialCollection => Snapshot.Live.Streams.IsEmpty
+        && Snapshot.Platforms.Values.All(state => !state.AttemptCompleted);
 
     public bool HasPartialFailure => Snapshot.Live.Streams.Length > 0
         && Snapshot.Platforms.Values.Any(state => state.Error is not null);

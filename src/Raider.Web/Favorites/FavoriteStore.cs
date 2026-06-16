@@ -115,7 +115,6 @@ public sealed class FavoriteStore
                     VALUES ($platform, $channelId, $streamerName, $category, $now, $now)
                     ON CONFLICT(platform, channel_id) DO UPDATE SET
                         streamer_name = excluded.streamer_name,
-                        category = COALESCE($category, favorites.category),
                         updated_at_utc = excluded.updated_at_utc;
                     """;
                 command.Parameters.AddWithValue("$platform", FormatPlatform(favorite.Platform));

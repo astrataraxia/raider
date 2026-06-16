@@ -1,5 +1,6 @@
 // Raider 생존 상태 엔드포인트의 HTTP 계약을 검증한다.
 using System.Net;
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Raider.Web.Collection;
@@ -41,9 +42,25 @@ public sealed class HealthEndpointTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, after.StatusCode);
     }
 
+    [Fact]
+    public async Task RefreshStatusChangesSnapshotVersionWhenSnapshotChanges()
+    {
+        var snapshots = application.Services.GetRequiredService<SnapshotStore>();
+        var before = await client.GetFromJsonAsync<RefreshStatus>("/api/refresh/status");
+
+        snapshots.ApplySuccess(Platform.Chzzk, [], DateTimeOffset.UtcNow);
+        var after = await client.GetFromJsonAsync<RefreshStatus>("/api/refresh/status");
+
+        Assert.NotNull(before);
+        Assert.NotNull(after);
+        Assert.NotEqual(before.SnapshotVersion, after.SnapshotVersion);
+    }
+
     public void Dispose()
     {
         client.Dispose();
         application.Dispose();
     }
+
+    private sealed record RefreshStatus(bool IsRefreshing, string SnapshotVersion);
 }

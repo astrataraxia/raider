@@ -252,21 +252,23 @@
     {
         <script>
             (function() {
+                const initialVersion = "@Model.Snapshot.Version.ToString(System.Globalization.CultureInfo.InvariantCulture)";
+
                 function checkStatus() {
                     fetch('/api/refresh/status')
                         .then(response => response.json())
                         .then(data => {
-                            if (!data.isRefreshing) {
+                            if (data.snapshotVersion !== initialVersion || !data.isRefreshing) {
                                 window.location.reload();
                             } else {
-                                setTimeout(checkStatus, 2000);
+                                setTimeout(checkStatus, 400);
                             }
                         })
                         .catch(() => {
-                            setTimeout(checkStatus, 3000);
+                            setTimeout(checkStatus, 1000);
                         });
                 }
-                setTimeout(checkStatus, 2000);
+                setTimeout(checkStatus, 200);
             })();
         </script>
     }

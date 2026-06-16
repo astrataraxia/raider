@@ -1,4 +1,5 @@
 // CHZZK typed client의 변환, 페이지 순회, 인증, 오류 계약을 검증한다.
+using System.Collections.Immutable;
 using System.Net;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -26,8 +27,8 @@ public sealed class ChzzkClientTests
         Assert.Equal("Fixture streamer one", stream.StreamerName);
         Assert.Equal("Fixture live one", stream.Title);
         Assert.Equal(321, stream.ViewerCount);
-        Assert.Equal("https://example.invalid/chzzk/thumbnail-1.jpg", stream.ThumbnailUrl?.AbsoluteUri);
-        Assert.Equal("https://chzzk.naver.com/live/fixture-channel-1", stream.WatchUrl.AbsoluteUri);
+        Assert.Equal("https://example.invalid/chzzk/thumbnail-1.jpg", stream.ThumbnailUrl);
+        Assert.Equal("https://chzzk.naver.com/live/fixture-channel-1", stream.WatchUrl);
         Assert.Equal(["Fixture tag 1", "Fixture tag 2", "Fixture category 1"], stream.Tags.ToArray());
     }
 
@@ -57,7 +58,7 @@ public sealed class ChzzkClientTests
 
         var stream = Assert.Single(await CreateClient(handler).CollectAsync(CancellationToken.None));
 
-        Assert.Equal("https://example.invalid/image_480.jpg", stream.ThumbnailUrl?.AbsoluteUri);
+        Assert.Equal("https://example.invalid/image_480.jpg", stream.ThumbnailUrl);
     }
 
     [Fact]
@@ -89,6 +90,29 @@ public sealed class ChzzkClientTests
         Assert.Equal(2, requests.Count);
         Assert.DoesNotContain("next=", requests[0].Query, StringComparison.Ordinal);
         Assert.Contains("next=fixture-next-token", requests[1].Query, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PublishesFirstPageBeforeFollowingCursor()
+    {
+        var requests = 0;
+        var handler = new FixtureHandler(_ =>
+        {
+            requests++;
+            return requests == 1 ? Response("pagination-first.json") : Response("pagination-last.json");
+        });
+        var partial = ImmutableArray<LiveStream>.Empty;
+
+        var result = await CreateClient(handler).CollectAsync(
+            streams =>
+            {
+                partial = streams;
+                return ValueTask.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.Single(partial);
+        Assert.Equal(2, result.Length);
     }
 
     [Fact]

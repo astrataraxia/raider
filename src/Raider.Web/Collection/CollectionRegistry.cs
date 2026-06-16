@@ -25,7 +25,7 @@ public sealed class CollectionRegistry
     {
         foreach (var worker in workers)
         {
-            _ = Task.Run(() => worker.CollectOnceAsync(CancellationToken.None));
+            _ = worker.CollectOnceAsync(CancellationToken.None);
         }
     }
 

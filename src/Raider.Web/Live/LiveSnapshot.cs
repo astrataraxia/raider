@@ -72,7 +72,7 @@ public sealed class LiveSnapshot
         return candidates
             .Select(index => Streams[index])
             .Where(stream => platform is null || stream.Platform == platform)
-            .Where(stream => normalizedQuery is null || stream.SearchText.Contains(normalizedQuery, StringComparison.Ordinal))
+            .Where(stream => normalizedQuery is null || stream.MatchesQuery(normalizedQuery))
             .ToImmutableArray();
     }
 }

@@ -48,7 +48,8 @@ public sealed class FavoriteCatalog(FavoriteStore store, SnapshotStore snapshots
         Dictionary<(Platform Platform, string ChannelId), LiveStream> streams)
     {
         var state = snapshot.Platforms[favorite.Platform];
-        var isDelayed = state.Error is not null
+        var isDelayed = state.IsPartial
+            || state.Error is not null
             || state.LastSuccessAt is null
             || timeProvider.GetUtcNow() - state.LastSuccessAt > StaleAfter;
         streams.TryGetValue((favorite.Platform, favorite.ChannelId), out var stream);
@@ -59,7 +60,7 @@ public sealed class FavoriteCatalog(FavoriteStore store, SnapshotStore snapshots
             favorite.ChannelId,
             favorite.StreamerName,
             status.ToString().ToLowerInvariant(),
-            status == FavoriteStatus.Live ? stream?.WatchUrl.ToString() : null,
+            status == FavoriteStatus.Live ? stream?.WatchUrl : null,
             status == FavoriteStatus.Live ? stream?.ViewerCount : null,
             favorite.Category);
     }

@@ -9,10 +9,11 @@ using Raider.Web.Live;
 
 namespace Raider.Web.Soop;
 
-public sealed class SoopClient : ILiveSource
+public sealed class SoopClient : IProgressiveLiveSource
 {
     private const int PageSize = 60;
     private const int MaximumPages = 100;
+    private const int MaximumConcurrentRequests = 4;
     private readonly HttpClient httpClient;
     private readonly TimeProvider timeProvider;
     private readonly ILogger<SoopClient> logger;
@@ -31,37 +32,37 @@ public sealed class SoopClient : ILiveSource
 
     public Platform Platform => Platform.Soop;
 
-    public async Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+    public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+    {
+        return CollectCoreAsync(null, cancellationToken);
+    }
+
+    public Task<ImmutableArray<LiveStream>> CollectAsync(
+        Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+        CancellationToken cancellationToken)
+    {
+        return CollectCoreAsync(publishPartial, cancellationToken);
+    }
+
+    private async Task<ImmutableArray<LiveStream>> CollectCoreAsync(
+        Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
+        CancellationToken cancellationToken)
     {
         var streams = new List<LiveStream>();
-        var excludedCount = 0;
-        var pageNumber = 1;
-        int? pageCount = null;
-
-        do
+        var firstPage = await GetPageAsync(1, cancellationToken);
+        var pageCount = (int)Math.Ceiling(firstPage.TotalCount / (double)PageSize);
+        if (pageCount > MaximumPages)
         {
-            var page = await GetPageAsync(pageNumber, cancellationToken);
-            pageCount ??= (int)Math.Ceiling(page.TotalCount / (double)PageSize);
-            if (pageCount > MaximumPages)
-            {
-                throw ContractError();
-            }
-
-            foreach (var broadcast in page.Broadcasts)
-            {
-                if (TryMap(broadcast, out var stream))
-                {
-                    streams.Add(stream);
-                }
-                else
-                {
-                    excludedCount++;
-                }
-            }
-
-            pageNumber++;
+            throw ContractError();
         }
-        while (pageNumber <= pageCount);
+
+        var excludedCount = Map(firstPage.Broadcasts, streams);
+        if (publishPartial is not null && streams.Count > 0 && pageCount > 1)
+        {
+            await publishPartial(LiveStream.OrderAndDeduplicate(streams));
+        }
+
+        excludedCount += await FetchRemainingPagesAsync(pageCount, streams, cancellationToken);
 
         if (excludedCount > 0)
         {
@@ -74,6 +75,55 @@ public sealed class SoopClient : ILiveSource
         }
 
         return LiveStream.OrderAndDeduplicate(streams);
+    }
+
+    private async Task<int> FetchRemainingPagesAsync(
+        int pageCount,
+        List<LiveStream> streams,
+        CancellationToken cancellationToken)
+    {
+        if (pageCount <= 1)
+        {
+            return 0;
+        }
+
+        var excludedCount = 0;
+        await Parallel.ForEachAsync(
+            Enumerable.Range(2, pageCount - 1),
+            new ParallelOptions
+            {
+                CancellationToken = cancellationToken,
+                MaxDegreeOfParallelism = MaximumConcurrentRequests,
+            },
+            async (pageNumber, token) =>
+            {
+                var pageStreams = new List<LiveStream>(PageSize);
+                var page = await GetPageAsync(pageNumber, token);
+                Interlocked.Add(ref excludedCount, Map(page.Broadcasts, pageStreams));
+                lock (streams)
+                {
+                    streams.AddRange(pageStreams);
+                }
+            });
+        return excludedCount;
+    }
+
+    private int Map(IEnumerable<SoopBroadcast> broadcasts, List<LiveStream> streams)
+    {
+        var excludedCount = 0;
+        foreach (var broadcast in broadcasts)
+        {
+            if (TryMap(broadcast, out var stream))
+            {
+                streams.Add(stream);
+            }
+            else
+            {
+                excludedCount++;
+            }
+        }
+
+        return excludedCount;
     }
 
     private async Task<SoopPage> GetPageAsync(int pageNumber, CancellationToken cancellationToken)

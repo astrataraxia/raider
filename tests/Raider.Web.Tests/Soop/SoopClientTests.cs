@@ -1,4 +1,5 @@
 // SOOP 공개 웹 JSON client의 변환, 전체 페이지, 무쿠키, 오류 계약을 검증한다.
+using System.Collections.Immutable;
 using System.Net;
 using Microsoft.Extensions.Logging.Abstractions;
 using Raider.Web.Collection;
@@ -20,8 +21,8 @@ public sealed class SoopClientTests
         Assert.Equal(Platform.Soop, stream.Platform);
         Assert.Equal("2001", stream.BroadcastId);
         Assert.Equal(321, stream.ViewerCount);
-        Assert.Equal("https://example.invalid/soop/thumbnail-1.jpg", stream.ThumbnailUrl?.AbsoluteUri);
-        Assert.Equal("https://play.sooplive.co.kr/fixture-user-1/2001", stream.WatchUrl.AbsoluteUri);
+        Assert.Equal("https://example.invalid/soop/thumbnail-1.jpg", stream.ThumbnailUrl);
+        Assert.Equal("https://play.sooplive.co.kr/fixture-user-1/2001", stream.WatchUrl);
         Assert.Equal(
             ["Fixture auto", "Fixture category tag", "Fixture hash", "Fixture language", "Fixture category"],
             stream.Tags.ToArray());
@@ -66,6 +67,46 @@ public sealed class SoopClientTests
         });
         Assert.Contains("pageNo=1", requests[0].RequestUri!.Query, StringComparison.Ordinal);
         Assert.Contains("pageNo=2", requests[1].RequestUri!.Query, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PublishesFirstPageAndFetchesRemainingPagesConcurrently()
+    {
+        var concurrent = 0;
+        var maximumConcurrent = 0;
+        var handler = new AsyncFixtureHandler(async (request, cancellationToken) =>
+        {
+            var current = Interlocked.Increment(ref concurrent);
+            maximumConcurrent = Math.Max(maximumConcurrent, current);
+            try
+            {
+                await Task.Delay(20, cancellationToken);
+                var pageNumber = int.Parse(
+                    System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query)["pageNo"]!,
+                    System.Globalization.CultureInfo.InvariantCulture);
+                return JsonResponse(
+                    $$"""
+                    {"total_cnt":240,"cnt":1,"broad":[{"broad_no":{{pageNumber}},"user_id":"user-{{pageNumber}}","user_nick":"Streamer {{pageNumber}}","broad_title":"Live {{pageNumber}}","current_view_cnt":{{pageNumber}}}]}
+                    """);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref concurrent);
+            }
+        });
+        var partial = ImmutableArray<LiveStream>.Empty;
+
+        var result = await CreateClient(handler).CollectAsync(
+            streams =>
+            {
+                partial = streams;
+                return ValueTask.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.Single(partial);
+        Assert.Equal(4, result.Length);
+        Assert.True(maximumConcurrent > 1);
     }
 
     [Fact]

@@ -64,7 +64,11 @@ app.MapGet("/favicon.ico", () => Results.Redirect("/favicon.svg"));
 app.MapGet("/health/live", () => Results.Ok());
 app.MapGet("/health/ready", (SnapshotStore snapshots) =>
     snapshots.Current.IsReady ? Results.Ok() : Results.StatusCode(StatusCodes.Status503ServiceUnavailable));
-app.MapGet("/api/refresh/status", (CollectionRegistry registry) => Results.Json(new { isRefreshing = registry.IsAnyCollecting }));
+app.MapGet("/api/refresh/status", (CollectionRegistry registry, SnapshotStore snapshots) => Results.Json(new
+{
+    isRefreshing = registry.IsAnyCollecting,
+    snapshotVersion = snapshots.Current.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
+}));
 
 app.Run();
 

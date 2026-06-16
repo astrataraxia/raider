@@ -13,10 +13,9 @@ public sealed record LiveStream
         string streamerName,
         string title,
         int viewerCount,
-        Uri? thumbnailUrl,
-        Uri watchUrl,
+        string? thumbnailUrl,
+        string watchUrl,
         ImmutableArray<string> tags,
-        string searchText,
         DateTimeOffset observedAt)
     {
         Platform = platform;
@@ -28,7 +27,6 @@ public sealed record LiveStream
         ThumbnailUrl = thumbnailUrl;
         WatchUrl = watchUrl;
         Tags = tags;
-        SearchText = searchText;
         ObservedAt = observedAt;
     }
 
@@ -44,13 +42,11 @@ public sealed record LiveStream
 
     public int ViewerCount { get; }
 
-    public Uri? ThumbnailUrl { get; }
+    public string? ThumbnailUrl { get; }
 
-    public Uri WatchUrl { get; }
+    public string WatchUrl { get; }
 
     public ImmutableArray<string> Tags { get; }
-
-    public string SearchText { get; }
 
     public DateTimeOffset ObservedAt { get; }
 
@@ -88,7 +84,6 @@ public sealed record LiveStream
             ParseOptionalHttpUrl(thumbnailUrl),
             ParseRequiredHttpUrl(watchUrl, nameof(watchUrl)),
             normalizedTags,
-            BuildSearchText(normalizedStreamerName, normalizedTitle, normalizedTags),
             observedAt);
     }
 
@@ -162,9 +157,11 @@ public sealed record LiveStream
         return normalized.ToImmutable();
     }
 
-    private static string BuildSearchText(string streamerName, string title, ImmutableArray<string> tags)
+    internal bool MatchesQuery(string normalizedQuery)
     {
-        return NormalizeSearch(string.Join('\n', new[] { streamerName, title }.Concat(tags)));
+        return StreamerName.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase)
+            || Title.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase)
+            || Tags.Any(tag => tag.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase));
     }
 
     internal static string NormalizeSearch(string value)
@@ -172,19 +169,19 @@ public sealed record LiveStream
         return value.Trim().Normalize(NormalizationForm.FormC).ToUpperInvariant();
     }
 
-    private static Uri? ParseOptionalHttpUrl(string? value)
+    private static string? ParseOptionalHttpUrl(string? value)
     {
-        return TryParseHttpUrl(value, out var uri) ? uri : null;
+        return TryParseHttpUrl(value, out var uri) ? uri.AbsoluteUri : null;
     }
 
-    private static Uri ParseRequiredHttpUrl(string value, string parameterName)
+    private static string ParseRequiredHttpUrl(string value, string parameterName)
     {
         if (!TryParseHttpUrl(value, out var uri))
         {
             throw new ArgumentException("An absolute HTTP or HTTPS URL is required.", parameterName);
         }
 
-        return uri;
+        return uri.AbsoluteUri;
     }
 
     private static bool TryParseHttpUrl(string? value, out Uri uri)

@@ -31,12 +31,52 @@ public sealed class CollectionRegistryTests
         Assert.False(worker.IsCollecting);
     }
 
+    [Fact]
+    public async Task TriggerStartsCollectionBeforeReturning()
+    {
+        var registry = new CollectionRegistry();
+        var source = new BlockingSource();
+        _ = new PlatformCollectorWorker(
+            source,
+            new SnapshotStore([Platform.Chzzk]),
+            new CollectionOptions(),
+            registry,
+            TimeProvider.System,
+            NullLogger<PlatformCollectorWorker>.Instance);
+
+        registry.TriggerCollectAll();
+
+        Assert.True(registry.IsAnyCollecting);
+        Assert.True(source.Started.Task.IsCompleted);
+        source.Complete.SetResult();
+        await source.Finished.Task.WaitAsync(TimeSpan.FromSeconds(1));
+    }
+
     private sealed class FakeSource : ILiveSource
     {
         public Platform Platform => Platform.Chzzk;
         public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(ImmutableArray<LiveStream>.Empty);
+        }
+    }
+
+    private sealed class BlockingSource : ILiveSource
+    {
+        public Platform Platform => Platform.Chzzk;
+
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource Complete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource Finished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+        {
+            Started.SetResult();
+            await Complete.Task.WaitAsync(cancellationToken);
+            Finished.SetResult();
+            return [];
         }
     }
 }

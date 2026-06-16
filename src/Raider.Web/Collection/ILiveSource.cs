@@ -10,3 +10,10 @@ public interface ILiveSource
 
     Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken);
 }
+
+public interface IProgressiveLiveSource : ILiveSource
+{
+    Task<ImmutableArray<LiveStream>> CollectAsync(
+        Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+        CancellationToken cancellationToken);
+}

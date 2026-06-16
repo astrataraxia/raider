@@ -61,6 +61,22 @@ public sealed class FavoriteStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task RepeatedUpsertPreservesExistingCategory()
+    {
+        Directory.CreateDirectory(directory);
+        var store = new FavoriteStore(Path.Combine(directory, "raider.db"));
+        await store.InitializeAsync(CancellationToken.None);
+        await store.UpsertAsync(new Favorite(Platform.Chzzk, "channel-1", "Alpha"), CancellationToken.None);
+        await store.UpdateCategoryAsync(Platform.Chzzk, "channel-1", "게임", CancellationToken.None);
+
+        await store.UpsertAsync(new Favorite(Platform.Chzzk, "channel-1", "Renamed"), CancellationToken.None);
+
+        var favorite = Assert.Single(await store.ListAsync(CancellationToken.None));
+        Assert.Equal("게임", favorite.Category);
+        Assert.Equal("Renamed", favorite.StreamerName);
+    }
+
+    [Fact]
     public async Task MigrationAddsCategoryColumnToExistingDatabase()
     {
         Directory.CreateDirectory(directory);

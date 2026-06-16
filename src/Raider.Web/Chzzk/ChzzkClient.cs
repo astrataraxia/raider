@@ -11,7 +11,7 @@ using Raider.Web.Live;
 
 namespace Raider.Web.Chzzk;
 
-public sealed class ChzzkClient : ILiveSource
+public sealed class ChzzkClient : IProgressiveLiveSource
 {
     private readonly HttpClient httpClient;
     private readonly ChzzkOptions options;
@@ -38,11 +38,26 @@ public sealed class ChzzkClient : ILiveSource
 
     public Platform Platform => Platform.Chzzk;
 
-    public async Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+    public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+    {
+        return CollectCoreAsync(null, cancellationToken);
+    }
+
+    public Task<ImmutableArray<LiveStream>> CollectAsync(
+        Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+        CancellationToken cancellationToken)
+    {
+        return CollectCoreAsync(publishPartial, cancellationToken);
+    }
+
+    private async Task<ImmutableArray<LiveStream>> CollectCoreAsync(
+        Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
+        CancellationToken cancellationToken)
     {
         var streams = new List<LiveStream>();
         var excludedCount = 0;
         string? next = null;
+        var isFirstPage = true;
 
         do
         {
@@ -60,6 +75,12 @@ public sealed class ChzzkClient : ILiveSource
             }
 
             next = page.Page.Next;
+            if (isFirstPage && publishPartial is not null && streams.Count > 0 && !string.IsNullOrWhiteSpace(next))
+            {
+                await publishPartial(LiveStream.OrderAndDeduplicate(streams));
+            }
+
+            isFirstPage = false;
         }
         while (!string.IsNullOrWhiteSpace(next));
 

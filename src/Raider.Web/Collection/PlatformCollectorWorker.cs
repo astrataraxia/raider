@@ -1,7 +1,9 @@
 // 한 플랫폼을 독립적으로 주기 수집하고 성공 또는 오류 상태를 게시한다.
+using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Raider.Web.Live;
 
 namespace Raider.Web.Collection;
 
@@ -49,7 +51,9 @@ public sealed class PlatformCollectorWorker : BackgroundService
                 {
                     using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     timeout.CancelAfter(options.CollectionTimeout);
-                    var streams = await source.CollectAsync(timeout.Token);
+                    var streams = source is IProgressiveLiveSource progressive
+                        ? await progressive.CollectAsync(PublishPartialAsync, timeout.Token)
+                        : await source.CollectAsync(timeout.Token);
                     snapshots.ApplySuccess(source.Platform, streams, timeProvider.GetUtcNow());
                     logger.LogInformation(
                         "Platform collection completed. Platform: {Platform}, Result: {Result}, StreamCount: {StreamCount}, DurationMs: {DurationMs}",
@@ -91,6 +95,12 @@ public sealed class PlatformCollectorWorker : BackgroundService
         {
             execution.Release();
         }
+    }
+
+    private ValueTask PublishPartialAsync(ImmutableArray<LiveStream> streams)
+    {
+        snapshots.ApplyPartial(source.Platform, streams, timeProvider.GetUtcNow());
+        return ValueTask.CompletedTask;
     }
 
     private void LogFailure(PlatformError error, long started)

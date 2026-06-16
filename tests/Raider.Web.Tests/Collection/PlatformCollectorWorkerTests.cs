@@ -28,6 +28,42 @@ public sealed class PlatformCollectorWorkerTests
     }
 
     [Fact]
+    public async Task ProgressiveSourcePublishesPartialResultBeforeCompletion()
+    {
+        var source = new ProgressiveFakeSource(Platform.Soop);
+        var store = new SnapshotStore([Platform.Chzzk, Platform.Soop]);
+        var worker = Worker(source, store);
+
+        var collection = worker.CollectOnceAsync(CancellationToken.None);
+        await source.PartialPublished.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Equal("partial", Assert.Single(store.Current.Live.Streams).BroadcastId);
+        Assert.True(store.Current.Platforms[Platform.Soop].IsPartial);
+        Assert.False(store.Current.Platforms[Platform.Soop].AttemptCompleted);
+
+        source.Complete.SetResult();
+        await collection;
+
+        Assert.Equal("complete", Assert.Single(store.Current.Live.Streams).BroadcastId);
+        Assert.False(store.Current.Platforms[Platform.Soop].IsPartial);
+        Assert.True(store.Current.Platforms[Platform.Soop].AttemptCompleted);
+    }
+
+    [Fact]
+    public async Task ProgressiveFailureRestoresLastCompleteResult()
+    {
+        var store = new SnapshotStore([Platform.Chzzk, Platform.Soop]);
+        store.ApplySuccess(Platform.Soop, [Stream("previous", Platform.Soop)], DateTimeOffset.UtcNow);
+        var worker = Worker(new FailingProgressiveSource(Platform.Soop), store);
+
+        await worker.CollectOnceAsync(CancellationToken.None);
+
+        Assert.Equal("previous", Assert.Single(store.Current.Live.Streams).BroadcastId);
+        Assert.False(store.Current.Platforms[Platform.Soop].IsPartial);
+        Assert.Equal(PlatformErrorKind.Contract, store.Current.Platforms[Platform.Soop].Error?.Kind);
+    }
+
+    [Fact]
     public async Task DoesNotRetryPermanentFailureAndPreventsOverlappingRuns()
     {
         var source = new FakeSource(
@@ -179,6 +215,48 @@ public sealed class PlatformCollectorWorkerTests
             {
                 Interlocked.Decrement(ref concurrentCalls);
             }
+        }
+    }
+
+    private sealed class ProgressiveFakeSource(Platform platform) : IProgressiveLiveSource
+    {
+        public Platform Platform { get; } = platform;
+
+        public TaskCompletionSource PartialPublished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource Complete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+        {
+            return CollectAsync(_ => ValueTask.CompletedTask, cancellationToken);
+        }
+
+        public async Task<ImmutableArray<LiveStream>> CollectAsync(
+            Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+            CancellationToken cancellationToken)
+        {
+            await publishPartial([Stream("partial", Platform)]);
+            PartialPublished.SetResult();
+            await Complete.Task.WaitAsync(cancellationToken);
+            return [Stream("complete", Platform)];
+        }
+    }
+
+    private sealed class FailingProgressiveSource(Platform platform) : IProgressiveLiveSource
+    {
+        public Platform Platform { get; } = platform;
+
+        public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public async Task<ImmutableArray<LiveStream>> CollectAsync(
+            Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+            CancellationToken cancellationToken)
+        {
+            await publishPartial([Stream("partial", Platform)]);
+            throw new PlatformCollectionException(new PlatformError(PlatformErrorKind.Contract), "contract");
         }
     }
 }

@@ -22,7 +22,7 @@ public sealed class LiveStreamTests
     }
 
     [Fact]
-    public void CreateNormalizesTagsAndSearchText()
+    public void CreateNormalizesTagsAndMatchesQuery()
     {
         var stream = Create(
             streamerName: " Streamer ",
@@ -30,7 +30,11 @@ public sealed class LiveStreamTests
             tags: ["  Cafe\u0301 ", "CAFÉ", " ", "Game"]);
 
         Assert.Equal(["Café", "Game"], stream.Tags.ToArray());
-        Assert.Equal("STREAMER\nTITLE\nCAFÉ\nGAME", stream.SearchText);
+        var snapshot = LiveSnapshot.Create([stream], DateTimeOffset.UtcNow);
+        Assert.Single(snapshot.Search(query: "stream"));
+        Assert.Single(snapshot.Search(query: "café"));
+        Assert.Single(snapshot.Search(query: "game"));
+        Assert.Empty(snapshot.Search(query: "missing"));
     }
 
     [Fact]

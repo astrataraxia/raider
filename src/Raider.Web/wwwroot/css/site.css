@@ -632,17 +632,6 @@ a {
   color: var(--color-text-muted);
 }
 
-.search-box kbd {
-  min-width: 21px;
-  padding: 1px 5px;
-  border: 1px solid var(--color-border);
-  border-radius: 5px;
-  color: var(--color-text-muted);
-  background: var(--color-surface-1);
-  font-size: 10px;
-  text-align: center;
-}
-
 .notice-banner {
   min-height: 48px;
   margin-bottom: 30px;
@@ -652,25 +641,6 @@ a {
   gap: 10px;
   color: #e5c98d;
   background: #f6b94a0d;
-}
-
-.notice-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  color: var(--color-warning);
-  background: #f6b94a16;
-}
-
-.notice-icon svg {
-  width: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
 }
 
 .notice-banner p {
@@ -858,54 +828,6 @@ button:focus-visible {
   background: linear-gradient(transparent, #06070bb3);
 }
 
-.thumbnail-forest {
-  background: linear-gradient(135deg, #15271e, #0a1010 55%, #385d49);
-}
-
-.thumbnail-stadium {
-  background: linear-gradient(145deg, #233348, #070b10 58%, #2d8cff);
-}
-
-.thumbnail-purple {
-  background: linear-gradient(135deg, #312148, #0c0911 58%, #8b7cff);
-}
-
-.thumbnail-blue {
-  background: linear-gradient(135deg, #0b1c34, #090c15 58%, #245bc4);
-}
-
-.thumbnail-sunset {
-  background: linear-gradient(145deg, #5d2f23, #120d12 62%, #e08c56);
-}
-
-.thumbnail-red {
-  background: linear-gradient(145deg, #4a1520, #110a0d 58%, #d7465b);
-}
-
-.thumbnail-pink {
-  background: linear-gradient(145deg, #44203d, #100b12 58%, #d764b0);
-}
-
-.thumbnail-gold {
-  background: linear-gradient(145deg, #49391b, #100e09 58%, #d5a63a);
-}
-
-.thumbnail-cyan {
-  background: linear-gradient(145deg, #153d42, #090f11 58%, #38a9b7);
-}
-
-.thumbnail-mono {
-  background: linear-gradient(145deg, #282a2d, #090a0b 58%, #616871);
-}
-
-.thumbnail-orange {
-  background: linear-gradient(145deg, #4b2c16, #100c09 58%, #d87835);
-}
-
-.thumbnail-violet {
-  background: linear-gradient(145deg, #302146, #0d0a11 58%, #7452ba);
-}
-
 .platform-badge,
 .viewer-badge {
   position: absolute;
@@ -950,38 +872,6 @@ button:focus-visible {
   border-radius: 50%;
   background: var(--color-live);
   box-shadow: 0 0 0 3px #ff4d6725;
-}
-
-.thumbnail-art {
-  position: absolute;
-  z-index: 1;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-30%);
-}
-
-.thumbnail-art.align-bottom {
-  top: auto;
-  bottom: 13px;
-  transform: none;
-}
-
-.art-kicker {
-  display: block;
-  margin-bottom: 2px;
-  color: #ffffff9e;
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-}
-
-.thumbnail-art strong {
-  display: block;
-  color: #fff;
-  font-size: clamp(20px, 2vw, 27px);
-  line-height: 0.94;
-  letter-spacing: -0.06em;
-  text-shadow: 0 2px 14px #00000080;
 }
 
 .card-copy {
@@ -1034,59 +924,6 @@ button:focus-visible {
 .card-tag-link:hover {
   opacity: 1;
   text-decoration: underline;
-}
-
-.empty-state {
-  min-height: 360px;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  display: grid;
-  place-items: center;
-  align-content: center;
-  text-align: center;
-}
-
-.empty-state[hidden] {
-  display: none;
-}
-
-.empty-orbit {
-  width: 54px;
-  height: 54px;
-  margin-bottom: 18px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 0 0 10px #8b7cff08;
-}
-
-.empty-orbit span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-brand);
-}
-
-.empty-state h2 {
-  margin: 0;
-  font-size: 19px;
-}
-
-.empty-state p {
-  margin: 6px 0 18px;
-  color: var(--color-text-muted);
-  font-size: 13px;
-}
-
-.empty-state button {
-  min-height: 40px;
-  padding: 0 15px;
-  border: 1px solid #8b7cff45;
-  border-radius: var(--radius-md);
-  color: var(--color-text-primary);
-  background: var(--color-brand-soft);
-  cursor: pointer;
 }
 
 .state-panel {
@@ -1475,10 +1312,6 @@ button:focus-visible {
     align-items: flex-start;
   }
 
-  .notice-icon {
-    flex: 0 0 auto;
-  }
-
   .section-heading {
     align-items: flex-end;
   }
@@ -1492,9 +1325,6 @@ button:focus-visible {
     padding: 10px;
   }
 
-  .search-box kbd {
-    display: none;
-  }
 }
 
 @media (min-width: 480px) and (max-width: 767px) {
