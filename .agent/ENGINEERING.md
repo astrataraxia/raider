@@ -233,6 +233,7 @@ retry_attempt
 - Razor 기본 HTML encoding을 유지한다.
 - 외부 링크 URL은 도메인 생성 시 검증한다.
 - 화면에는 비밀값, 원본 응답, 내부 오류 상세를 포함하지 않는다.
+- 스냅샷 시각은 수집과 저장 경계에서는 `DateTimeOffset` 그대로 유지하고, 홈 화면 표시 직전에 `Asia/Seoul` 기준으로 변환한다.
 - 즐겨찾기 PUT은 현재 스냅샷에 존재하는 canonical `(Platform, ChannelId)`만 허용한다.
 - 즐겨찾기 쓰기 API는 antiforgery 검증을 적용한다.
 

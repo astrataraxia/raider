@@ -1,5 +1,22 @@
 # Raider 릴리스 기록.
 
+## v1.3.4. 2026-06-27.
+
+- **한국 시간 고정 표시**: 홈 화면의 스냅샷 갱신 시각을 서버 또는 컨테이너 로컬 타임존과 무관하게 `Asia/Seoul` 기준 `HH:mm`으로 표시한다.
+- **SQLite 전이 취약 패키지 해소**: `SQLitePCLRaw.bundle_e_sqlite3`를 3.0.3으로 명시해 `SQLitePCLRaw.lib.e_sqlite3` 2.1.11의 `NU1903` 취약점 경고를 제거했다.
+- **문서 최신화**: README, 제품 계획, 엔지니어링 계약, 디자인 계약, 배포 문서를 `v1.3.4`와 현재 시간 표시 계약 기준으로 정리했다.
+
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 홈 화면 테스트 | `dotnet test --filter "FullyQualifiedName~HomePageTests"` 10개 통과. |
+| 전체 자동 테스트 | `dotnet test` 82개 통과. |
+| 취약 패키지 확인 | `dotnet list src/Raider.Web/Raider.Web.csproj package --include-transitive --vulnerable` 취약 패키지 없음. |
+| 코드 포맷 | `dotnet format --verify-no-changes` 통과. |
+| 빌드 및 경고 | `dotnet build --no-restore -warnaserror` 경고 0개, 오류 0개. |
+| 공백 검사 | `git diff --check` 통과. |
+
 ## v1.3.3. 2026-06-16.
 
 - **빠른 수동 새로고침**: 새로고침 요청이 수집 worker를 즉시 실행하고, CHZZK과 SOOP 모두 첫 페이지 결과를 부분 스냅샷으로 먼저 게시해 인기 방송이 더 빨리 화면에 반영된다.

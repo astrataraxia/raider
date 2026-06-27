@@ -1,6 +1,6 @@
 # Raider 단일 앱 컨테이너 배포.
 
-현재 릴리스 버전은 `v1.2.1`이다.
+현재 릴리스 버전은 `v1.3.4`다.
 
 ## 권장 환경.
 
@@ -23,7 +23,7 @@
 `.env`의 `RAIDER_IMAGE`에는 레지스트리에 게시한 이미지 주소를 입력한다.
 
 ```text
-RAIDER_IMAGE=ghcr.io/astrataraxia/raider:1.2.1
+RAIDER_IMAGE=ghcr.io/astrataraxia/raider:1.3.4
 RAIDER_BIND_ADDRESS=127.0.0.1
 RAIDER_PORT=8080
 RAIDER_DATA_PATH=./data
@@ -49,11 +49,11 @@ docker compose down
 
 ## GHCR 이미지 게시.
 
-`.github/workflows/publish-container.yml`은 `v1.2.1` 형태의 Git 태그가 GitHub에 push되면 실행된다.
+`.github/workflows/publish-container.yml`은 `v1.3.4` 형태의 Git 태그가 GitHub에 push되면 실행된다.
 
 1. 전체 테스트, 포맷 검사, 경고 오류 빌드를 실행한다.
 2. 검증이 통과하면 저장소의 `GITHUB_TOKEN`으로 GHCR에 로그인한다.
-3. 예를 들어 `v1.2.1`이면 `ghcr.io/astrataraxia/raider:1.2.1`, `:1.2`, `:latest` 태그를 게시한다.
+3. 예를 들어 `v1.3.4`면 `ghcr.io/astrataraxia/raider:1.3.4`, `:1.3`, `:latest` 태그를 게시한다.
 
 별도 Personal Access Token을 GitHub Actions Secret에 저장하지 않는다. 워크플로의 `packages: write` 권한만 사용한다.
 
@@ -62,7 +62,7 @@ GHCR 이미지를 수동으로 먼저 게시했다면 GitHub package의 `Package
 릴리스 게시 명령.
 
 ```text
-VERSION=1.3.0
+VERSION=1.3.4
 git tag -a "v$VERSION" -m "Raider v$VERSION"
 git push origin "v$VERSION"
 ```
@@ -87,6 +87,10 @@ RAIDER__CHZZK__CLIENTSECRET
 ```
 
 SOOP은 현재 공식 발급 키 없이 검증된 공개 웹 JSON을 사용한다.
+
+## 시간 표시.
+
+컨테이너와 호스트 운영 타임존은 별도로 강제하지 않는다. 앱은 수집 시각을 `DateTimeOffset`으로 보관하고, 홈 화면의 마지막 갱신 시각만 서버 로컬 타임존과 무관하게 `Asia/Seoul` 기준으로 표시한다.
 
 ## 실행 계약.
 
