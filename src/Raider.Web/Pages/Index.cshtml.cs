@@ -1,5 +1,6 @@
 // 현재 라이브 스냅샷을 검색 가능한 홈 화면 모델로 변환한다.
 using System.Collections.Immutable;
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Raider.Web.Collection;
@@ -11,6 +12,7 @@ namespace Raider.Web.Pages;
 public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry registry, FavoriteStore favoriteStore, TimeProvider timeProvider) : PageModel
 {
     private const int PageSize = 120;
+    private static readonly TimeZoneInfo SeoulTimeZone = FindSeoulTimeZone();
     private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(20);
 
     [BindProperty(SupportsGet = true)]
@@ -63,6 +65,8 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
         .Any(state => timeProvider.GetUtcNow() - state.LastSuccessAt > StaleAfter);
 
     public bool IsRefreshing => registry.IsAnyCollecting;
+
+    public string SnapshotObservedAtText => FormatSeoulTime(Snapshot.ObservedAt);
 
     public async Task OnGetAsync()
     {
@@ -145,5 +149,26 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
             "soop" => Raider.Web.Live.Platform.Soop,
             _ => null,
         };
+    }
+
+    public static string FormatSeoulTime(DateTimeOffset observedAt)
+    {
+        return TimeZoneInfo.ConvertTime(observedAt, SeoulTimeZone).ToString("HH:mm", CultureInfo.InvariantCulture);
+    }
+
+    private static TimeZoneInfo FindSeoulTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Korea Standard Time");
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Korea Standard Time");
+        }
     }
 }

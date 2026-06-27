@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Raider.Web.Collection;
 using Raider.Web.Live;
+using Raider.Web.Pages;
 
 namespace Raider.Web.Tests.Web;
 
@@ -119,6 +120,27 @@ public sealed class HomePageTests : IDisposable
         Assert.Contains("No Image의 방송 썸네일", stale, StringComparison.Ordinal);
         Assert.Contains("방송 목록이 오래되었습니다", stale, StringComparison.Ordinal);
         Assert.Contains("현재 방송을 찾지 못했습니다.", empty, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task HeaderShowsSnapshotObservedAtInAsiaSeoulTime()
+    {
+        snapshots.ApplySuccess(
+            Platform.Chzzk,
+            [Stream("seoul-time", Platform.Chzzk, "Seoul Time", "Live", 1, [])],
+            new DateTimeOffset(2026, 6, 13, 0, 5, 0, TimeSpan.Zero));
+
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/", CancellationToken.None));
+
+        Assert.Contains("09:05 갱신", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SnapshotObservedAtFormattingDoesNotDependOnServerLocalTime()
+    {
+        var displayed = IndexModel.FormatSeoulTime(new DateTimeOffset(2026, 6, 13, 0, 5, 0, TimeSpan.Zero));
+
+        Assert.Equal("09:05", displayed);
     }
 
     [Fact]
