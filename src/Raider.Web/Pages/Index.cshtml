@@ -32,7 +32,7 @@
                 }
                 else
                 {
-                    <form method="post" asp-page-handler="Refresh">
+                    <form method="post" asp-page-handler="Refresh" data-refresh-form>
                         @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
                         @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
                         @if (!string.IsNullOrWhiteSpace(Model.Query)) { <input type="hidden" name="q" value="@Model.Query" /> }
@@ -168,55 +168,58 @@
             }
         </section>
 
-        @if (Model.HasPartialFailure)
-        {
-            <aside class="notice-banner" role="status"><strong>일부 플랫폼 갱신이 지연되고 있습니다.</strong><span>마지막 정상 목록을 표시하며 자동으로 재시도 중입니다.</span></aside>
-        }
-        @if (Model.IsStale)
-        {
-            <aside class="notice-banner" role="status"><strong>방송 목록이 오래되었습니다.</strong><span>플랫폼 갱신을 기다리고 있습니다.</span></aside>
-        }
-
-        <section class="section-heading" aria-labelledby="live-title"><div><p class="eyebrow">SORTED BY VIEWERS</p><h2 id="live-title">현재 인기 방송</h2></div><span>시청자 수 높은 순</span></section>
-
-        @if (Model.IsInitialCollection)
-        {
-            <section class="state-panel"><h2>첫 방송 목록을 수집하고 있습니다.</h2><p>CHZZK과 SOOP의 현재 라이브를 확인하는 중입니다.</p><div class="skeleton-grid" aria-hidden="true">@for (var i = 0; i < 8; i++) { <span></span> }</div></section>
-        }
-        else if (Model.HasInitialFailure)
-        {
-            <section class="state-panel"><h2>첫 방송 목록을 가져오지 못했습니다.</h2><p>플랫폼 연결을 자동으로 재시도 중입니다.</p></section>
-        }
-        else if (Model.Streams.IsEmpty)
-        {
-            <section class="state-panel"><h2>현재 방송을 찾지 못했습니다.</h2><p>다른 플랫폼, 태그 또는 검색어를 사용해 보세요.</p></section>
-        }
-        else
-        {
-            <section class="stream-grid" aria-label="현재 라이브 방송">
-                @foreach (var stream in Model.Streams)
-                {
-                    <partial name="_StreamTile" model="stream" />
-                }
-            </section>
-            @if (Model.TotalPages > 1)
+        <div data-live-content data-refreshing="@Model.IsRefreshing.ToString().ToLowerInvariant()" data-snapshot-version="@Model.Snapshot.Version.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+            @if (Model.HasPartialFailure)
             {
-                <nav class="pagination" aria-label="방송 목록 페이지">
-                    @if (Model.PageNumber > 1)
-                    {
-                        <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, fav = Model.FavoritesOnly ? "true" : null, cat = Model.SelectedCategory, p = Model.PageNumber - 1 })">이전</a>
-                    }
-                    <span>@Model.PageNumber / @Model.TotalPages</span>
-                    @if (Model.PageNumber < Model.TotalPages)
-                    {
-                        <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, fav = Model.FavoritesOnly ? "true" : null, cat = Model.SelectedCategory, p = Model.PageNumber + 1 })">다음</a>
-                    }
-                </nav>
+                <aside class="notice-banner" role="status"><strong>일부 플랫폼 갱신이 지연되고 있습니다.</strong><span>마지막 정상 목록을 표시하며 자동으로 재시도 중입니다.</span></aside>
             }
-        }
+            @if (Model.IsStale)
+            {
+                <aside class="notice-banner" role="status"><strong>방송 목록이 오래되었습니다.</strong><span>플랫폼 갱신을 기다리고 있습니다.</span></aside>
+            }
+
+            <section class="section-heading" aria-labelledby="live-title"><div><p class="eyebrow">SORTED BY VIEWERS</p><h2 id="live-title">현재 인기 방송</h2></div><span>시청자 수 높은 순</span></section>
+
+            @if (Model.IsInitialCollection)
+            {
+                <section class="state-panel"><h2>첫 방송 목록을 수집하고 있습니다.</h2><p>CHZZK과 SOOP의 현재 라이브를 확인하는 중입니다.</p><div class="skeleton-grid" aria-hidden="true">@for (var i = 0; i < 8; i++) { <span></span> }</div></section>
+            }
+            else if (Model.HasInitialFailure)
+            {
+                <section class="state-panel"><h2>첫 방송 목록을 가져오지 못했습니다.</h2><p>플랫폼 연결을 자동으로 재시도 중입니다.</p></section>
+            }
+            else if (Model.Streams.IsEmpty)
+            {
+                <section class="state-panel"><h2>현재 방송을 찾지 못했습니다.</h2><p>다른 플랫폼, 태그 또는 검색어를 사용해 보세요.</p></section>
+            }
+            else
+            {
+                <section class="stream-grid" aria-label="현재 라이브 방송">
+                    @foreach (var stream in Model.Streams)
+                    {
+                        <partial name="_StreamTile" model="stream" />
+                    }
+                </section>
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="pagination" aria-label="방송 목록 페이지">
+                        @if (Model.PageNumber > 1)
+                        {
+                            <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, fav = Model.FavoritesOnly ? "true" : null, cat = Model.SelectedCategory, p = Model.PageNumber - 1 })">이전</a>
+                        }
+                        <span>@Model.PageNumber / @Model.TotalPages</span>
+                        @if (Model.PageNumber < Model.TotalPages)
+                        {
+                            <a href="@Url.Page("/Index", new { platform = Model.Platform, tag = Model.Tag, q = Model.Query, fav = Model.FavoritesOnly ? "true" : null, cat = Model.SelectedCategory, p = Model.PageNumber + 1 })">다음</a>
+                        }
+                    </nav>
+                }
+            }
+        </div>
     </main>
     </div>
     <script src="/js/favorites.js" asp-append-version="true"></script>
+    <script src="/js/refresh.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var toggleBtn = document.getElementById("tag-toggle-btn");
@@ -248,29 +251,5 @@
             }
         });
     </script>
-    @if (Model.IsRefreshing)
-    {
-        <script>
-            (function() {
-                const initialVersion = "@Model.Snapshot.Version.ToString(System.Globalization.CultureInfo.InvariantCulture)";
-
-                function checkStatus() {
-                    fetch('/api/refresh/status')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.snapshotVersion !== initialVersion || !data.isRefreshing) {
-                                window.location.reload();
-                            } else {
-                                setTimeout(checkStatus, 400);
-                            }
-                        })
-                        .catch(() => {
-                            setTimeout(checkStatus, 1000);
-                        });
-                }
-                setTimeout(checkStatus, 200);
-            })();
-        </script>
-    }
 </body>
 </html>

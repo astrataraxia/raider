@@ -347,6 +347,17 @@
     }
   }
 
+  function bindStreamToggles() {
+    document.querySelectorAll(".favorite-toggle").forEach(function (button) {
+      if (button.dataset.favoriteBound === "true") {
+        return;
+      }
+
+      button.dataset.favoriteBound = "true";
+      button.addEventListener("click", function () { void toggle(button); });
+    });
+  }
+
   async function load() {
     try {
       var response = await fetch("/api/favorites", { headers: { Accept: "application/json" } });
@@ -358,6 +369,7 @@
       (await response.json()).forEach(function (favorite) {
         favorites.set(key(favorite.platform, favorite.channelId), favorite);
       });
+      bindStreamToggles();
       render();
     } catch {
       status.textContent = "즐겨찾기를 불러오지 못했습니다.";
@@ -384,10 +396,6 @@
       button.disabled = false;
     }
   }
-
-  document.querySelectorAll(".favorite-toggle").forEach(function (button) {
-    button.addEventListener("click", function () { void toggle(button); });
-  });
 
   collapse.addEventListener("click", function () {
     if (mobileQuery.matches) {
@@ -428,6 +436,11 @@
     });
   }
 
+  window.RaiderFavorites = {
+    refresh: load
+  };
+
+  bindStreamToggles();
   setCollapsed(localStorage.getItem("raider.favorites.sidebarCollapsed") === "true");
   syncViewport();
   void load();
