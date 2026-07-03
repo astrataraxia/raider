@@ -28,7 +28,7 @@ builder.Services
     .AddHttpClient<SoopClient>(client =>
     {
         client.BaseAddress = new Uri("https://live.sooplive.com/");
-        client.Timeout = TimeSpan.FromSeconds(5);
+        client.Timeout = TimeSpan.FromSeconds(15);
     })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {

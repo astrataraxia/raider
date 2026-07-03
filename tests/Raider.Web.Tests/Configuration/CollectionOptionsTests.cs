@@ -9,15 +9,29 @@ public sealed class CollectionOptionsTests
     [Fact]
     public void ChzzkCollectionTimeoutAllowsLargePaginatedCatalog()
     {
+        var options = ReadCollectionOptions("Chzzk");
+
+        Assert.NotNull(options);
+        Assert.True(options.CollectionTimeout >= TimeSpan.FromMinutes(3));
+    }
+
+    [Fact]
+    public void SoopCollectionTimeoutAllowsSlowPaginatedCatalog()
+    {
+        var options = ReadCollectionOptions("Soop");
+
+        Assert.NotNull(options);
+        Assert.True(options.CollectionTimeout >= TimeSpan.FromMinutes(3));
+    }
+
+    private static CollectionOptions? ReadCollectionOptions(string platform)
+    {
         var configuration = new ConfigurationBuilder()
             .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.json"))
             .Build();
 
-        var options = configuration
-            .GetSection("Raider:Collection:Chzzk")
+        return configuration
+            .GetSection($"Raider:Collection:{platform}")
             .Get<CollectionOptions>();
-
-        Assert.NotNull(options);
-        Assert.True(options.CollectionTimeout >= TimeSpan.FromMinutes(3));
     }
 }

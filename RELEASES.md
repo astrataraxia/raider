@@ -1,5 +1,16 @@
 # Raider 릴리스 기록.
 
+## v1.3.7. 2026-07-03.
+
+- **SOOP 운영 timeout 확대**: 운영 서버에서 SOOP 공개 웹 JSON 페이지 일부가 로컬보다 느리게 응답해 전체 수집이 반복 timeout되는 현상을 확인하고, SOOP 요청 timeout을 15초, 전체 수집 timeout을 180초로 늘렸다.
+- **SOOP 설정 회귀 테스트**: SOOP 전체 수집 timeout도 대형 페이지네이션과 느린 운영망을 감당하는 값인지 설정 테스트로 고정했다.
+
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 설정 테스트 | `dotnet test tests\Raider.Web.Tests\Raider.Web.Tests.csproj --filter CollectionOptionsTests --no-restore` 2개 통과. |
+
 ## v1.3.6. 2026-07-03.
 
 - **CHZZK 수집 timeout 확대**: 운영에서 CHZZK 전체 라이브 규모가 6천 개 이상으로 커지며 20개 단위 순차 페이지 수집이 60초 제한에 걸릴 수 있어, CHZZK 전체 수집 timeout을 180초로 늘렸다.
