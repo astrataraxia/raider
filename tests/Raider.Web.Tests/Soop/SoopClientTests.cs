@@ -77,7 +77,7 @@ public sealed class SoopClientTests
         var handler = new AsyncFixtureHandler(async (request, cancellationToken) =>
         {
             var current = Interlocked.Increment(ref concurrent);
-            maximumConcurrent = Math.Max(maximumConcurrent, current);
+            UpdateMaximum(ref maximumConcurrent, current);
             try
             {
                 await Task.Delay(20, cancellationToken);
@@ -107,6 +107,20 @@ public sealed class SoopClientTests
         Assert.Single(partial);
         Assert.Equal(4, result.Length);
         Assert.True(maximumConcurrent > 1);
+    }
+
+    private static void UpdateMaximum(ref int target, int value)
+    {
+        int current;
+        do
+        {
+            current = Volatile.Read(ref target);
+            if (value <= current)
+            {
+                return;
+            }
+        }
+        while (Interlocked.CompareExchange(ref target, value, current) != current);
     }
 
     [Fact]
