@@ -1,5 +1,20 @@
 # Raider 릴리스 기록.
 
+## v1.3.6. 2026-07-03.
+
+- **CHZZK 수집 timeout 확대**: 운영에서 CHZZK 전체 라이브 규모가 6천 개 이상으로 커지며 20개 단위 순차 페이지 수집이 60초 제한에 걸릴 수 있어, CHZZK 전체 수집 timeout을 180초로 늘렸다.
+- **운영 기본값 회귀 테스트**: CHZZK 수집 timeout이 대형 페이지네이션 규모를 감당하는지 설정 테스트로 고정했다.
+- **SOOP 병렬 테스트 안정화**: 병렬 수집 테스트의 최대 동시성 관측값을 원자적으로 갱신해 테스트 race를 제거했다.
+
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 설정 테스트 | `dotnet test tests\Raider.Web.Tests\Raider.Web.Tests.csproj --filter CollectionOptionsTests --no-restore` 1개 통과. |
+| SOOP 병렬 테스트 반복 | `dotnet test tests\Raider.Web.Tests\Raider.Web.Tests.csproj --filter FullyQualifiedName~SoopClientTests.PublishesFirstPageAndFetchesRemainingPagesConcurrently --no-restore` 10회 통과. |
+| 전체 자동 테스트 | `dotnet test tests\Raider.Web.Tests\Raider.Web.Tests.csproj --no-restore` 83개 통과. |
+| 코드 포맷 | `dotnet format --verify-no-changes` 통과. |
+
 ## v1.3.5. 2026-06-28.
 
 - **부분 새로고침 전환**: 수집 완료 감지 시 `window.location.reload()`로 전체 문서를 다시 불러오던 흐름을 제거하고, 현재 HTML을 fetch한 뒤 헤더 상태, 통계, 라이브 결과 영역만 교체하도록 바꿨다.
