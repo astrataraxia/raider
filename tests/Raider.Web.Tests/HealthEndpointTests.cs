@@ -3,8 +3,10 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Raider.Web.Chzzk;
 using Raider.Web.Collection;
 using Raider.Web.Live;
+using Raider.Web.Soop;
 
 namespace Raider.Web.Tests;
 
@@ -77,6 +79,18 @@ public sealed class HealthEndpointTests : IDisposable
         Assert.Equal("Failure", soop.Result);
         Assert.Equal(2500, soop.DurationMs);
         Assert.Equal("Timeout", soop.ErrorKind);
+    }
+
+    [Fact]
+    public void PlatformHttpClientsRelyOnTheCollectionTimeout()
+    {
+        var factory = application.Services.GetRequiredService<IHttpClientFactory>();
+
+        var chzzk = factory.CreateClient(nameof(ChzzkClient));
+        var soop = factory.CreateClient(nameof(SoopClient));
+
+        Assert.Equal(Timeout.InfiniteTimeSpan, chzzk.Timeout);
+        Assert.Equal(Timeout.InfiniteTimeSpan, soop.Timeout);
     }
 
     public void Dispose()

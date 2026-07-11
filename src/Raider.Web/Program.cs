@@ -21,14 +21,14 @@ builder.Services.AddSingleton<IHostedService, FavoriteStoreInitializer>();
 builder.Services.AddHttpClient<ChzzkClient>(client =>
 {
     client.BaseAddress = new Uri("https://openapi.chzzk.naver.com/");
-    client.Timeout = TimeSpan.FromSeconds(5);
+    client.Timeout = Timeout.InfiniteTimeSpan;
 });
 builder.Services.AddTransient<ILiveSource>(services => services.GetRequiredService<ChzzkClient>());
 builder.Services
     .AddHttpClient<SoopClient>(client =>
     {
         client.BaseAddress = new Uri("https://live.sooplive.com/");
-        client.Timeout = TimeSpan.FromSeconds(15);
+        client.Timeout = Timeout.InfiniteTimeSpan;
     })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
