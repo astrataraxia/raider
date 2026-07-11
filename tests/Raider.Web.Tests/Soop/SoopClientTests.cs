@@ -70,7 +70,7 @@ public sealed class SoopClientTests
     }
 
     [Fact]
-    public async Task PublishesFirstPageAndFetchesRemainingPagesConcurrently()
+    public async Task PublishesFirstPageAndFetchesRemainingPagesSequentially()
     {
         var concurrent = 0;
         var maximumConcurrent = 0;
@@ -106,7 +106,36 @@ public sealed class SoopClientTests
 
         Assert.Single(partial);
         Assert.Equal(4, result.Length);
-        Assert.True(maximumConcurrent > 1);
+        Assert.Equal(1, maximumConcurrent);
+    }
+
+    [Fact]
+    public async Task RetriesTransientFailureForAnIndividualPage()
+    {
+        var requests = 0;
+        var handler = new FixtureHandler(_ =>
+        {
+            requests++;
+            if (requests == 1)
+            {
+                return Response("pagination-first.json");
+            }
+
+            if (requests == 2)
+            {
+                throw new HttpRequestException("Temporary network failure.");
+            }
+
+            return JsonResponse(
+                """
+                {"total_cnt":61,"cnt":1,"broad":[{"broad_no":2002,"user_id":"fixture-user-2","user_nick":"Fixture streamer two","broad_title":"Fixture live two","current_view_cnt":123}]}
+                """);
+        });
+
+        var result = await CreateClient(handler).CollectAsync(CancellationToken.None);
+
+        Assert.Equal(2, result.Length);
+        Assert.Equal(3, requests);
     }
 
     private static void UpdateMaximum(ref int target, int value)

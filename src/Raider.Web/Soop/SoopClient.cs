@@ -13,7 +13,9 @@ public sealed class SoopClient : IProgressiveLiveSource
 {
     private const int PageSize = 60;
     private const int MaximumPages = 100;
-    private const int MaximumConcurrentRequests = 4;
+    private const int MaximumConcurrentRequests = 1;
+    private const int MaximumRequestAttempts = 3;
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
     private readonly HttpClient httpClient;
     private readonly TimeProvider timeProvider;
     private readonly ILogger<SoopClient> logger;
@@ -49,7 +51,7 @@ public sealed class SoopClient : IProgressiveLiveSource
         CancellationToken cancellationToken)
     {
         var streams = new List<LiveStream>();
-        var firstPage = await GetPageAsync(1, cancellationToken);
+        var firstPage = await GetPageWithRetryAsync(1, cancellationToken);
         var pageCount = (int)Math.Ceiling(firstPage.TotalCount / (double)PageSize);
         if (pageCount > MaximumPages)
         {
@@ -98,7 +100,7 @@ public sealed class SoopClient : IProgressiveLiveSource
             async (pageNumber, token) =>
             {
                 var pageStreams = new List<LiveStream>(PageSize);
-                var page = await GetPageAsync(pageNumber, token);
+                var page = await GetPageWithRetryAsync(pageNumber, token);
                 Interlocked.Add(ref excludedCount, Map(page.Broadcasts, pageStreams));
                 lock (streams)
                 {
@@ -106,6 +108,31 @@ public sealed class SoopClient : IProgressiveLiveSource
                 }
             });
         return excludedCount;
+    }
+
+    private async Task<SoopPage> GetPageWithRetryAsync(int pageNumber, CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await GetPageAsync(pageNumber, cancellationToken);
+            }
+            catch (PlatformCollectionException exception) when (
+                attempt < MaximumRequestAttempts &&
+                exception.Error.CanRetryImmediately &&
+                !cancellationToken.IsCancellationRequested)
+            {
+                logger.LogWarning(
+                    exception,
+                    "Retrying SOOP page collection. Platform: {Platform}, PageNumber: {PageNumber}, ErrorKind: {ErrorKind}, RetryAttempt: {RetryAttempt}",
+                    Platform.Soop,
+                    pageNumber,
+                    exception.Error.Kind,
+                    attempt);
+                await Task.Delay(RetryDelay, timeProvider, cancellationToken);
+            }
+        }
     }
 
     private int Map(IEnumerable<SoopBroadcast> broadcasts, List<LiveStream> streams)
