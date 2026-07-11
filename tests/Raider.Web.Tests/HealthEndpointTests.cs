@@ -48,12 +48,35 @@ public sealed class HealthEndpointTests : IDisposable
         var snapshots = application.Services.GetRequiredService<SnapshotStore>();
         var before = await client.GetFromJsonAsync<RefreshStatus>("/api/refresh/status");
 
-        snapshots.ApplySuccess(Platform.Chzzk, [], DateTimeOffset.UtcNow);
+        snapshots.ApplySuccess(Platform.Chzzk, [], DateTimeOffset.UtcNow, TimeSpan.FromMilliseconds(1234));
         var after = await client.GetFromJsonAsync<RefreshStatus>("/api/refresh/status");
 
         Assert.NotNull(before);
         Assert.NotNull(after);
         Assert.NotEqual(before.SnapshotVersion, after.SnapshotVersion);
+        var chzzk = Assert.Single(after.Platforms, platform => platform.Platform == "Chzzk");
+        Assert.Equal("Success", chzzk.Result);
+        Assert.Equal(1234, chzzk.DurationMs);
+        Assert.Null(chzzk.ErrorKind);
+    }
+
+    [Fact]
+    public async Task RefreshStatusExposesSafeFailureDiagnostics()
+    {
+        var snapshots = application.Services.GetRequiredService<SnapshotStore>();
+
+        snapshots.ApplyFailure(
+            Platform.Soop,
+            new PlatformError(PlatformErrorKind.Timeout),
+            DateTimeOffset.UtcNow,
+            TimeSpan.FromMilliseconds(2500));
+        var status = await client.GetFromJsonAsync<RefreshStatus>("/api/refresh/status");
+
+        Assert.NotNull(status);
+        var soop = Assert.Single(status.Platforms, platform => platform.Platform == "Soop");
+        Assert.Equal("Failure", soop.Result);
+        Assert.Equal(2500, soop.DurationMs);
+        Assert.Equal("Timeout", soop.ErrorKind);
     }
 
     public void Dispose()
@@ -62,5 +85,7 @@ public sealed class HealthEndpointTests : IDisposable
         application.Dispose();
     }
 
-    private sealed record RefreshStatus(bool IsRefreshing, string SnapshotVersion);
+    private sealed record RefreshStatus(bool IsRefreshing, string SnapshotVersion, IReadOnlyList<PlatformStatus> Platforms);
+
+    private sealed record PlatformStatus(string Platform, string Result, double? DurationMs, string? ErrorKind);
 }

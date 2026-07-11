@@ -68,6 +68,15 @@ app.MapGet("/api/refresh/status", (CollectionRegistry registry, SnapshotStore sn
 {
     isRefreshing = registry.IsAnyCollecting,
     snapshotVersion = snapshots.Current.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
+    platforms = snapshots.Current.Platforms.Values
+        .OrderBy(state => state.Platform)
+        .Select(state => new
+        {
+            platform = state.Platform.ToString(),
+            result = state.LastAttemptAt is null ? "Pending" : state.Error is null ? "Success" : "Failure",
+            durationMs = state.LastDuration?.TotalMilliseconds,
+            errorKind = state.Error?.Kind.ToString(),
+        }),
 }));
 
 app.Run();

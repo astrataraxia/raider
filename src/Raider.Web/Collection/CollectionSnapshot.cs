@@ -11,7 +11,8 @@ public sealed record PlatformCollectionState(
     DateTimeOffset? LastSuccessAt,
     DateTimeOffset? LastAttemptAt,
     PlatformError? Error,
-    bool IsPartial)
+    bool IsPartial,
+    TimeSpan? LastDuration)
 {
     public bool AttemptCompleted => LastAttemptAt is not null;
 }

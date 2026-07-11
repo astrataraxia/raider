@@ -4,6 +4,7 @@
 
   var pollTimer = 0;
   var isPolling = false;
+  var reportedCollectionResults = new Set();
 
   function parseHtml(html) {
     return new DOMParser().parseFromString(html, "text/html");
@@ -78,6 +79,33 @@
     pollTimer = window.setTimeout(checkStatus, delay);
   }
 
+  function formatDuration(durationMs) {
+    return (durationMs / 1000).toFixed(durationMs >= 10000 ? 1 : 2) + "초";
+  }
+
+  function reportCollectionResults(platforms) {
+    (platforms || []).forEach(function (platform) {
+      if (platform.result === "Pending" || typeof platform.durationMs !== "number") {
+        return;
+      }
+
+      var resultKey = [platform.platform, platform.result, platform.durationMs, platform.errorKind || ""].join(":");
+      if (reportedCollectionResults.has(resultKey)) {
+        return;
+      }
+
+      reportedCollectionResults.add(resultKey);
+      var message = "[Raider 수집] " + platform.platform + ": " +
+        (platform.result === "Success" ? "성공" : "실패") + " (" + formatDuration(platform.durationMs) + ").";
+      if (platform.result === "Success") {
+        console.info(message);
+        return;
+      }
+
+      console.warn(message + " API 오류: " + (platform.errorKind || "Unknown") + ".");
+    });
+  }
+
   async function checkStatus() {
     var liveContent = document.querySelector("[data-live-content]");
     if (!liveContent) {
@@ -96,6 +124,9 @@
 
       var data = await response.json();
       if (data.snapshotVersion !== initialVersion || !data.isRefreshing) {
+        if (!data.isRefreshing) {
+          reportCollectionResults(data.platforms);
+        }
         isPolling = false;
         await refreshCurrentHtml();
         return;

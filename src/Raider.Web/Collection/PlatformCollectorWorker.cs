@@ -54,7 +54,11 @@ public sealed class PlatformCollectorWorker : BackgroundService
                     var streams = source is IProgressiveLiveSource progressive
                         ? await progressive.CollectAsync(PublishPartialAsync, timeout.Token)
                         : await source.CollectAsync(timeout.Token);
-                    snapshots.ApplySuccess(source.Platform, streams, timeProvider.GetUtcNow());
+                    snapshots.ApplySuccess(
+                        source.Platform,
+                        streams,
+                        timeProvider.GetUtcNow(),
+                        Stopwatch.GetElapsedTime(started));
                     logger.LogInformation(
                         "Platform collection completed. Platform: {Platform}, Result: {Result}, StreamCount: {StreamCount}, DurationMs: {DurationMs}",
                         source.Platform,
@@ -78,14 +82,22 @@ public sealed class PlatformCollectorWorker : BackgroundService
                 }
                 catch (PlatformCollectionException exception)
                 {
-                    snapshots.ApplyFailure(source.Platform, exception.Error, timeProvider.GetUtcNow());
+                    snapshots.ApplyFailure(
+                        source.Platform,
+                        exception.Error,
+                        timeProvider.GetUtcNow(),
+                        Stopwatch.GetElapsedTime(started));
                     LogFailure(exception.Error, started);
                     return;
                 }
                 catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                 {
                     var error = new PlatformError(PlatformErrorKind.Timeout);
-                    snapshots.ApplyFailure(source.Platform, error, timeProvider.GetUtcNow());
+                    snapshots.ApplyFailure(
+                        source.Platform,
+                        error,
+                        timeProvider.GetUtcNow(),
+                        Stopwatch.GetElapsedTime(started));
                     LogFailure(error, started);
                     return;
                 }

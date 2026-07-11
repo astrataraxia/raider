@@ -17,14 +17,18 @@ public sealed class SnapshotStore
             .Distinct()
             .ToFrozenDictionary(
                 platform => platform,
-                platform => new PlatformCollectionState(platform, [], null, null, null, false));
+                platform => new PlatformCollectionState(platform, [], null, null, null, false, null));
         completeStreams = states.Keys.ToDictionary(platform => platform, _ => ImmutableArray<LiveStream>.Empty);
         current = Build(states, DateTimeOffset.MinValue, 0);
     }
 
     public CollectionSnapshot Current => Volatile.Read(ref current);
 
-    public bool ApplySuccess(Platform platform, ImmutableArray<LiveStream> streams, DateTimeOffset completedAt)
+    public bool ApplySuccess(
+        Platform platform,
+        ImmutableArray<LiveStream> streams,
+        DateTimeOffset completedAt,
+        TimeSpan? duration = null)
     {
         lock (updateLock)
         {
@@ -35,7 +39,7 @@ public sealed class SnapshotStore
             }
 
             var states = snapshot.Platforms.ToDictionary();
-            states[platform] = new PlatformCollectionState(platform, streams, completedAt, completedAt, null, false);
+            states[platform] = new PlatformCollectionState(platform, streams, completedAt, completedAt, null, false, duration);
             completeStreams[platform] = streams;
             Interlocked.Exchange(ref current, Build(states.ToFrozenDictionary(), completedAt, snapshot.Version + 1));
             return true;
@@ -58,7 +62,11 @@ public sealed class SnapshotStore
         }
     }
 
-    public bool ApplyFailure(Platform platform, PlatformError error, DateTimeOffset completedAt)
+    public bool ApplyFailure(
+        Platform platform,
+        PlatformError error,
+        DateTimeOffset completedAt,
+        TimeSpan? duration = null)
     {
         lock (updateLock)
         {
@@ -76,6 +84,7 @@ public sealed class SnapshotStore
                 LastAttemptAt = completedAt,
                 Error = error,
                 IsPartial = false,
+                LastDuration = duration,
             };
             Interlocked.Exchange(ref current, Build(states.ToFrozenDictionary(), completedAt, snapshot.Version + 1));
             return true;
