@@ -73,6 +73,7 @@ public sealed class PlatformCollectorWorker : BackgroundService
                     !cancellationToken.IsCancellationRequested)
                 {
                     logger.LogWarning(
+                        exception,
                         "Retrying platform collection. Platform: {Platform}, Operation: {Operation}, ErrorKind: {ErrorKind}, RetryAttempt: {RetryAttempt}",
                         source.Platform,
                         "collect",
@@ -87,7 +88,7 @@ public sealed class PlatformCollectorWorker : BackgroundService
                         exception.Error,
                         timeProvider.GetUtcNow(),
                         Stopwatch.GetElapsedTime(started));
-                    LogFailure(exception.Error, started);
+                    LogFailure(exception, started);
                     return;
                 }
                 catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -98,7 +99,7 @@ public sealed class PlatformCollectorWorker : BackgroundService
                         error,
                         timeProvider.GetUtcNow(),
                         Stopwatch.GetElapsedTime(started));
-                    LogFailure(error, started);
+                    LogFailure(new PlatformCollectionException(error, "Platform collection timed out."), started);
                     return;
                 }
             }
@@ -115,13 +116,14 @@ public sealed class PlatformCollectorWorker : BackgroundService
         return ValueTask.CompletedTask;
     }
 
-    private void LogFailure(PlatformError error, long started)
+    private void LogFailure(PlatformCollectionException exception, long started)
     {
         logger.LogWarning(
+            exception,
             "Platform collection completed. Platform: {Platform}, Result: {Result}, ErrorKind: {ErrorKind}, DurationMs: {DurationMs}",
             source.Platform,
             "Failure",
-            error.Kind,
+            exception.Error.Kind,
             Stopwatch.GetElapsedTime(started).TotalMilliseconds);
     }
 
