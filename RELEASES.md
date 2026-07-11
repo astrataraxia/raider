@@ -1,5 +1,19 @@
 # Raider 릴리스 기록.
 
+## v1.3.9. 2026-07-11.
+
+- **운영 수집 timeout 일원화**: CHZZK 5초, SOOP 15초의 HTTP 클라이언트 제한을 제거하고 기존 플랫폼별 전체 수집 timeout 180초만 적용한다. 느린 외부 API를 조기 수집 실패로 오인하지 않는다.
+- **회귀 테스트**: 두 플랫폼 HTTP 클라이언트가 별도 timeout 없이 수집 worker의 취소 토큰을 따르는지 고정했다.
+
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 공개 사이트 재현 | 수동 새로고침에서 CHZZK `Timeout` 11.1초, SOOP `Network` 17.9초를 브라우저 Console과 운영 컨테이너 로그에서 확인. |
+| 전체 자동 테스트 | `dotnet test tests\Raider.Web.Tests\Raider.Web.Tests.csproj --no-restore` 86개 통과. |
+| 코드 포맷 | `dotnet format tests\Raider.Web.Tests\Raider.Web.Tests.csproj --verify-no-changes --no-restore` 통과. |
+| 빌드 | `dotnet build src\Raider.Web\Raider.Web.csproj --no-restore -warnaserror` 경고 0개, 오류 0개. |
+
 ## v1.3.8. 2026-07-11.
 
 - **수집 결과 진단**: 플랫폼별 마지막 수집 성공 또는 실패, 전체 소요 시간, 안전한 오류 종류를 상태 API로 제공한다.
