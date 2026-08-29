@@ -1,9 +1,7 @@
 // CHZZK 공식 API의 전체 현재 라이브 목록을 수집하고 공통 모델로 변환한다.
 using System.Collections.Immutable;
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Raider.Web.Collection;
 using Raider.Web.Configuration;
