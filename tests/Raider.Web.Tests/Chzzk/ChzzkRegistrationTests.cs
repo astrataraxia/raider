@@ -22,6 +22,7 @@ public sealed class ChzzkRegistrationTests
                     {
                         ["Raider:Chzzk:ClientId"] = "fixture-id",
                         ["Raider:Chzzk:ClientSecret"] = "fixture-secret",
+                        ["Raider:Soop:ClientId"] = "fixture-soop-client-id",
                         ["Raider:Collection:Chzzk:Enabled"] = "false",
                         ["Raider:Collection:Soop:Enabled"] = "false",
                     });
