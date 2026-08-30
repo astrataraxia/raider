@@ -10,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddOptions<ChzzkOptions>()
     .Bind(builder.Configuration.GetSection(ChzzkOptions.SectionName));
+builder.Services
+    .AddOptions<SoopOptions>()
+    .Bind(builder.Configuration.GetSection(SoopOptions.SectionName));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<CollectionRegistry>();
 builder.Services.AddRazorPages();
@@ -27,7 +30,7 @@ builder.Services.AddTransient<ILiveSource>(services => services.GetRequiredServi
 builder.Services
     .AddHttpClient<SoopClient>(client =>
     {
-        client.BaseAddress = new Uri("https://live.sooplive.com/");
+        client.BaseAddress = new Uri("https://openapi.sooplive.com/");
         client.Timeout = Timeout.InfiniteTimeSpan;
     })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler

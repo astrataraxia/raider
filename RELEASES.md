@@ -1,5 +1,25 @@
 # Raider 릴리스 기록.
 
+## v2.0.0. 2026-08-30.
+
+- **SOOP 공식 API 전환**: 기존 공개 웹 JSON 수집을 SOOP Developers 공식 `broad/list` API로 교체했다. 운영 설정의 `Raider:Soop:ClientId` 또는 `RAIDER__SOOP__CLIENTID`가 필요하다.
+- **SOOP 카테고리 API 연동**: 공식 `broad/category/list` 응답을 재귀적으로 읽어 카테고리 이름을 공통 태그로 제공한다. 카테고리 메타데이터가 일시적으로 실패해도 방송 수집 자체는 계속한다.
+- **시청자 수 계약 결정**: 공식 응답의 `total_view_cnt`를 공통 모델의 현재 시청자 수로 매핑한다.
+- **즐겨찾기 호환성 유지**: 기존과 동일하게 SOOP `broad_no`를 `channel_id`로 사용한다. SQLite 즐겨찾기 파일 경로와 테이블 구조는 변경하지 않으며, 구버전 파일에 `category`가 없을 때만 기존 행을 보존한 채 컬럼을 추가한다.
+- **배포 버전 상향**: 공식 API 인증과 응답 계약 전환을 포함하는 큰 내부 호환성 변경으로 프로젝트 버전을 `2.0.0`으로 올렸다.
+
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 실제 일반 runtime 기동 | 시스템 `Microsoft.AspNetCore.App 10.0.11`에서 SOOP 공식 API 수집 성공, 1,391개 방송 확인. |
+| 실제 앱 HTTP | `/health/live` 200, SOOP 홈 200, 재생 링크 120개와 카테고리 태그 링크 렌더링 확인. |
+| 실제 필터 | SOOP 카테고리 필터 요청 200 및 결과 화면 렌더링 확인. |
+| Chzzk 격리 | 검증 프로세스에서 Chzzk 수집을 비활성화하고 SOOP 요청만 확인. |
+| 자동 테스트 | `dotnet test` 88개 통과. |
+| 코드 포맷 | `dotnet format --verify-no-changes --no-restore` 통과. |
+| 빌드 | `dotnet build --no-restore -warnaserror` 경고 0개, 오류 0개. |
+
 ## v1.3.11. 2026-07-12.
 
 - **SOOP 일시 네트워크 장애 복구**: 나머지 페이지를 순차 수집하고, DNS 또는 TCP의 일시 오류가 난 페이지는 최대 3회까지 재시도한다. 한 페이지의 순간 실패로 전체 SOOP 목록을 폐기할 가능성을 낮춘다.

@@ -1,14 +1,14 @@
 {
   "total_cnt": 1,
-  "cnt": 1,
+  "page_no": "1",
   "broad": [
     {
-      "broad_no": 2003,
+      "broad_no": "2003",
       "user_id": "fixture-user-3",
       "user_nick": "Fixture streamer three",
       "broad_thumb": null,
-      "current_view_cnt": 42,
-      "total_view_cnt": 84,
+      "total_view_cnt": "84",
+      "broad_cate_no": "00130000",
       "broad_grade": "0",
       "is_password": "0"
     }

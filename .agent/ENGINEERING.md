@@ -146,7 +146,7 @@ BaseService
 
 태그 규칙.
 
-- CHZZK의 `tags`와 카테고리, SOOP의 `auto_hashtags`, `category_tags`, `hash_tags`, `lang_tags`를 공통 태그로 변환한다.
+- CHZZK의 `tags`와 카테고리, SOOP 공식 `broad/category/list`의 카테고리 이름을 공통 태그로 변환한다.
 - 앞뒤 공백 제거, Unicode Form C 정규화, 빈 값 제거, 대소문자 무시 중복 제거를 적용한다.
 - UI 표시용 원문 태그와 검색 비교용 정규화 키를 구분하되 별도 범용 값 타입은 만들지 않는다.
 
@@ -177,7 +177,7 @@ BaseService
 - 원본 응답 전체, 인증 헤더, 쿠키, 토큰은 저장하거나 일반 로그에 출력하지 않는다.
 - 자동 테스트는 외부 네트워크를 호출하지 않고 최소 익명 fixture와 로컬 HTTP 서버를 사용한다.
 
-CHZZK은 공식 Open API를 운영 경로로 사용한다. SOOP은 공개 웹 JSON을 사용하며 변경과 차단 위험을 계약 테스트와 오류 상태로 드러낸다.
+CHZZK과 SOOP 모두 공식 API를 운영 경로로 사용한다. SOOP의 공식 `broad/list`와 `broad/category/list`는 Client ID가 필요하며, `result` 코드와 필수 JSON 구조 검사를 수행한다. `total_view_cnt`는 현재 시청자 수로 매핑하고 `broad_no`를 기존과 동일한 `ChannelId`로 사용한다. API 변경은 계약 테스트와 오류 상태로 드러낸다.
 
 ## 9. 수집과 동시성.
 
@@ -258,6 +258,7 @@ Docker에서는 환경 변수를 사용한다. 실제 비밀값이 담긴 `.env`
 ```text
 Raider:Chzzk:ClientId
 Raider:Chzzk:ClientSecret
+Raider:Soop:ClientId
 ```
 
 운영 환경 변수는 ASP.NET Core 계층형 설정 규칙에 맞춰 `RAIDER__` 접두사와 이중 밑줄을 사용한다.
@@ -269,6 +270,7 @@ RAIDER__BIND_ADDR
 RAIDER__CHZZK__CLIENTID
 RAIDER__CHZZK__CLIENTSECRET
 RAIDER__CHZZK__POLLINTERVAL
+RAIDER__SOOP__CLIENTID
 RAIDER__SOOP__POLLINTERVAL
 RAIDER__REQUESTTIMEOUT
 RAIDER__COLLECTIONTIMEOUT

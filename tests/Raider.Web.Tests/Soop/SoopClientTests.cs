@@ -1,4 +1,4 @@
-// SOOP 공개 웹 JSON client의 변환, 전체 페이지, 무쿠키, 오류 계약을 검증한다.
+// SOOP 공식 API client의 변환, 전체 페이지, 무쿠키, 오류 계약을 검증한다.
 using System.Collections.Immutable;
 using System.Net;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,7 +11,7 @@ namespace Raider.Web.Tests.Soop;
 public sealed class SoopClientTests
 {
     [Fact]
-    public async Task NormalFixtureMapsCurrentViewCountTagsAndUrls()
+    public async Task NormalFixtureMapsOfficialViewCountCategoryAndUrls()
     {
         var client = CreateClient(new FixtureHandler(_ => Response("normal.json")));
 
@@ -22,9 +22,9 @@ public sealed class SoopClientTests
         Assert.Equal("2001", stream.BroadcastId);
         Assert.Equal(321, stream.ViewerCount);
         Assert.Equal("https://example.invalid/soop/thumbnail-1.jpg", stream.ThumbnailUrl);
-        Assert.Equal("https://play.sooplive.co.kr/fixture-user-1/2001", stream.WatchUrl);
+        Assert.Equal("https://play.sooplive.com/fixture-user-1/2001", stream.WatchUrl);
         Assert.Equal(
-            ["Fixture auto", "Fixture category tag", "Fixture hash", "Fixture language", "Fixture category"],
+            ["Fixture category"],
             stream.Tags.ToArray());
     }
 
@@ -33,7 +33,7 @@ public sealed class SoopClientTests
     {
         var optional = CreateClient(new FixtureHandler(_ => JsonResponse(
             """
-            {"total_cnt":1,"cnt":1,"broad":[{"broad_no":2004,"user_id":"user","user_nick":"Streamer","broad_title":"Valid","broad_thumb":null,"current_view_cnt":1}],"time":0,"is_wp":0}
+            {"total_cnt":1,"page_no":"1","broad":[{"broad_no":"2004","user_id":"user","user_nick":"Streamer","broad_title":"Valid","broad_thumb":null,"total_view_cnt":"1","broad_cate_no":"00130000"}],"time":0}
             """)));
         var missing = CreateClient(new FixtureHandler(_ => Response("missing-required-field.json")));
 
@@ -52,7 +52,7 @@ public sealed class SoopClientTests
                 ? Response("pagination-first.json")
                 : JsonResponse(
                     """
-                    {"total_cnt":61,"cnt":2,"broad":[{"broad_no":2001,"user_id":"fixture-user-1","user_nick":"Duplicate","broad_title":"Duplicate","current_view_cnt":1},{"broad_no":2002,"user_id":"fixture-user-2","user_nick":"Fixture streamer two","broad_title":"Fixture live two","current_view_cnt":123}],"time":0,"is_wp":0}
+                    {"total_cnt":61,"page_no":"2","broad":[{"broad_no":"2001","user_id":"fixture-user-1","user_nick":"Duplicate","broad_title":"Duplicate","total_view_cnt":"1","broad_cate_no":"00130000"},{"broad_no":"2002","user_id":"fixture-user-2","user_nick":"Fixture streamer two","broad_title":"Fixture live two","total_view_cnt":"123","broad_cate_no":"00130000"}],"time":0}
                     """);
         });
 
@@ -62,11 +62,12 @@ public sealed class SoopClientTests
         Assert.Equal(2, requests.Count);
         Assert.All(requests, request =>
         {
-            Assert.Contains("orderType=broad_start", request.RequestUri!.Query, StringComparison.Ordinal);
+            Assert.Contains("order_type=broad_start", request.RequestUri!.Query, StringComparison.Ordinal);
+            Assert.Contains("client_id=fixture-client-id", request.RequestUri!.Query, StringComparison.Ordinal);
             Assert.False(request.Headers.Contains("Cookie"));
         });
-        Assert.Contains("pageNo=1", requests[0].RequestUri!.Query, StringComparison.Ordinal);
-        Assert.Contains("pageNo=2", requests[1].RequestUri!.Query, StringComparison.Ordinal);
+        Assert.Contains("page_no=1", requests[0].RequestUri!.Query, StringComparison.Ordinal);
+        Assert.Contains("page_no=2", requests[1].RequestUri!.Query, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -82,11 +83,11 @@ public sealed class SoopClientTests
             {
                 await Task.Delay(20, cancellationToken);
                 var pageNumber = int.Parse(
-                    System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query)["pageNo"]!,
+                    System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query)["page_no"]!,
                     System.Globalization.CultureInfo.InvariantCulture);
                 return JsonResponse(
                     $$"""
-                    {"total_cnt":240,"cnt":1,"broad":[{"broad_no":{{pageNumber}},"user_id":"user-{{pageNumber}}","user_nick":"Streamer {{pageNumber}}","broad_title":"Live {{pageNumber}}","current_view_cnt":{{pageNumber}}}]}
+                    {"total_cnt":240,"page_no":"{{pageNumber}}","broad":[{"broad_no":"{{pageNumber}}","user_id":"user-{{pageNumber}}","user_nick":"Streamer {{pageNumber}}","broad_title":"Live {{pageNumber}}","total_view_cnt":"{{pageNumber}}","broad_cate_no":"00130000"}]}
                     """);
             }
             finally
@@ -128,7 +129,7 @@ public sealed class SoopClientTests
 
             return JsonResponse(
                 """
-                {"total_cnt":61,"cnt":1,"broad":[{"broad_no":2002,"user_id":"fixture-user-2","user_nick":"Fixture streamer two","broad_title":"Fixture live two","current_view_cnt":123}]}
+                {"total_cnt":61,"page_no":"2","broad":[{"broad_no":"2002","user_id":"fixture-user-2","user_nick":"Fixture streamer two","broad_title":"Fixture live two","total_view_cnt":"123","broad_cate_no":"00130000"}]}
                 """);
         });
 
@@ -207,14 +208,32 @@ public sealed class SoopClientTests
         Assert.Equal(PlatformErrorKind.Timeout, error.Error.Kind);
     }
 
+    [Fact]
+    public async Task MapsInvalidOfficialClientResultAsAuthentication()
+    {
+        var client = CreateClient(new FixtureHandler(_ => JsonResponse(
+            """
+            {"result":-1104,"msg":"invalid client"}
+            """)));
+
+        var error = await Assert.ThrowsAsync<PlatformCollectionException>(
+            () => client.CollectAsync(CancellationToken.None));
+
+        Assert.Equal(PlatformErrorKind.Authentication, error.Error.Kind);
+    }
+
     private static SoopClient CreateClient(HttpMessageHandler handler)
     {
         return new SoopClient(
-            new HttpClient(handler)
+            new HttpClient(new CategoryFixtureHandler(handler))
             {
-                BaseAddress = new Uri("https://live.sooplive.com/"),
+                BaseAddress = new Uri("https://openapi.sooplive.com/"),
                 Timeout = TimeSpan.FromSeconds(5),
             },
+            Microsoft.Extensions.Options.Options.Create(new Raider.Web.Configuration.SoopOptions
+            {
+                ClientId = "fixture-client-id",
+            }),
             TimeProvider.System,
             NullLogger<SoopClient>.Instance);
     }
@@ -230,6 +249,34 @@ public sealed class SoopClientTests
         {
             Content = new StringContent(json),
         };
+    }
+
+    private sealed class CategoryFixtureHandler(HttpMessageHandler inner) : HttpMessageHandler
+    {
+        private readonly HttpMessageInvoker invoker = new(inner);
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri?.AbsolutePath.EndsWith("/broad/category/list", StringComparison.Ordinal) == true)
+            {
+                return Task.FromResult(JsonResponse(
+                    """
+                    {"broad_category":[{"cate_no":"00130000","cate_name":"Fixture category","child":[]}]}
+                    """));
+            }
+
+            return invoker.SendAsync(request, cancellationToken);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                invoker.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
     }
 
     private sealed class FixtureHandler(Func<HttpRequestMessage, HttpResponseMessage> respond) : HttpMessageHandler

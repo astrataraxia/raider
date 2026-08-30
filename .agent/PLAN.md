@@ -2,7 +2,7 @@
 
 ## 현재 상태.
 
-Raider `v1.3.11`은 CHZZK과 SOOP의 현재 라이브 방송을 수집하고 검색 가능한 타일 화면, 서버 공용 즐겨찾기, 빠른 수동 새로고침과 전체 문서 reload 없는 부분 갱신을 제공한다. 브라우저 Console에서 플랫폼별 수집 결과와 소요 시간을 진단할 수 있다. 현재 릴리스 구현과 출시 검증은 완료됐다. 완료 범위와 검증 결과는 [RELEASES.md](../RELEASES.md)에 보관한다.
+Raider `v2.0.0`은 CHZZK과 SOOP의 현재 라이브 방송을 수집하고 검색 가능한 타일 화면, 서버 공용 즐겨찾기, 빠른 수동 새로고침과 전체 문서 reload 없는 부분 갱신을 제공한다. 브라우저 Console에서 플랫폼별 수집 결과와 소요 시간을 진단할 수 있다. SOOP 수집은 공개 웹 JSON 대신 SOOP Developers 공식 API를 사용한다. 현재 릴리스 구현과 출시 검증은 완료됐다. 완료 범위와 검증 결과는 [RELEASES.md](../RELEASES.md)에 보관한다.
 
 현재 진행 중인 Goal은 없다. 후속 작업은 사용자 가치나 운영 문제로 필요성이 확인된 항목만 별도 계획 문서로 만든다.
 
@@ -32,7 +32,8 @@ Raider `v1.3.11`은 CHZZK과 SOOP의 현재 라이브 방송을 수집하고 검
 ## 운영 계약.
 
 - CHZZK은 공식 Open API를 사용한다.
-- SOOP은 공식 Client ID가 없어 검증된 공개 웹 JSON을 사용한다. 계약 변경과 차단 가능성을 운영 위험으로 유지한다.
+- SOOP은 SOOP Developers 공식 `broad/list`와 `broad/category/list` API를 사용한다. Client ID를 운영 설정으로 주입하며 계약 변경은 응답 계약 오류로 드러낸다.
+- SOOP의 `total_view_cnt`는 현재 시청자 수로 공통 모델에 매핑하고, 기존 `broad_no` 기반 `channel_id`는 유지한다.
 - 플랫폼별 폴링 주기는 10분이다.
 - HTTP 요청은 전체 수집 취소 토큰으로만 제한하고, 전체 수집 timeout은 CHZZK과 SOOP 모두 180초다.
 - 한 플랫폼 실패는 다른 플랫폼 수집과 화면 응답을 막지 않는다.

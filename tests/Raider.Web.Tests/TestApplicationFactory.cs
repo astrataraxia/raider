@@ -15,6 +15,7 @@ internal sealed class TestApplicationFactory : WebApplicationFactory<Program>
             {
                 ["Raider:Chzzk:ClientId"] = "fixture-client-id",
                 ["Raider:Chzzk:ClientSecret"] = "fixture-client-secret",
+                ["Raider:Soop:ClientId"] = "fixture-soop-client-id",
                 ["Raider:Collection:Chzzk:Enabled"] = "false",
                 ["Raider:Collection:Soop:Enabled"] = "false",
                 ["Raider:Favorites:DatabasePath"] = Path.Combine(Path.GetTempPath(), $"raider-test-{Guid.NewGuid():N}.db"),
