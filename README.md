@@ -11,10 +11,11 @@ CHZZK과 SOOP의 현재 라이브 방송을 한 화면에서 검색하고 탐색
 - 시간 표시: 홈 화면의 스냅샷 갱신 시각은 서버 타임존과 무관하게 `Asia/Seoul` 기준으로 표시.
 - 새로고침 방식: 앱 내부 새로고침과 수집 완료 반영은 전체 문서 reload 없이 라이브 영역만 부분 갱신한다.
 - 수집 진단: 브라우저 개발자 도구 Console에서 플랫폼별 성공 또는 실패, 소요 시간, 안전한 오류 종류를 확인할 수 있다.
+- 플랫폼 키: CHZZK 또는 SOOP 키가 없어도 앱은 시작되고, 키가 없는 플랫폼만 화면에 오류로 표시한다.
 
 ## 시작하기.
 
-로컬 CHZZK 인증정보는 .NET User Secrets에 저장한다.
+로컬 플랫폼 인증정보는 .NET User Secrets에 저장한다.
 
 ```text
 dotnet user-secrets set "Raider:Chzzk:ClientId" "<client-id>" --project src/Raider.Web
@@ -23,9 +24,9 @@ dotnet user-secrets set "Raider:Soop:ClientId" "<soop-client-id>" --project src/
 dotnet run --project src/Raider.Web
 ```
 
-앱 실행 후 `http://localhost:5094` 또는 실행 로그에 표시된 주소를 연다. SOOP은 SOOP Developers 공식 `broad/list` 및 `broad/category/list` API를 사용하며 Client ID가 필요하다. API 응답의 `total_view_cnt`를 공통 모델의 현재 시청자 수로 사용한다.
+앱 실행 후 `http://localhost:5094` 또는 실행 로그에 표시된 주소를 연다. CHZZK 또는 SOOP 키가 없어도 앱은 시작되며, 키가 없는 플랫폼만 화면에 Configuration 오류로 표시된다. SOOP은 SOOP Developers 공식 `broad/list` 및 `broad/category/list` API를 사용하며 Client ID가 필요하다. API 응답의 `total_view_cnt`를 공통 모델의 현재 시청자 수로 사용한다.
 
-이번 `v2.0.0`의 SOOP API 전환은 수집 어댑터 내부 계약만 교체한다. 기존 SOOP 즐겨찾기의 `channel_id`는 이전과 동일하게 `broad_no` 기반으로 유지되며, 기존 SQLite 파일을 새로 만들거나 삭제하지 않는다. 운영 배포 전에는 SQLite 파일을 백업하고, 기존 `RAIDER_DATA_PATH`와 `RAIDER__FAVORITES__DATABASEPATH` 경로를 그대로 유지한다.
+`v2.0.0`의 SOOP API 전환은 수집 어댑터 내부 계약만 교체했다. 기존 SOOP 즐겨찾기의 `channel_id`는 이전과 동일하게 `broad_no` 기반으로 유지되며, 기존 SQLite 파일을 새로 만들거나 삭제하지 않는다. 운영 배포 전에는 SQLite 파일을 백업하고, 기존 `RAIDER_DATA_PATH`와 `RAIDER__FAVORITES__DATABASEPATH` 경로를 그대로 유지한다.
 
 ## Docker Compose 실행.
 

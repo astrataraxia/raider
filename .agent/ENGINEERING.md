@@ -61,7 +61,7 @@ Definition of Done.
 
 도입하지 않는 기본 기술.
 
-- Entity Framework Core, PostgreSQL, Redis.
+- Entity Framework Core, PostgreSQL, Redis, 즐겨찾기 메모리 캐시.
 - Elasticsearch, OpenSearch, 외부 검색 서비스.
 - SignalR, 메시지 브로커, 마이크로서비스.
 - 별도 DI 컨테이너와 별도 로깅 프레임워크.
@@ -76,12 +76,13 @@ Program
 │   ├── LiveStream
 │   ├── LiveSnapshot
 │   └── LiveSearch
-├── Platforms
-│   ├── Chzzk
-│   └── Soop
+├── Chzzk / Soop
 ├── Collection
 │   ├── PlatformCollector
 │   └── SnapshotStore
+├── Favorites
+│   ├── FavoriteStore
+│   └── FavoriteCatalog
 └── Web
     ├── Pages
     └── wwwroot
@@ -93,8 +94,8 @@ Program
 | `Platforms.Chzzk` | CHZZK HTTP 계약과 공통 모델 변환. | SOOP 규칙, 화면 표현. |
 | `Platforms.Soop` | SOOP HTTP 계약과 공통 모델 변환. | CHZZK 규칙, 화면 표현. |
 | `Collection` | 독립 주기 실행, 실패 격리, 병합, 스냅샷 교체. | HTML 렌더링, 플랫폼 응답 직접 해석. |
-| `Web` | 스냅샷 한 번 읽기, 필터, 검색, Razor 렌더링, 헬스 엔드포인트. | 외부 플랫폼 호출, 수집 실행. |
-| `Favorites` | 공용 즐겨찾기 SQLite 저장과 현재 스냅샷 기반 라이브 상태 결합. | 사용자 계정, 외부 플랫폼 호출, 수집 worker 쓰기. |
+| `Web` | 기본 홈은 스냅샷 한 번 읽기, 필터, 검색, Razor 렌더링, 헬스 엔드포인트. | 외부 플랫폼 호출, 수집 실행. |
+| `Favorites` | 공용 즐겨찾기 SQLite 저장과 현재 스냅샷 기반 라이브 상태 결합. | 사용자 계정, 외부 플랫폼 호출, 수집 worker 쓰기, Redis, 메모리 캐시. |
 | `Program` | 설정과 의존성 조립, 시작, 정상 종료. | 도메인 규칙과 응답 파싱. |
 
 인터페이스는 안정적인 테스트 경계가 필요하거나 두 구현이 실제 존재할 때만 만든다. 플랫폼 어댑터의 공통 수집 계약은 필요하지만 모든 클래스에 인터페이스를 붙이지 않는다.
@@ -169,7 +170,7 @@ BaseService
 ## 8. HTTP와 외부 계약.
 
 - 플랫폼별 typed `HttpClient`를 등록하고 요청마다 새 `HttpClient`를 만들지 않는다.
-- 고정 User-Agent, connect timeout, 전체 요청 timeout을 설정한다.
+- 고정 User-Agent를 설정한다. HTTP 클라이언트 timeout은 두지 않고 플랫폼별 전체 수집 timeout만 적용한다.
 - 플랫폼 응답 DTO는 해당 플랫폼 namespace 밖으로 노출하지 않는다.
 - 성공 상태라도 응답 필수 구조가 다르면 계약 오류다.
 - 페이지 중 하나라도 실패하면 완성 결과로 인정하지 않는다.
@@ -188,15 +189,15 @@ CHZZK과 SOOP 모두 공식 API를 운영 경로로 사용한다. SOOP의 공식
 - 제한 초과 오류는 즉시 재시도하지 않고 다음 기본 폴링 주기에 다시 시도한다. 현재 `Retry-After` 헤더는 반영하지 않는다.
 - 성공한 플랫폼 결과만 교체하며 실패 플랫폼의 마지막 정상 목록은 유지한다.
 - 플랫폼 상태를 병합해 완성된 `LiveSnapshot`을 만든 뒤 `Interlocked.Exchange`로 참조를 교체한다.
-- 웹 요청은 현재 스냅샷 참조를 한 번 읽고 외부 I/O나 잠금을 기다리지 않는다.
-- 즐겨찾기 API의 SQLite I/O는 라이브 수집 및 기본 홈 화면과 실패를 격리한다.
+- 기본 홈 화면 요청은 현재 스냅샷 참조를 한 번 읽고 외부 I/O나 잠금을 기다리지 않는다.
+- 즐겨찾기 목록과 쓰기만 SQLite I/O를 하며, 라이브 수집 및 기본 홈 화면과 실패를 격리한다.
 - 종료 토큰을 존중하고 진행 중 요청에 제한 시간을 적용한다.
 
 ## 10. 오류와 로그.
 
 오류 종류.
 
-- HTTP, 인증, 제한 초과, 차단, 타임아웃, 응답 계약, 도메인 필드, 시작 설정.
+- HTTP, 인증, 제한 초과, 차단, 타임아웃, 응답 계약, 도메인 필드, 설정 누락.
 
 규칙.
 
@@ -229,7 +230,7 @@ retry_attempt
 | `GET` | `/health/ready` | 첫 수집 시도가 완료됐는지 확인. |
 
 - 필터와 검색은 URL query parameter로 표현한다.
-- 요청은 스냅샷을 한 번만 읽는다.
+- 기본 홈 요청은 스냅샷을 한 번만 읽는다. 즐겨찾기 필터와 `/api/favorites`는 SQLite를 읽는다.
 - Razor 기본 HTML encoding을 유지한다.
 - 외부 링크 URL은 도메인 생성 시 검증한다.
 - 화면에는 비밀값, 원본 응답, 내부 오류 상세를 포함하지 않는다.
@@ -246,6 +247,8 @@ retry_attempt
 - 최신 수집 성공 목록에 있으면 라이브, 없으면 오프라인이다.
 - 플랫폼 수집 실패 또는 오래된 상태에서는 라이브 여부를 `상태 확인 지연`으로 표시한다.
 - 연결은 작업마다 짧게 열고 닫으며 busy timeout과 제한된 재시도를 사용한다.
+- 목록 조회는 요청마다 SQLite를 읽는다. 메모리 캐시와 Redis는 두지 않는다.
+- 추가, 삭제, 카테고리 변경은 SQLite에 즉시 기록한다.
 - 초기화, 잠금, 손상, 권한 오류는 즐겨찾기 기능에만 격리한다.
 
 ## 12. 설정과 비밀값.
@@ -327,7 +330,7 @@ dotnet build --no-restore -warnaserror
 - Razor HTML encoding을 우회하지 않는다.
 - 비루트 사용자와 읽기 전용 루트 파일시스템으로 컨테이너를 실행한다.
 - 원본 JSON, 과거 방송, 이미지 파일을 메모리에 보관하지 않는다.
-- 화면 요청은 스냅샷 읽기, 필터, 검색, 렌더링만 수행한다.
+- 기본 홈 요청은 스냅샷 읽기, 필터, 검색, 렌더링만 수행한다. 즐겨찾기 필터와 API는 SQLite를 읽거나 쓴다.
 - 수천 건 규모에서는 메모리 내 부분 문자열 검색과 태그 인덱스를 우선한다.
 - `FrozenDictionary`, source generation, pooling 등은 읽기 경로 또는 측정 근거가 있을 때만 사용한다. 태그 인덱스는 현재 읽기 중심 계약 때문에 허용한다.
 - 확정 운영 값은 플랫폼별 10분 폴링, CPU 1, 메모리 256MB, PID 128이며 실제 측정 결과는 `DEPLOYMENT.md`와 `RELEASES.md`를 따른다.
@@ -340,7 +343,7 @@ dotnet build --no-restore -warnaserror
 - [ ] 더 단순한 구현이 같은 명확성과 정확성을 제공하지 않는가.
 - [ ] 외부 실패와 정상 빈 목록을 구분하는가.
 - [ ] 한 플랫폼 실패가 다른 플랫폼에 전파되지 않는가.
-- [ ] 화면 요청이 외부 I/O나 잠금을 기다리지 않는가.
+- [ ] 기본 홈 요청이 외부 플랫폼 I/O나 잠금을 기다리지 않는가. 즐겨찾기 SQLite는 목록과 쓰기에만 쓰는가.
 - [ ] 태그와 검색 정규화가 일관적인가.
 - [ ] 비밀값과 원본 응답이 노출되지 않는가.
 - [ ] 관련 문서와 체크리스트가 갱신됐는가.

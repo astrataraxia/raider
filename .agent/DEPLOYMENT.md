@@ -134,6 +134,7 @@ services:
       RAIDER__FAVORITES__DATABASEPATH: /data/raider.db
       RAIDER__CHZZK__CLIENTID: ${RAIDER__CHZZK__CLIENTID}
       RAIDER__CHZZK__CLIENTSECRET: ${RAIDER__CHZZK__CLIENTSECRET}
+      RAIDER__SOOP__CLIENTID: ${RAIDER__SOOP__CLIENTID}
     networks:
       - proxy
     volumes:
@@ -154,6 +155,7 @@ networks:
 - 기본 서버 경로는 Compose 파일 기준 `./data`다.
 - 운영에서는 백업 위치가 명확한 절대 경로를 `RAIDER_DATA_PATH`로 지정할 수 있다.
 - Compose의 일회성 `raider-data-init` 서비스가 앱 시작 전에 데이터 디렉터리와 기존 DB 파일의 쓰기 권한을 자동으로 맞춘다.
+- 즐겨찾기 목록은 요청마다 SQLite에서 읽는다. 메모리 캐시와 Redis는 두지 않는다.
 - 실행 중 단순 파일 복사 대신 SQLite 일관성이 보장되는 백업 절차를 사용한다.
 - 외부 공개 시 reverse proxy 인증을 적용하고 Raider 직접 포트 접근을 차단한다.
 
