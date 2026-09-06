@@ -105,6 +105,36 @@ public sealed class HomePageTests : IDisposable
     }
 
     [Fact]
+    public async Task ShowsConfigurationFailureForMissingPlatformKeys()
+    {
+        snapshots.ApplyFailure(Platform.Chzzk, new PlatformError(PlatformErrorKind.Configuration), DateTimeOffset.UtcNow);
+        snapshots.ApplySuccess(
+            Platform.Soop,
+            [Stream("soop", Platform.Soop, "Soop", "Live", 1, [])],
+            DateTimeOffset.UtcNow.AddTicks(1));
+
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/", CancellationToken.None));
+
+        Assert.Contains("CHZZK API 키가 설정되지 않았습니다", html, StringComparison.Ordinal);
+        Assert.Contains("해당 플랫폼 방송을 수집할 수 없습니다", html, StringComparison.Ordinal);
+        Assert.Contains("data-broadcast-id=\"soop\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("일부 플랫폼 갱신이 지연되고 있습니다", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ShowsConfigurationFailureWhenBothPlatformKeysAreMissing()
+    {
+        snapshots.ApplyFailure(Platform.Chzzk, new PlatformError(PlatformErrorKind.Configuration), DateTimeOffset.UtcNow);
+        snapshots.ApplyFailure(Platform.Soop, new PlatformError(PlatformErrorKind.Configuration), DateTimeOffset.UtcNow.AddTicks(1));
+
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/", CancellationToken.None));
+
+        Assert.Contains("CHZZK, SOOP API 키가 설정되지 않았습니다", html, StringComparison.Ordinal);
+        Assert.Contains("방송 목록을 가져오지 못했습니다", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("플랫폼 연결을 자동으로 재시도 중입니다", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ShowsDefaultThumbnailEmptyAndStaleStates()
     {
         snapshots.ApplySuccess(

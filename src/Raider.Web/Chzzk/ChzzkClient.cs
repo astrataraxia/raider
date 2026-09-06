@@ -29,7 +29,6 @@ public sealed class ChzzkClient : IProgressiveLiveSource
         }
 
         this.options = options.Value;
-        this.options.Validate();
         this.timeProvider = timeProvider;
         this.logger = logger;
     }
@@ -52,6 +51,7 @@ public sealed class ChzzkClient : IProgressiveLiveSource
         Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
         CancellationToken cancellationToken)
     {
+        EnsureConfigured();
         var streams = new List<LiveStream>();
         var excludedCount = 0;
         string? next = null;
@@ -93,6 +93,16 @@ public sealed class ChzzkClient : IProgressiveLiveSource
         }
 
         return LiveStream.OrderAndDeduplicate(streams);
+    }
+
+    private void EnsureConfigured()
+    {
+        if (!options.IsConfigured)
+        {
+            throw new PlatformCollectionException(
+                new PlatformError(PlatformErrorKind.Configuration),
+                "CHZZK ClientId and ClientSecret are required.");
+        }
     }
 
     private async Task<ChzzkContent> GetPageAsync(string? next, CancellationToken cancellationToken)

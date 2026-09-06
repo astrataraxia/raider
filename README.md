@@ -4,7 +4,7 @@ CHZZK과 SOOP의 현재 라이브 방송을 한 화면에서 검색하고 탐색
 
 ## 현재 릴리스.
 
-- 버전: `v2.0.0`.
+- 버전: `v2.0.1`.
 - 런타임: .NET 10과 ASP.NET Core Razor Pages.
 - 저장 방식: 라이브는 불변 메모리 스냅샷, 공용 즐겨찾기는 서버 호스트 SQLite.
 - 배포 방식: 단일 앱 컨테이너와 일회성 데이터 권한 초기화 서비스. 기본 배포는 시스템 ASP.NET Core runtime을 포함한 framework-dependent 컨테이너 이미지다.
@@ -47,7 +47,7 @@ docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 
 Traefik을 사용하는 운영 환경에서는 앱을 외부 proxy 네트워크에 연결하고 호스트 포트 공개를 생략할 수 있다. 이 경우에도 `raider-data-init`, `/data` 볼륨, `RAIDER__FAVORITES__DATABASEPATH=/data/raider.db` 설정은 유지해야 한다.
 
-`v2.0.0` 형태의 Git 태그를 push하면 GitHub Actions가 테스트 후 Private GHCR 이미지를 자동 게시한다. 자세한 일반 Compose와 Traefik 배포 절차는 [DEPLOYMENT.md](.agent/DEPLOYMENT.md)를 따른다.
+`v2.0.1` 형태의 Git 태그를 push하면 GitHub Actions가 테스트 후 Private GHCR 이미지를 자동 게시한다. 자세한 일반 Compose와 Traefik 배포 절차는 [DEPLOYMENT.md](.agent/DEPLOYMENT.md)를 따른다.
 
 ## 검증.
 

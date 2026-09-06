@@ -44,8 +44,8 @@
                             </svg>
                         </button>
                     </form>
-                    <span class="status-dot @(Model.HasPartialFailure || Model.HasInitialFailure || Model.IsStale ? "is-warning" : "")" aria-hidden="true"></span>
-                    <span class="sync-copy"><strong>@(Model.HasPartialFailure || Model.HasInitialFailure ? "일부 수집 지연" : "현재 스냅샷")</strong><span>@Model.SnapshotObservedAtText 갱신</span></span>
+                    <span class="status-dot @(Model.HasPartialFailure || Model.HasInitialFailure || Model.HasConfigurationFailure || Model.IsStale ? "is-warning" : "")" aria-hidden="true"></span>
+                    <span class="sync-copy"><strong>@(Model.HasConfigurationFailure ? "일부 플랫폼 오류" : Model.HasPartialFailure || Model.HasInitialFailure ? "일부 수집 지연" : "현재 스냅샷")</strong><span>@Model.SnapshotObservedAtText 갱신</span></span>
                 }
             </div>
         </div>
@@ -169,6 +169,10 @@
         </section>
 
         <div data-live-content data-refreshing="@Model.IsRefreshing.ToString().ToLowerInvariant()" data-snapshot-version="@Model.Snapshot.Version.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+            @if (Model.HasConfigurationFailure && !Model.HasInitialFailure)
+            {
+                <aside class="notice-banner" role="status"><strong>@Model.ConfigurationFailurePlatformText API 키가 설정되지 않았습니다.</strong><span>해당 플랫폼 방송을 수집할 수 없습니다.</span></aside>
+            }
             @if (Model.HasPartialFailure)
             {
                 <aside class="notice-banner" role="status"><strong>일부 플랫폼 갱신이 지연되고 있습니다.</strong><span>마지막 정상 목록을 표시하며 자동으로 재시도 중입니다.</span></aside>
@@ -186,7 +190,14 @@
             }
             else if (Model.HasInitialFailure)
             {
-                <section class="state-panel"><h2>첫 방송 목록을 가져오지 못했습니다.</h2><p>플랫폼 연결을 자동으로 재시도 중입니다.</p></section>
+                if (Model.HasConfigurationFailure)
+                {
+                    <section class="state-panel"><h2>방송 목록을 가져오지 못했습니다.</h2><p>@Model.ConfigurationFailurePlatformText API 키가 설정되지 않았습니다.</p></section>
+                }
+                else
+                {
+                    <section class="state-panel"><h2>첫 방송 목록을 가져오지 못했습니다.</h2><p>플랫폼 연결을 자동으로 재시도 중입니다.</p></section>
+                }
             }
             else if (Model.Streams.IsEmpty)
             {

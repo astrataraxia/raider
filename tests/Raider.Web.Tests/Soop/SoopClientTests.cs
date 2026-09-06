@@ -222,7 +222,26 @@ public sealed class SoopClientTests
         Assert.Equal(PlatformErrorKind.Authentication, error.Error.Kind);
     }
 
-    private static SoopClient CreateClient(HttpMessageHandler handler)
+    [Fact]
+    public async Task MissingCredentialsFailCollectionAsConfigurationWithoutSendingRequest()
+    {
+        var requested = false;
+        var handler = new FixtureHandler(_ =>
+        {
+            requested = true;
+            return JsonResponse("""{"total_cnt":0,"page_no":"1","broad":[],"time":0}""");
+        });
+
+        var error = await Assert.ThrowsAsync<PlatformCollectionException>(
+            () => CreateClient(handler, new Raider.Web.Configuration.SoopOptions()).CollectAsync(CancellationToken.None));
+
+        Assert.Equal(PlatformErrorKind.Configuration, error.Error.Kind);
+        Assert.False(requested);
+    }
+
+    private static SoopClient CreateClient(
+        HttpMessageHandler handler,
+        Raider.Web.Configuration.SoopOptions? options = null)
     {
         return new SoopClient(
             new HttpClient(new CategoryFixtureHandler(handler))
@@ -230,7 +249,7 @@ public sealed class SoopClientTests
                 BaseAddress = new Uri("https://openapi.sooplive.com/"),
                 Timeout = TimeSpan.FromSeconds(5),
             },
-            Microsoft.Extensions.Options.Options.Create(new Raider.Web.Configuration.SoopOptions
+            Microsoft.Extensions.Options.Options.Create(options ?? new Raider.Web.Configuration.SoopOptions
             {
                 ClientId = "fixture-client-id",
             }),

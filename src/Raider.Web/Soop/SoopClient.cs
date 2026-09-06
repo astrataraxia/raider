@@ -37,7 +37,6 @@ public sealed class SoopClient : IProgressiveLiveSource
         }
 
         this.options = options.Value;
-        this.options.Validate();
         this.timeProvider = timeProvider;
         this.logger = logger;
     }
@@ -60,6 +59,7 @@ public sealed class SoopClient : IProgressiveLiveSource
         Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
         CancellationToken cancellationToken)
     {
+        EnsureConfigured();
         var streams = new List<LiveStream>();
         var firstPage = await GetPageWithRetryAsync(1, cancellationToken);
         var pageCount = (int)Math.Ceiling(firstPage.TotalCount / (double)PageSize);
@@ -120,6 +120,16 @@ public sealed class SoopClient : IProgressiveLiveSource
                 }
             });
         return excludedCount;
+    }
+
+    private void EnsureConfigured()
+    {
+        if (!options.IsConfigured)
+        {
+            throw new PlatformCollectionException(
+                new PlatformError(PlatformErrorKind.Configuration),
+                "SOOP ClientId is required.");
+        }
     }
 
     private async Task<SoopPage> GetPageWithRetryAsync(int pageNumber, CancellationToken cancellationToken)

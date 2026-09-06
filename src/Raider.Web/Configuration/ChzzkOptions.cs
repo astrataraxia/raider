@@ -9,6 +9,9 @@ public sealed class ChzzkOptions
 
     public string ClientSecret { get; init; } = string.Empty;
 
+    public bool IsConfigured =>
+        !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret);
+
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(ClientId))

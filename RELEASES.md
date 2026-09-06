@@ -1,5 +1,20 @@
 # Raider 릴리스 기록.
 
+## v2.0.1. 2026-09-06.
+
+- **플랫폼 키 누락 격리**: CHZZK 또는 SOOP 인증 설정이 없어도 프로세스가 시작된다. 키가 없는 플랫폼만 Configuration 오류로 화면에 표시하고, 키가 있는 플랫폼 수집과 HTTP 응답은 계속한다.
+- **화면 안내**: 한쪽만 빠지면 `CHZZK API 키가 설정되지 않았습니다` 같은 배너와 나머지 플랫폼 타일을 함께 보여준다. 둘 다 없으면 재시도 문구 대신 키 미설정을 표시한다.
+- **수집 계약**: 클라이언트 생성자에서 키를 검사해 기동을 중단하지 않는다. 수집 시점에 키가 없으면 HTTP 호출 없이 Configuration 오류를 게시한다.
+
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 자동 테스트 | Playwright 제외 `dotnet test` 93개 통과. 기동, 수집 Configuration 오류, 홈 화면 배너 계약을 포함. |
+| 코드 포맷 | `dotnet format --verify-no-changes` 통과. |
+| 빌드 | `dotnet build --no-restore -warnaserror`에서 C# 경고 0개. 이 환경의 NuGet 감사 캐시 권한으로 `NU1900`이 발생할 수 있다. |
+| Playwright | 이 환경에 Chromium이 없어 브라우저 테스트는 실행하지 않았다. |
+
 ## v2.0.0. 2026-08-30.
 
 - **SOOP 공식 API 전환**: 기존 공개 웹 JSON 수집을 SOOP Developers 공식 `broad/list` API로 교체했다. 운영 설정의 `Raider:Soop:ClientId` 또는 `RAIDER__SOOP__CLIENTID`가 필요하다.

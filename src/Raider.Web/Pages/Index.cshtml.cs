@@ -55,10 +55,26 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
         && Snapshot.Platforms.Values.All(state => !state.AttemptCompleted);
 
     public bool HasPartialFailure => Snapshot.Live.Streams.Length > 0
-        && Snapshot.Platforms.Values.Any(state => state.Error is not null);
+        && Snapshot.Platforms.Values.Any(state =>
+            state.Error is not null && state.Error.Kind != PlatformErrorKind.Configuration);
 
     public bool HasInitialFailure => Snapshot.Live.Streams.Length == 0
         && Snapshot.Platforms.Values.Any(state => state.Error is not null);
+
+    public bool HasConfigurationFailure => Snapshot.Platforms.Values
+        .Any(state => state.Error?.Kind == PlatformErrorKind.Configuration);
+
+    public string ConfigurationFailurePlatformText => string.Join(
+        ", ",
+        Snapshot.Platforms.Values
+            .Where(state => state.Error?.Kind == PlatformErrorKind.Configuration)
+            .OrderBy(state => state.Platform)
+            .Select(state => state.Platform switch
+            {
+                Raider.Web.Live.Platform.Chzzk => "CHZZK",
+                Raider.Web.Live.Platform.Soop => "SOOP",
+                _ => state.Platform.ToString(),
+            }));
 
     public bool IsStale => Snapshot.Platforms.Values
         .Where(state => state.LastSuccessAt is not null)

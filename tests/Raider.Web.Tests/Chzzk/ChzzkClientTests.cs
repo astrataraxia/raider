@@ -182,7 +182,24 @@ public sealed class ChzzkClientTests
         Assert.Equal(PlatformErrorKind.Contract, invalid.Error.Kind);
     }
 
-    private static ChzzkClient CreateClient(HttpMessageHandler handler)
+    [Fact]
+    public async Task MissingCredentialsFailCollectionAsConfigurationWithoutSendingRequest()
+    {
+        var requested = false;
+        var handler = new FixtureHandler(_ =>
+        {
+            requested = true;
+            return JsonResponse("""{"code":200,"content":{"data":[],"page":{"next":null}}}""");
+        });
+
+        var error = await Assert.ThrowsAsync<PlatformCollectionException>(
+            () => CreateClient(handler, new ChzzkOptions()).CollectAsync(CancellationToken.None));
+
+        Assert.Equal(PlatformErrorKind.Configuration, error.Error.Kind);
+        Assert.False(requested);
+    }
+
+    private static ChzzkClient CreateClient(HttpMessageHandler handler, ChzzkOptions? options = null)
     {
         return new ChzzkClient(
             new HttpClient(handler)
@@ -190,7 +207,7 @@ public sealed class ChzzkClientTests
                 BaseAddress = new Uri("https://openapi.chzzk.naver.com/"),
                 Timeout = TimeSpan.FromSeconds(5),
             },
-            Options.Create(new ChzzkOptions
+            Options.Create(options ?? new ChzzkOptions
             {
                 ClientId = "fixture-client-id",
                 ClientSecret = "fixture-client-secret",

@@ -7,9 +7,11 @@ public sealed class SoopOptions
 
     public string ClientId { get; init; } = string.Empty;
 
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(ClientId);
+
     public void Validate()
     {
-        if (string.IsNullOrWhiteSpace(ClientId))
+        if (!IsConfigured)
         {
             throw new InvalidOperationException("SOOP ClientId is required.");
         }

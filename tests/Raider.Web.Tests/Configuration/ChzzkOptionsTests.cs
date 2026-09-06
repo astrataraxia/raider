@@ -54,5 +54,8 @@ public sealed class ChzzkOptionsTests
         Assert.DoesNotContain(options.ClientId, options.ToString(), StringComparison.Ordinal);
         Assert.DoesNotContain(options.ClientSecret, options.ToString(), StringComparison.Ordinal);
         Assert.Throws<InvalidOperationException>(() => new ChzzkOptions().Validate());
+        Assert.False(new ChzzkOptions().IsConfigured);
+        Assert.False(new ChzzkOptions { ClientId = "id" }.IsConfigured);
+        Assert.True(options.IsConfigured);
     }
 }
