@@ -13,7 +13,14 @@
         <div class="thumbnail">
         @if (Model.ThumbnailUrl is not null)
         {
-            <img src="@Model.ThumbnailUrl" alt="@alt" loading="lazy" decoding="async" />
+            @if (ViewData["EagerThumbnail"] as bool? == true)
+            {
+                <img src="@Model.ThumbnailUrl" alt="@alt" loading="eager" fetchpriority="high" decoding="async" />
+            }
+            else
+            {
+                <img src="@Model.ThumbnailUrl" alt="@alt" loading="lazy" decoding="async" />
+            }
         }
         else
         {

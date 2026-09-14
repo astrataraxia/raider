@@ -1,5 +1,18 @@
 # Raider 릴리스 기록.
 
+## v2.1.1. 2026-09-14.
+
+- **문서**: `AGENTS.md`, `DEPLOYMENT.md`의 현재 버전과 Compose 이미지 태그를 `v2.1.1`에 맞춘다.
+- **첫 화면 썸네일**: 홈 그리드 앞 8장은 `loading=eager`와 `fetchpriority=high`로 즉시 요청하고, 나머지는 기존처럼 `lazy`다. 플랫폼 CDN 자체 지연(수 초~수십 초)은 앱이 줄이지 못한다.
+
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 운영 홈 HTML | `https://raider.astral-ataraxia.com/` 약 86ms, 200. |
+| 썸네일 URL | CHZZK Akamai `image_480.jpg`와 SOOP `liveimg.sooplive.com`을 브라우저가 직접 요청. 같은 8장 중 30ms~21s. |
+| 자동 테스트 | 첫 8장 eager / 이후 lazy 계약을 포함. |
+
 ## v2.1.0. 2026-09-14.
 
 - **코드 다이어트**: 수집 HTTP 오류 매핑, 즐겨찾기 쓰기 가드, 워커 등록을 공유하고 `IProgressiveLiveSource`와 미사용 Options `Validate`/`ToString`을 제거했다. SOOP 페이지 수집은 DOP=1 Parallel 대신 순차 `for`다.

@@ -12,6 +12,8 @@ namespace Raider.Web.Pages;
 public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry registry, FavoriteStore favoriteStore, TimeProvider timeProvider) : PageModel
 {
     private const int PageSize = 120;
+
+    public const int EagerThumbnailCount = 8;
     private static readonly TimeZoneInfo SeoulTimeZone = FindSeoulTimeZone();
 
     [BindProperty(SupportsGet = true)]

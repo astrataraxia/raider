@@ -206,9 +206,12 @@
             else
             {
                 <section class="stream-grid" aria-label="현재 라이브 방송">
+                    @{ var thumbnailIndex = 0; }
                     @foreach (var stream in Model.Streams)
                     {
-                        <partial name="_StreamTile" model="stream" />
+                        ViewData["EagerThumbnail"] = thumbnailIndex < Raider.Web.Pages.IndexModel.EagerThumbnailCount;
+                        thumbnailIndex++;
+                        <partial name="_StreamTile" model="stream" view-data="ViewData" />
                     }
                 </section>
                 @if (Model.TotalPages > 1)

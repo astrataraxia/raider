@@ -38,7 +38,8 @@ public sealed class HomePageTests : IDisposable
         Assert.Contains("Special Title", html, StringComparison.Ordinal);
         Assert.Contains("321", html, StringComparison.Ordinal);
         Assert.Contains("https://example.invalid/alpha", html, StringComparison.Ordinal);
-        Assert.Contains("loading=\"lazy\"", html, StringComparison.Ordinal);
+        Assert.Contains("loading=\"eager\"", html, StringComparison.Ordinal);
+        Assert.Contains("fetchpriority=\"high\"", html, StringComparison.Ordinal);
         Assert.Contains("alt=\"Alpha의 방송 썸네일\"", html, StringComparison.Ordinal);
         Assert.Contains("rel=\"noopener noreferrer\"", html, StringComparison.Ordinal);
         Assert.Contains("class=\"favorite-toggle\"", html, StringComparison.Ordinal);
@@ -48,6 +49,23 @@ public sealed class HomePageTests : IDisposable
         Assert.Contains(">one<", html, StringComparison.Ordinal);
         Assert.Contains(">three<", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">four<", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task FirstThumbnailsLoadEagerAndLaterThumbnailsStayLazy()
+    {
+        snapshots.ApplySuccess(
+            Platform.Chzzk,
+            Enumerable.Range(1, 9).Select(i => Stream($"id-{i}", Platform.Chzzk, $"Name{i}", "Live", 10 - i, [])).ToImmutableArray(),
+            DateTimeOffset.UtcNow);
+
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/", CancellationToken.None));
+        var loadings = Regex.Matches(html, "loading=\"(eager|lazy)\"").Select(match => match.Groups[1].Value).ToArray();
+
+        Assert.Equal(9, loadings.Length);
+        Assert.Equal(IndexModel.EagerThumbnailCount, loadings.Count(value => value == "eager"));
+        Assert.Equal("lazy", Assert.Single(loadings.Skip(IndexModel.EagerThumbnailCount)));
+        Assert.Equal(IndexModel.EagerThumbnailCount, Regex.Matches(html, "fetchpriority=\"high\"").Count);
     }
 
     [Fact]
