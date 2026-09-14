@@ -125,14 +125,12 @@ public sealed class HomePagePlaywrightTests
         await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
         var page = await browser.NewPageAsync();
         await page.GotoAsync(client.BaseAddress!.ToString());
+        await Assertions.Expect(page.Locator(".thumbnail img")).ToBeVisibleAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "새로고침", Exact = true }).ClickAsync();
-        await page.WaitForFunctionAsync(
-            """
-            () => {
-              const img = document.querySelector('.thumbnail img');
-              return img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0;
-            }
-            """);
+        await Assertions.Expect(page.Locator(".thumbnail img")).ToBeVisibleAsync();
+        var decoded = await page.Locator(".thumbnail img").EvaluateAsync<bool>(
+            "img => img.decode().then(() => true).catch(() => false)");
+        Assert.True(decoded);
     }
 
     private static LiveStream Stream(
