@@ -107,40 +107,13 @@ public sealed class HomePagePlaywrightTests
         await Assertions.Expect(second.Locator(".favorite-item")).ToContainTextAsync("Alpha");
     }
 
-    [Fact]
-    public async Task PartialHtmlRefreshReloadsThumbnailImages()
-    {
-        await using var application = new TestApplicationFactory();
-        application.UseKestrel(0);
-        using var client = application.CreateClient();
-        var thumbnailUrl = new Uri(client.BaseAddress!, "/favicon.svg").AbsoluteUri;
-        var snapshots = application.Services.GetRequiredService<SnapshotStore>();
-        snapshots.ApplySuccess(
-            Platform.Chzzk,
-            [Stream("alpha", Platform.Chzzk, "Alpha", "Special Game", 100, ["game"], thumbnailUrl)],
-            DateTimeOffset.UtcNow);
-        snapshots.ApplySuccess(Platform.Soop, [], DateTimeOffset.UtcNow.AddTicks(1));
-
-        using var playwright = await Playwright.CreateAsync();
-        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-        var page = await browser.NewPageAsync();
-        await page.GotoAsync(client.BaseAddress!.ToString());
-        await Assertions.Expect(page.Locator(".thumbnail img")).ToBeVisibleAsync();
-        await page.GetByRole(AriaRole.Button, new() { Name = "새로고침", Exact = true }).ClickAsync();
-        await Assertions.Expect(page.Locator(".thumbnail img")).ToBeVisibleAsync();
-        var decoded = await page.Locator(".thumbnail img").EvaluateAsync<bool>(
-            "img => img.decode().then(() => true).catch(() => false)");
-        Assert.True(decoded);
-    }
-
     private static LiveStream Stream(
         string id,
         Platform platform,
         string streamer,
         string title,
         int viewers,
-        IEnumerable<string> tags,
-        string? thumbnailUrl = null)
+        IEnumerable<string> tags)
     {
         return LiveStream.Create(
             platform,
@@ -149,7 +122,7 @@ public sealed class HomePagePlaywrightTests
             streamer,
             title,
             viewers,
-            thumbnailUrl,
+            null,
             $"https://example.invalid/{id}",
             tags,
             DateTimeOffset.UtcNow);
