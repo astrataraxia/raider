@@ -17,7 +17,13 @@
       return;
     }
 
-    current.replaceWith(next);
+    var adopted = document.adoptNode(next);
+    current.replaceWith(adopted);
+    adopted.querySelectorAll("img[src]").forEach(function (img) {
+      var src = img.getAttribute("src");
+      img.removeAttribute("src");
+      img.setAttribute("src", src);
+    });
   }
 
   async function refreshCurrentHtml() {

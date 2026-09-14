@@ -107,13 +107,42 @@ public sealed class HomePagePlaywrightTests
         await Assertions.Expect(second.Locator(".favorite-item")).ToContainTextAsync("Alpha");
     }
 
+    [Fact]
+    public async Task PartialHtmlRefreshReloadsThumbnailImages()
+    {
+        await using var application = new TestApplicationFactory();
+        application.UseKestrel(0);
+        using var client = application.CreateClient();
+        var thumbnailUrl = new Uri(client.BaseAddress!, "/favicon.svg").AbsoluteUri;
+        var snapshots = application.Services.GetRequiredService<SnapshotStore>();
+        snapshots.ApplySuccess(
+            Platform.Chzzk,
+            [Stream("alpha", Platform.Chzzk, "Alpha", "Special Game", 100, ["game"], thumbnailUrl)],
+            DateTimeOffset.UtcNow);
+        snapshots.ApplySuccess(Platform.Soop, [], DateTimeOffset.UtcNow.AddTicks(1));
+
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+        var page = await browser.NewPageAsync();
+        await page.GotoAsync(client.BaseAddress!.ToString());
+        await page.GetByRole(AriaRole.Button, new() { Name = "새로고침", Exact = true }).ClickAsync();
+        await page.WaitForFunctionAsync(
+            """
+            () => {
+              const img = document.querySelector('.thumbnail img');
+              return img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0;
+            }
+            """);
+    }
+
     private static LiveStream Stream(
         string id,
         Platform platform,
         string streamer,
         string title,
         int viewers,
-        IEnumerable<string> tags)
+        IEnumerable<string> tags,
+        string? thumbnailUrl = null)
     {
         return LiveStream.Create(
             platform,
@@ -122,7 +151,7 @@ public sealed class HomePagePlaywrightTests
             streamer,
             title,
             viewers,
-            null,
+            thumbnailUrl,
             $"https://example.invalid/{id}",
             tags,
             DateTimeOffset.UtcNow);

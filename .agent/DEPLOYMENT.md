@@ -1,6 +1,6 @@
 # Raider 단일 앱 컨테이너 배포.
 
-현재 릴리스 버전은 `v2.1.1`이다.
+현재 릴리스 버전은 `v2.1.2`이다.
 
 ## 권장 환경.
 
@@ -23,7 +23,7 @@
 `.env`의 `RAIDER_IMAGE`에는 레지스트리에 게시한 이미지 주소를 입력한다.
 
 ```text
-RAIDER_IMAGE=ghcr.io/astrataraxia/raider:2.1.1
+RAIDER_IMAGE=ghcr.io/astrataraxia/raider:2.1.2
 RAIDER_BIND_ADDRESS=127.0.0.1
 RAIDER_PORT=8080
 RAIDER_DATA_PATH=./data
