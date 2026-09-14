@@ -1,55 +1,20 @@
-// 플랫폼과 무관한 현재 라이브 방송 정보를 표현한다.
 using System.Collections.Immutable;
 using System.Text;
 
 namespace Raider.Web.Live;
 
-public sealed record LiveStream
+public sealed record LiveStream(
+    Platform Platform,
+    string BroadcastId,
+    string ChannelId,
+    string StreamerName,
+    string Title,
+    int ViewerCount,
+    string? ThumbnailUrl,
+    string WatchUrl,
+    ImmutableArray<string> Tags,
+    DateTimeOffset ObservedAt)
 {
-    private LiveStream(
-        Platform platform,
-        string broadcastId,
-        string channelId,
-        string streamerName,
-        string title,
-        int viewerCount,
-        string? thumbnailUrl,
-        string watchUrl,
-        ImmutableArray<string> tags,
-        DateTimeOffset observedAt)
-    {
-        Platform = platform;
-        BroadcastId = broadcastId;
-        ChannelId = channelId;
-        StreamerName = streamerName;
-        Title = title;
-        ViewerCount = viewerCount;
-        ThumbnailUrl = thumbnailUrl;
-        WatchUrl = watchUrl;
-        Tags = tags;
-        ObservedAt = observedAt;
-    }
-
-    public Platform Platform { get; }
-
-    public string BroadcastId { get; }
-
-    public string ChannelId { get; }
-
-    public string StreamerName { get; }
-
-    public string Title { get; }
-
-    public int ViewerCount { get; }
-
-    public string? ThumbnailUrl { get; }
-
-    public string WatchUrl { get; }
-
-    public ImmutableArray<string> Tags { get; }
-
-    public DateTimeOffset ObservedAt { get; }
-
     public static LiveStream Create(
         Platform platform,
         string broadcastId,
@@ -70,20 +35,16 @@ public sealed record LiveStream
         ArgumentOutOfRangeException.ThrowIfNegative(viewerCount);
         ArgumentNullException.ThrowIfNull(tags);
 
-        var normalizedStreamerName = NormalizeRequired(streamerName, nameof(streamerName));
-        var normalizedTitle = NormalizeRequired(title, nameof(title));
-        var normalizedTags = NormalizeTags(tags);
-
         return new LiveStream(
             platform,
             NormalizeRequired(broadcastId, nameof(broadcastId)),
             NormalizeRequired(channelId, nameof(channelId)),
-            normalizedStreamerName,
-            normalizedTitle,
+            NormalizeRequired(streamerName, nameof(streamerName)),
+            NormalizeRequired(title, nameof(title)),
             viewerCount,
-            ParseOptionalHttpUrl(thumbnailUrl),
+            TryParseHttpUrl(thumbnailUrl, out var thumbnail) ? thumbnail.AbsoluteUri : null,
             ParseRequiredHttpUrl(watchUrl, nameof(watchUrl)),
-            normalizedTags,
+            NormalizeTags(tags),
             observedAt);
     }
 
@@ -167,11 +128,6 @@ public sealed record LiveStream
     internal static string NormalizeSearch(string value)
     {
         return value.Trim().Normalize(NormalizationForm.FormC).ToUpperInvariant();
-    }
-
-    private static string? ParseOptionalHttpUrl(string? value)
-    {
-        return TryParseHttpUrl(value, out var uri) ? uri.AbsoluteUri : null;
     }
 
     private static string ParseRequiredHttpUrl(string value, string parameterName)

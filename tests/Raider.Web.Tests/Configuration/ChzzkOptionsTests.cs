@@ -41,7 +41,7 @@ public sealed class ChzzkOptionsTests
     }
 
     [Fact]
-    public void ValidationAndStringOutputDoNotExposeSecrets()
+    public void IsConfiguredRequiresClientIdAndSecret()
     {
         var options = new ChzzkOptions
         {
@@ -49,13 +49,8 @@ public sealed class ChzzkOptionsTests
             ClientSecret = "private-client-secret",
         };
 
-        options.Validate();
-
-        Assert.DoesNotContain(options.ClientId, options.ToString(), StringComparison.Ordinal);
-        Assert.DoesNotContain(options.ClientSecret, options.ToString(), StringComparison.Ordinal);
-        Assert.Throws<InvalidOperationException>(() => new ChzzkOptions().Validate());
+        Assert.True(options.IsConfigured);
         Assert.False(new ChzzkOptions().IsConfigured);
         Assert.False(new ChzzkOptions { ClientId = "id" }.IsConfigured);
-        Assert.True(options.IsConfigured);
     }
 }

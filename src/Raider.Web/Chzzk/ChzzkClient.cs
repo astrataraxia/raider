@@ -1,6 +1,5 @@
 // CHZZK 공식 API의 전체 현재 라이브 목록을 수집하고 공통 모델로 변환한다.
 using System.Collections.Immutable;
-using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Raider.Web.Collection;
@@ -9,7 +8,7 @@ using Raider.Web.Live;
 
 namespace Raider.Web.Chzzk;
 
-public sealed class ChzzkClient : IProgressiveLiveSource
+public sealed class ChzzkClient : ILiveSource
 {
     private readonly HttpClient httpClient;
     private readonly ChzzkOptions options;
@@ -36,12 +35,10 @@ public sealed class ChzzkClient : IProgressiveLiveSource
     public Platform Platform => Platform.Chzzk;
 
     public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
-    {
-        return CollectCoreAsync(null, cancellationToken);
-    }
+        => CollectAsync(null, cancellationToken);
 
     public Task<ImmutableArray<LiveStream>> CollectAsync(
-        Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+        Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
         CancellationToken cancellationToken)
     {
         return CollectCoreAsync(publishPartial, cancellationToken);
@@ -122,7 +119,7 @@ public sealed class ChzzkClient : IProgressiveLiveSource
             using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                throw CreateHttpError(response.StatusCode);
+                throw PlatformHttp.HttpError("CHZZK", response.StatusCode);
             }
 
             var result = await response.Content.ReadFromJsonAsync<ChzzkResponse>(cancellationToken: cancellationToken);
@@ -138,26 +135,9 @@ public sealed class ChzzkClient : IProgressiveLiveSource
         {
             throw;
         }
-        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception exception) when (exception is OperationCanceledException or HttpRequestException or JsonException)
         {
-            throw new PlatformCollectionException(
-                new PlatformError(PlatformErrorKind.Timeout),
-                "CHZZK request timed out.",
-                exception);
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new PlatformCollectionException(
-                new PlatformError(PlatformErrorKind.Network),
-                "CHZZK network request failed.",
-                exception);
-        }
-        catch (JsonException exception)
-        {
-            throw new PlatformCollectionException(
-                new PlatformError(PlatformErrorKind.Contract),
-                "CHZZK response contract was invalid.",
-                exception);
+            throw PlatformHttp.RequestFailed("CHZZK", exception, cancellationToken);
         }
     }
 
@@ -199,21 +179,6 @@ public sealed class ChzzkClient : IProgressiveLiveSource
     private static string? ResolveThumbnailUrl(string? value)
     {
         return value?.Replace("{type}", "480", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static PlatformCollectionException CreateHttpError(HttpStatusCode statusCode)
-    {
-        var kind = statusCode switch
-        {
-            HttpStatusCode.Unauthorized => PlatformErrorKind.Authentication,
-            HttpStatusCode.Forbidden => PlatformErrorKind.Forbidden,
-            HttpStatusCode.RequestTimeout => PlatformErrorKind.Timeout,
-            HttpStatusCode.TooManyRequests => PlatformErrorKind.RateLimited,
-            >= HttpStatusCode.InternalServerError => PlatformErrorKind.Server,
-            _ => PlatformErrorKind.Contract,
-        };
-
-        return new PlatformCollectionException(new PlatformError(kind), $"CHZZK request failed with HTTP {(int)statusCode}.");
     }
 
     private static PlatformCollectionException ContractError()

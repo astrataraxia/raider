@@ -37,6 +37,19 @@ public sealed class SnapshotStoreTests
     }
 
     [Fact]
+    public void OlderPartialDoesNotOverwriteNewerSuccess()
+    {
+        var store = new SnapshotStore([Platform.Chzzk, Platform.Soop]);
+        store.ApplySuccess(Platform.Chzzk, [Stream("complete", Platform.Chzzk)], At(2));
+
+        store.ApplyPartial(Platform.Chzzk, [Stream("stale-partial", Platform.Chzzk)], At(1));
+
+        var state = store.Current.Platforms[Platform.Chzzk];
+        Assert.Equal("complete", Assert.Single(state.Streams).BroadcastId);
+        Assert.False(state.IsPartial);
+    }
+
+    [Fact]
     public async Task ConcurrentReadsObserveCompleteSnapshots()
     {
         var store = new SnapshotStore([Platform.Chzzk, Platform.Soop]);

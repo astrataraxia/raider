@@ -1,5 +1,19 @@
 # Raider 릴리스 기록.
 
+## v2.1.0. 2026-09-14.
+
+- **코드 다이어트**: 수집 HTTP 오류 매핑, 즐겨찾기 쓰기 가드, 워커 등록을 공유하고 `IProgressiveLiveSource`와 미사용 Options `Validate`/`ToString`을 제거했다. SOOP 페이지 수집은 DOP=1 Parallel 대신 순차 `for`다.
+- **즐겨찾기 드롭**: 스트리머를 커스텀 카테고리에 놓아도 그 카테고리가 localStorage `customCategories`에서 지워지지 않는다.
+- **스냅샷 부분 갱신**: `ApplyPartial`이 더 오래된 시각의 부분 결과로 최신 성공 스냅샷을 덮지 않는다.
+
+### 검증 결과.
+
+| 항목 | 결과 |
+| --- | --- |
+| 자동 테스트 | Playwright 제외 `dotnet test` 94개 통과. 스냅샷 stale partial 회귀를 포함. |
+| 즐겨찾기 드롭 | 배포 전 소스 루프에서 splice 제거 확인. 라이브 사이트는 이 태그 배포 전이라 구코드를 서빙했다. |
+| Playwright | 이 환경에 Chromium이 없어 브라우저 테스트는 실행하지 않았다. |
+
 ## v2.0.1. 2026-09-06.
 
 - **플랫폼 키 누락 격리**: CHZZK 또는 SOOP 인증 설정이 없어도 프로세스가 시작된다. 키가 없는 플랫폼만 Configuration 오류로 화면에 표시하고, 키가 있는 플랫폼 수집과 HTTP 응답은 계속한다.

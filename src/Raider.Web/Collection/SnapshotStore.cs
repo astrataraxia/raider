@@ -51,6 +51,11 @@ public sealed class SnapshotStore
         lock (updateLock)
         {
             var snapshot = Current;
+            if (!CanApply(snapshot, platform, observedAt))
+            {
+                return;
+            }
+
             var previous = snapshot.Platforms[platform];
             var states = snapshot.Platforms.ToDictionary();
             states[platform] = previous with

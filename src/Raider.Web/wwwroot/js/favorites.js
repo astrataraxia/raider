@@ -232,15 +232,6 @@
         try {
           var data = JSON.parse(e.dataTransfer.getData("text/plain") || "{}");
           if (data.type === "streamer" && data.sourceCategory !== cat) {
-            var customCats = [];
-            try {
-              customCats = JSON.parse(localStorage.getItem("raider.favorites.customCategories") || "[]");
-            } catch (err) {}
-            var idx = customCats.indexOf(cat);
-            if (idx > -1) {
-              customCats.splice(idx, 1);
-              localStorage.setItem("raider.favorites.customCategories", JSON.stringify(customCats));
-            }
             void updateCategory(data.platform, data.channelId, cat);
           }
         } catch (err) {}

@@ -55,7 +55,9 @@ public sealed class CollectionRegistryTests
     private sealed class FakeSource : ILiveSource
     {
         public Platform Platform => Platform.Chzzk;
-        public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+        public Task<ImmutableArray<LiveStream>> CollectAsync(
+            Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
+            CancellationToken cancellationToken)
         {
             return Task.FromResult(ImmutableArray<LiveStream>.Empty);
         }
@@ -71,7 +73,9 @@ public sealed class CollectionRegistryTests
 
         public TaskCompletionSource Finished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public async Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+        public async Task<ImmutableArray<LiveStream>> CollectAsync(
+            Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
+            CancellationToken cancellationToken)
         {
             Started.SetResult();
             await Complete.Task.WaitAsync(cancellationToken);

@@ -1,4 +1,3 @@
-// Raider 웹 애플리케이션을 구성하고 실행한다.
 using Raider.Web.Chzzk;
 using Raider.Web.Collection;
 using Raider.Web.Configuration;
@@ -20,7 +19,6 @@ builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerifica
 builder.Services.AddSingleton(services => new FavoriteStore(
     builder.Configuration["Raider:Favorites:DatabasePath"] ?? Path.Combine(AppContext.BaseDirectory, "data", "raider.db")));
 builder.Services.AddSingleton<FavoriteCatalog>();
-builder.Services.AddSingleton<IHostedService, FavoriteStoreInitializer>();
 builder.Services.AddHttpClient<ChzzkClient>(client =>
 {
     client.BaseAddress = new Uri("https://openapi.chzzk.naver.com/");
@@ -39,25 +37,27 @@ builder.Services
     });
 builder.Services.AddTransient<ILiveSource>(services => services.GetRequiredService<SoopClient>());
 builder.Services.AddSingleton(_ => new SnapshotStore([Platform.Chzzk, Platform.Soop]));
-builder.Services.AddSingleton<IHostedService>(services => new PlatformCollectorWorker(
+builder.Services.AddSingleton<IHostedService>(services => CreateCollector(
+    services,
     services.GetRequiredService<ChzzkClient>(),
-    services.GetRequiredService<SnapshotStore>(),
-    services.GetRequiredService<IConfiguration>().GetSection("Raider:Collection:Chzzk").Get<CollectionOptions>() ?? new(),
-    services.GetRequiredService<CollectionRegistry>(),
-    services.GetRequiredService<TimeProvider>(),
-    services.GetRequiredService<ILogger<PlatformCollectorWorker>>()));
-builder.Services.AddSingleton<IHostedService>(services => new PlatformCollectorWorker(
+    "Raider:Collection:Chzzk",
+    new CollectionOptions()));
+builder.Services.AddSingleton<IHostedService>(services => CreateCollector(
+    services,
     services.GetRequiredService<SoopClient>(),
-    services.GetRequiredService<SnapshotStore>(),
-    services.GetRequiredService<IConfiguration>().GetSection("Raider:Collection:Soop").Get<CollectionOptions>() ?? new()
-    {
-        CollectionTimeout = TimeSpan.FromSeconds(30),
-    },
-    services.GetRequiredService<CollectionRegistry>(),
-    services.GetRequiredService<TimeProvider>(),
-    services.GetRequiredService<ILogger<PlatformCollectorWorker>>()));
+    "Raider:Collection:Soop",
+    new CollectionOptions { CollectionTimeout = TimeSpan.FromSeconds(30) }));
 
 var app = builder.Build();
+
+try
+{
+    await app.Services.GetRequiredService<FavoriteStore>().InitializeAsync(CancellationToken.None);
+}
+catch (Exception exception)
+{
+    app.Logger.LogError(exception, "Favorite store initialization failed.");
+}
 
 app.UseStaticFiles();
 app.UseAntiforgery();
@@ -83,5 +83,20 @@ app.MapGet("/api/refresh/status", (CollectionRegistry registry, SnapshotStore sn
 }));
 
 app.Run();
+
+static PlatformCollectorWorker CreateCollector(
+    IServiceProvider services,
+    ILiveSource source,
+    string section,
+    CollectionOptions fallback)
+{
+    return new PlatformCollectorWorker(
+        source,
+        services.GetRequiredService<SnapshotStore>(),
+        services.GetRequiredService<IConfiguration>().GetSection(section).Get<CollectionOptions>() ?? fallback,
+        services.GetRequiredService<CollectionRegistry>(),
+        services.GetRequiredService<TimeProvider>(),
+        services.GetRequiredService<ILogger<PlatformCollectorWorker>>());
+}
 
 public partial class Program;

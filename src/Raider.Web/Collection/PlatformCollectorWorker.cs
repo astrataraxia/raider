@@ -51,9 +51,7 @@ public sealed class PlatformCollectorWorker : BackgroundService
                 {
                     using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     timeout.CancelAfter(options.CollectionTimeout);
-                    var streams = source is IProgressiveLiveSource progressive
-                        ? await progressive.CollectAsync(PublishPartialAsync, timeout.Token)
-                        : await source.CollectAsync(timeout.Token);
+                    var streams = await source.CollectAsync(PublishPartialAsync, timeout.Token);
                     snapshots.ApplySuccess(
                         source.Platform,
                         streams,

@@ -23,5 +23,7 @@ public sealed record CollectionSnapshot(
     DateTimeOffset ObservedAt,
     long Version)
 {
+    public static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(20);
+
     public bool IsReady => Platforms.Count > 0 && Platforms.Values.All(state => state.AttemptCompleted);
 }

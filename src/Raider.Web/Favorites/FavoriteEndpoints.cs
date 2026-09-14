@@ -1,4 +1,3 @@
-// 공용 즐겨찾기 조회와 변경 HTTP 경계를 등록한다.
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.Data.Sqlite;
 using Raider.Web.Live;
@@ -41,32 +40,22 @@ public static class FavoriteEndpoints
         ILogger<FavoriteStore> logger,
         CancellationToken cancellationToken)
     {
-        if (!await IsValidAntiForgeryRequestAsync(context, antiforgery))
+        var guard = await GuardWriteAsync(platform, channelId, context, antiforgery);
+        if (guard.Error is not null)
         {
-            return Results.BadRequest();
+            return guard.Error;
         }
 
-        if (!FavoriteStore.TryParsePlatform(platform, out var parsedPlatform) || !IsValidChannelId(channelId))
-        {
-            return Results.BadRequest();
-        }
-
-        var stream = catalog.FindCurrent(parsedPlatform, channelId);
+        var stream = catalog.FindCurrent(guard.Platform, channelId);
         if (stream is null)
         {
             return Results.NotFound();
         }
 
-        try
-        {
-            await store.UpsertAsync(new Favorite(stream.Platform, stream.ChannelId, stream.StreamerName), cancellationToken);
-            return Results.NoContent();
-        }
-        catch (Exception exception) when (IsStoreFailure(exception))
-        {
-            logger.LogError(exception, "Favorite update failed.");
-            return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-        }
+        return await TryStoreAsync(
+            () => store.UpsertAsync(new Favorite(stream.Platform, stream.ChannelId, stream.StreamerName), cancellationToken),
+            logger,
+            "Favorite update failed.");
     }
 
     private static async Task<IResult> DeleteAsync(
@@ -78,49 +67,16 @@ public static class FavoriteEndpoints
         ILogger<FavoriteStore> logger,
         CancellationToken cancellationToken)
     {
-        if (!await IsValidAntiForgeryRequestAsync(context, antiforgery))
+        var guard = await GuardWriteAsync(platform, channelId, context, antiforgery);
+        if (guard.Error is not null)
         {
-            return Results.BadRequest();
+            return guard.Error;
         }
 
-        if (!FavoriteStore.TryParsePlatform(platform, out var parsedPlatform) || !IsValidChannelId(channelId))
-        {
-            return Results.BadRequest();
-        }
-
-        try
-        {
-            await store.DeleteAsync(parsedPlatform, channelId, cancellationToken);
-            return Results.NoContent();
-        }
-        catch (Exception exception) when (IsStoreFailure(exception))
-        {
-            logger.LogError(exception, "Favorite delete failed.");
-            return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-        }
-    }
-
-    private static bool IsValidChannelId(string value)
-    {
-        return !string.IsNullOrWhiteSpace(value) && value.Length <= 256;
-    }
-
-    private static async Task<bool> IsValidAntiForgeryRequestAsync(HttpContext context, IAntiforgery antiforgery)
-    {
-        try
-        {
-            await antiforgery.ValidateRequestAsync(context);
-            return true;
-        }
-        catch (AntiforgeryValidationException)
-        {
-            return false;
-        }
-    }
-
-    private static bool IsStoreFailure(Exception exception)
-    {
-        return exception is SqliteException or IOException or UnauthorizedAccessException;
+        return await TryStoreAsync(
+            () => store.DeleteAsync(guard.Platform, channelId, cancellationToken),
+            logger,
+            "Favorite delete failed.");
     }
 
     private static async Task<IResult> UpdateCategoryAsync(
@@ -138,26 +94,60 @@ public static class FavoriteEndpoints
             return Results.BadRequest();
         }
 
-        if (!await IsValidAntiForgeryRequestAsync(context, antiforgery))
+        var guard = await GuardWriteAsync(platform, channelId, context, antiforgery);
+        if (guard.Error is not null)
         {
-            return Results.BadRequest();
+            return guard.Error;
         }
 
-        if (!FavoriteStore.TryParsePlatform(platform, out var parsedPlatform) || !IsValidChannelId(channelId))
-        {
-            return Results.BadRequest();
-        }
+        return await TryStoreAsync(
+            () => store.UpdateCategoryAsync(guard.Platform, channelId, request.Category, cancellationToken),
+            logger,
+            "Favorite category update failed.");
+    }
 
+    private static async Task<(Platform Platform, IResult? Error)> GuardWriteAsync(
+        string platform,
+        string channelId,
+        HttpContext context,
+        IAntiforgery antiforgery)
+    {
         try
         {
-            await store.UpdateCategoryAsync(parsedPlatform, channelId, request.Category, cancellationToken);
+            await antiforgery.ValidateRequestAsync(context);
+        }
+        catch (AntiforgeryValidationException)
+        {
+            return (default, Results.BadRequest());
+        }
+
+        if (!FavoriteStore.TryParsePlatform(platform, out var parsedPlatform)
+            || string.IsNullOrWhiteSpace(channelId)
+            || channelId.Length > 256)
+        {
+            return (default, Results.BadRequest());
+        }
+
+        return (parsedPlatform, null);
+    }
+
+    private static async Task<IResult> TryStoreAsync(Func<Task> action, ILogger logger, string failureMessage)
+    {
+        try
+        {
+            await action();
             return Results.NoContent();
         }
         catch (Exception exception) when (IsStoreFailure(exception))
         {
-            logger.LogError(exception, "Favorite category update failed.");
+            logger.LogError(exception, failureMessage);
             return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
         }
+    }
+
+    private static bool IsStoreFailure(Exception exception)
+    {
+        return exception is SqliteException or IOException or UnauthorizedAccessException;
     }
 }
 

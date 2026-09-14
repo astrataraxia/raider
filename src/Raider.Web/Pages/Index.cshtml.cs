@@ -13,7 +13,6 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
 {
     private const int PageSize = 120;
     private static readonly TimeZoneInfo SeoulTimeZone = FindSeoulTimeZone();
-    private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(20);
 
     [BindProperty(SupportsGet = true)]
     public string? Platform { get; set; }
@@ -78,7 +77,7 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
 
     public bool IsStale => Snapshot.Platforms.Values
         .Where(state => state.LastSuccessAt is not null)
-        .Any(state => timeProvider.GetUtcNow() - state.LastSuccessAt > StaleAfter);
+        .Any(state => timeProvider.GetUtcNow() - state.LastSuccessAt > CollectionSnapshot.StaleAfter);
 
     public bool IsRefreshing => registry.IsAnyCollecting;
 
@@ -137,18 +136,13 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
             .Skip((PageNumber - 1) * PageSize)
             .Take(PageSize)
             .ToImmutableArray();
-        PopularTags = Snapshot.Live.StreamsByTag
+        var rankedTags = Snapshot.Live.StreamsByTag
             .OrderByDescending(pair => pair.Value.Length)
             .ThenBy(pair => pair.Key, StringComparer.Ordinal)
-            .Take(8)
             .Select(pair => pair.Key)
-            .ToImmutableArray();
-        AllPopularTags = Snapshot.Live.StreamsByTag
-            .OrderByDescending(pair => pair.Value.Length)
-            .ThenBy(pair => pair.Key, StringComparer.Ordinal)
-            .Take(30)
-            .Select(pair => pair.Key)
-            .ToImmutableArray();
+            .ToArray();
+        PopularTags = rankedTags.Take(8).ToImmutableArray();
+        AllPopularTags = rankedTags.Take(30).ToImmutableArray();
     }
 
     public IActionResult OnPostRefresh()

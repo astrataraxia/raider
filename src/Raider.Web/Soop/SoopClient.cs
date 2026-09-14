@@ -1,7 +1,6 @@
 // SOOP 공식 API의 전체 현재 라이브 목록을 수집하고 공통 모델로 변환한다.
 using System.Collections.Immutable;
 using System.Globalization;
-using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -12,11 +11,10 @@ using Raider.Web.Live;
 
 namespace Raider.Web.Soop;
 
-public sealed class SoopClient : IProgressiveLiveSource
+public sealed class SoopClient : ILiveSource
 {
     private const int PageSize = 60;
     private const int MaximumPages = 100;
-    private const int MaximumConcurrentRequests = 1;
     private const int MaximumRequestAttempts = 3;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
     private readonly HttpClient httpClient;
@@ -44,12 +42,10 @@ public sealed class SoopClient : IProgressiveLiveSource
     public Platform Platform => Platform.Soop;
 
     public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
-    {
-        return CollectCoreAsync(null, cancellationToken);
-    }
+        => CollectAsync(null, cancellationToken);
 
     public Task<ImmutableArray<LiveStream>> CollectAsync(
-        Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+        Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
         CancellationToken cancellationToken)
     {
         return CollectCoreAsync(publishPartial, cancellationToken);
@@ -102,23 +98,12 @@ public sealed class SoopClient : IProgressiveLiveSource
         }
 
         var excludedCount = 0;
-        await Parallel.ForEachAsync(
-            Enumerable.Range(2, pageCount - 1),
-            new ParallelOptions
-            {
-                CancellationToken = cancellationToken,
-                MaxDegreeOfParallelism = MaximumConcurrentRequests,
-            },
-            async (pageNumber, token) =>
-            {
-                var pageStreams = new List<LiveStream>(PageSize);
-                var page = await GetPageWithRetryAsync(pageNumber, token);
-                Interlocked.Add(ref excludedCount, Map(page.Broadcasts, categoryNames, pageStreams));
-                lock (streams)
-                {
-                    streams.AddRange(pageStreams);
-                }
-            });
+        for (var pageNumber = 2; pageNumber <= pageCount; pageNumber++)
+        {
+            var page = await GetPageWithRetryAsync(pageNumber, cancellationToken);
+            excludedCount += Map(page.Broadcasts, categoryNames, streams);
+        }
+
         return excludedCount;
     }
 
@@ -187,7 +172,7 @@ public sealed class SoopClient : IProgressiveLiveSource
             using var response = await httpClient.GetAsync(path, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                throw CreateHttpError(response.StatusCode);
+                throw PlatformHttp.HttpError("SOOP", response.StatusCode);
             }
 
             var result = await response.Content.ReadFromJsonAsync<SoopResponse>(cancellationToken: cancellationToken);
@@ -212,26 +197,9 @@ public sealed class SoopClient : IProgressiveLiveSource
         {
             throw;
         }
-        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception exception) when (exception is OperationCanceledException or HttpRequestException or JsonException)
         {
-            throw new PlatformCollectionException(
-                new PlatformError(PlatformErrorKind.Timeout),
-                "SOOP request timed out.",
-                exception);
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new PlatformCollectionException(
-                new PlatformError(PlatformErrorKind.Network),
-                "SOOP network request failed.",
-                exception);
-        }
-        catch (JsonException exception)
-        {
-            throw new PlatformCollectionException(
-                new PlatformError(PlatformErrorKind.Contract),
-                "SOOP response contract was invalid.",
-                exception);
+            throw PlatformHttp.RequestFailed("SOOP", exception, cancellationToken);
         }
     }
 
@@ -244,7 +212,7 @@ public sealed class SoopClient : IProgressiveLiveSource
             using var response = await httpClient.GetAsync(path, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                throw CreateHttpError(response.StatusCode);
+                throw PlatformHttp.HttpError("SOOP", response.StatusCode);
             }
 
             var result = await response.Content.ReadFromJsonAsync<SoopCategoryResponse>(cancellationToken: cancellationToken);
@@ -351,21 +319,6 @@ public sealed class SoopClient : IProgressiveLiveSource
     private static string? NormalizeThumbnail(string? thumbnail)
     {
         return thumbnail?.StartsWith("//", StringComparison.Ordinal) == true ? $"https:{thumbnail}" : thumbnail;
-    }
-
-    private static PlatformCollectionException CreateHttpError(HttpStatusCode statusCode)
-    {
-        var kind = statusCode switch
-        {
-            HttpStatusCode.Unauthorized => PlatformErrorKind.Authentication,
-            HttpStatusCode.Forbidden => PlatformErrorKind.Forbidden,
-            HttpStatusCode.RequestTimeout => PlatformErrorKind.Timeout,
-            HttpStatusCode.TooManyRequests => PlatformErrorKind.RateLimited,
-            >= HttpStatusCode.InternalServerError => PlatformErrorKind.Server,
-            _ => PlatformErrorKind.Contract,
-        };
-
-        return new PlatformCollectionException(new PlatformError(kind), $"SOOP request failed with HTTP {(int)statusCode}.");
     }
 
     private static PlatformCollectionException ContractError()

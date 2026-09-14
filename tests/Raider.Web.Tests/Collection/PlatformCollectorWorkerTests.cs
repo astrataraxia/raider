@@ -190,7 +190,9 @@ public sealed class PlatformCollectorWorkerTests
 
         public int MaximumConcurrentCalls { get; private set; }
 
-        public async Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
+        public async Task<ImmutableArray<LiveStream>> CollectAsync(
+            Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
+            CancellationToken cancellationToken)
         {
             CallCount++;
             var concurrent = Interlocked.Increment(ref concurrentCalls);
@@ -218,7 +220,7 @@ public sealed class PlatformCollectorWorkerTests
         }
     }
 
-    private sealed class ProgressiveFakeSource(Platform platform) : IProgressiveLiveSource
+    private sealed class ProgressiveFakeSource(Platform platform) : ILiveSource
     {
         public Platform Platform { get; } = platform;
 
@@ -226,36 +228,26 @@ public sealed class PlatformCollectorWorkerTests
 
         public TaskCompletionSource Complete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
-        {
-            return CollectAsync(_ => ValueTask.CompletedTask, cancellationToken);
-        }
-
         public async Task<ImmutableArray<LiveStream>> CollectAsync(
-            Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+            Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
             CancellationToken cancellationToken)
         {
-            await publishPartial([Stream("partial", Platform)]);
+            await publishPartial!([Stream("partial", Platform)]);
             PartialPublished.SetResult();
             await Complete.Task.WaitAsync(cancellationToken);
             return [Stream("complete", Platform)];
         }
     }
 
-    private sealed class FailingProgressiveSource(Platform platform) : IProgressiveLiveSource
+    private sealed class FailingProgressiveSource(Platform platform) : ILiveSource
     {
         public Platform Platform { get; } = platform;
 
-        public Task<ImmutableArray<LiveStream>> CollectAsync(CancellationToken cancellationToken)
-        {
-            throw new NotSupportedException();
-        }
-
         public async Task<ImmutableArray<LiveStream>> CollectAsync(
-            Func<ImmutableArray<LiveStream>, ValueTask> publishPartial,
+            Func<ImmutableArray<LiveStream>, ValueTask>? publishPartial,
             CancellationToken cancellationToken)
         {
-            await publishPartial([Stream("partial", Platform)]);
+            await publishPartial!([Stream("partial", Platform)]);
             throw new PlatformCollectionException(new PlatformError(PlatformErrorKind.Contract), "contract");
         }
     }
