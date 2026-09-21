@@ -1,6 +1,6 @@
 # Raider 단일 앱 컨테이너 배포.
 
-현재 릴리스 버전은 `v2.1.2`이다.
+현재 릴리스 버전은 `v2.2.0`이다.
 
 ## 권장 환경.
 
@@ -23,12 +23,13 @@
 `.env`의 `RAIDER_IMAGE`에는 레지스트리에 게시한 이미지 주소를 입력한다.
 
 ```text
-RAIDER_IMAGE=ghcr.io/astrataraxia/raider:2.1.2
+RAIDER_IMAGE=ghcr.io/astrataraxia/raider:2.2.0
 RAIDER_BIND_ADDRESS=127.0.0.1
 RAIDER_PORT=8080
 RAIDER_DATA_PATH=./data
 RAIDER__CHZZK__CLIENTID=실제-client-id
 RAIDER__CHZZK__CLIENTSECRET=실제-client-secret
+RAIDER__CHZZK__REDIRECTURI=https://raider.example/auth/chzzk/callback
 RAIDER__SOOP__CLIENTID=실제-client-id
 ```
 
@@ -85,6 +86,7 @@ docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 ```text
 RAIDER__CHZZK__CLIENTID
 RAIDER__CHZZK__CLIENTSECRET
+RAIDER__CHZZK__REDIRECTURI
 RAIDER__SOOP__CLIENTID
 ```
 
@@ -134,6 +136,7 @@ services:
       RAIDER__FAVORITES__DATABASEPATH: /data/raider.db
       RAIDER__CHZZK__CLIENTID: ${RAIDER__CHZZK__CLIENTID}
       RAIDER__CHZZK__CLIENTSECRET: ${RAIDER__CHZZK__CLIENTSECRET}
+      RAIDER__CHZZK__REDIRECTURI: ${RAIDER__CHZZK__REDIRECTURI}
       RAIDER__SOOP__CLIENTID: ${RAIDER__SOOP__CLIENTID}
     networks:
       - proxy

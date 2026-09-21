@@ -1,0 +1,115 @@
+@page
+@model Raider.Web.Pages.RecapModel
+@{
+    ViewData["Title"] = "채팅 리캡";
+    var recap = Model.Recap;
+}
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1.3.8" />
+</head>
+<body>
+    <div class="visually-hidden" data-antiforgery-token>@Html.AntiForgeryToken()</div>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand-block">
+                <a class="brand" asp-page="/Index" aria-label="Raider 홈">
+                    <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
+                </a>
+                <a class="recap-link is-current" asp-page="/Recap">리캡</a>
+            </div>
+            @if (Model.IsSignedIn)
+            {
+                <form method="post" action="/auth/logout">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="refresh-button">로그아웃</button>
+                </form>
+            }
+        </div>
+    </header>
+    <main class="recap-page">
+        <h1>@(string.IsNullOrWhiteSpace(Model.ViewerName) ? "채팅 리캡" : Model.ViewerName)</h1>
+        @if (!Model.IsSignedIn)
+        {
+            @if (Model.LoginFailed)
+            {
+                <p class="recap-note">치지직 로그인에 실패했습니다. 다시 시도하거나, Redirect URI가 콘솔 값과 같은지 확인하세요.</p>
+            }
+            <p><a class="recap-link" href="/auth/chzzk">치지직으로 로그인</a></p>
+        }
+        else if (Model.CollectionStartedOn is { } started)
+        {
+            <p class="recap-note">수집일: @started.ToString("yyyy-MM-dd")부터. 그 전 기록은 모으지 않았습니다. 감시하지 않는 채널은 세지 않습니다.</p>
+        }
+        else
+        {
+            <p class="recap-note">아직 모은 채팅이 없습니다. 치지직은 과거 채팅 목록을 주지 않습니다. Raider가 켜져 있는 동안, 홈 즐겨찾기의 CHZZK 채널이 라이브일 때 친 채팅만 앞으로 쌓입니다.</p>
+        }
+
+        @if (recap.TotalChats > 0 && recap.HomeChannelId is not null)
+        {
+            <section class="recap-card recap-home">
+                <p class="recap-label">본진</p>
+                <p class="recap-hero">@((recap.HomeShare * 100).ToString("0"))%</p>
+                <p>채팅 @recap.TotalChats.ToString("N0")건 중 @recap.Channels[0].Count.ToString("N0")건이 @recap.HomeChannelName</p>
+            </section>
+            <section class="recap-stats">
+                <div class="recap-card"><p class="recap-label">총 채팅</p><p class="recap-hero">@recap.TotalChats.ToString("N0")</p></div>
+                <div class="recap-card"><p class="recap-label">활동 채널</p><p class="recap-hero">@recap.ActiveChannels</p></div>
+                <div class="recap-card"><p class="recap-label">활동 일수</p><p class="recap-hero">@recap.ActiveDays</p></div>
+            </section>
+            <section class="recap-badges" aria-label="뱃지">
+                @if (recap.HasAttendanceBadge)
+                {
+                    <span class="recap-badge">개근 @recap.HomeChannelName 출석률 @((recap.AttendanceRate * 100).ToString("0"))%</span>
+                }
+                @if (recap.HasVeteranBadge)
+                {
+                    <span class="recap-badge">고인물 @recap.HomeChannelName</span>
+                }
+                @if (recap.HasLoyaltyBadge)
+                {
+                    <span class="recap-badge">일편단심 본진 비중 @((recap.HomeShare * 100).ToString("0"))%</span>
+                }
+                @if (recap.HasHopperBadge)
+                {
+                    <span class="recap-badge">메뚜기 @(recap.ActiveChannels)개 채널</span>
+                }
+            </section>
+            <section class="recap-card">
+                <p class="recap-label">최장 연속 출석</p>
+                <p class="recap-hero">@(recap.LongestStreak)회</p>
+                <p>지금 @(recap.CurrentStreak)회 연속. 본진 방송이 있던 날 기준, 휴방은 건너뜁니다.</p>
+            </section>
+            <table class="recap-table">
+                <thead>
+                    <tr><th>채널</th><th>채팅</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var channel in recap.Channels)
+                {
+                    <tr>
+                        <td>@channel.Name</td>
+                        <td>@channel.Count.ToString("N0")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <section class="recap-card">
+                <p class="recap-label">월별 채팅 수</p>
+                <ul class="recap-months">
+                    @foreach (var month in recap.Months)
+                    {
+                        <li>@month.Month.ToString("yyyy-MM") @month.Count.ToString("N0")건</li>
+                    }
+                </ul>
+            </section>
+        }
+    </main>
+</body>
+</html>

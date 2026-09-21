@@ -1349,3 +1349,96 @@ button:focus-visible {
     animation: none;
   }
 }
+
+.recap-link {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.recap-link.is-current,
+.recap-link:hover {
+  color: var(--color-brand-hover);
+}
+
+.recap-page {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: grid;
+  gap: 16px;
+}
+
+.recap-page h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.recap-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.recap-card {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+}
+
+.recap-label {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.recap-hero {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.recap-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.recap-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.recap-badge {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-soft);
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+
+.recap-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.recap-table th,
+.recap-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.recap-months {
+  margin: 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 640px) {
+  .recap-stats {
+    grid-template-columns: 1fr;
+  }
+}

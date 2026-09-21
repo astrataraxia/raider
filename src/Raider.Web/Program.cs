@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Raider.Web.Chzzk;
 using Raider.Web.Collection;
 using Raider.Web.Configuration;
 using Raider.Web.Favorites;
 using Raider.Web.Live;
+using Raider.Web.Recap;
 using Raider.Web.Soop;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,13 +14,29 @@ builder.Services
 builder.Services
     .AddOptions<SoopOptions>()
     .Bind(builder.Configuration.GetSection(SoopOptions.SectionName));
+builder.Services
+    .AddOptions<ChatOptions>()
+    .Bind(builder.Configuration.GetSection(ChatOptions.SectionName));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<CollectionRegistry>();
 builder.Services.AddRazorPages();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "raider-recap";
+        options.LoginPath = "/recap";
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
+builder.Services.AddAuthorization();
 builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
-builder.Services.AddSingleton(services => new FavoriteStore(
-    builder.Configuration["Raider:Favorites:DatabasePath"] ?? Path.Combine(AppContext.BaseDirectory, "data", "raider.db")));
+builder.Services.AddSingleton(services => new FavoriteStore(ResolveDatabasePath(services)));
+builder.Services.AddSingleton(services => new ChatCountStore(ResolveDatabasePath(services)));
 builder.Services.AddSingleton<FavoriteCatalog>();
+builder.Services.AddSingleton<OauthStateStore>();
 builder.Services.AddHttpClient<ChzzkClient>(client =>
 {
     client.BaseAddress = new Uri("https://openapi.chzzk.naver.com/");
@@ -47,22 +65,40 @@ builder.Services.AddSingleton<IHostedService>(services => CreateCollector(
     services.GetRequiredService<SoopClient>(),
     "Raider:Collection:Soop",
     new CollectionOptions { CollectionTimeout = TimeSpan.FromSeconds(30) }));
+builder.Services.AddHttpClient<ChzzkChatAccess>(client =>
+{
+    client.Timeout = Timeout.InfiniteTimeSpan;
+    if (client.DefaultRequestHeaders.UserAgent.Count == 0)
+    {
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Raider/0.1");
+    }
+});
+builder.Services.AddHttpClient<ChzzkAuthClient>(client =>
+{
+    client.BaseAddress = new Uri("https://openapi.chzzk.naver.com/");
+    client.Timeout = Timeout.InfiniteTimeSpan;
+});
+builder.Services.AddHostedService<ChzzkChatWorker>();
 
 var app = builder.Build();
 
 try
 {
     await app.Services.GetRequiredService<FavoriteStore>().InitializeAsync(CancellationToken.None);
+    await app.Services.GetRequiredService<ChatCountStore>().InitializeAsync(CancellationToken.None);
 }
 catch (Exception exception)
 {
-    app.Logger.LogError(exception, "Favorite store initialization failed.");
+    app.Logger.LogError(exception, "Store initialization failed.");
 }
 
 app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 app.MapRazorPages();
 app.MapFavoriteEndpoints();
+app.MapChzzkAuthEndpoints();
 app.MapGet("/favicon.ico", () => Results.Redirect("/favicon.svg"));
 app.MapGet("/health/live", () => Results.Ok());
 app.MapGet("/health/ready", (SnapshotStore snapshots) =>
@@ -83,6 +119,10 @@ app.MapGet("/api/refresh/status", (CollectionRegistry registry, SnapshotStore sn
 }));
 
 app.Run();
+
+static string ResolveDatabasePath(IServiceProvider services)
+    => services.GetRequiredService<IConfiguration>()["Raider:Favorites:DatabasePath"]
+        ?? Path.Combine(AppContext.BaseDirectory, "data", "raider.db");
 
 static PlatformCollectorWorker CreateCollector(
     IServiceProvider services,

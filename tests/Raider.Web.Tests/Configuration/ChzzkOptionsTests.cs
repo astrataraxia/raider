@@ -50,7 +50,14 @@ public sealed class ChzzkOptionsTests
         };
 
         Assert.True(options.IsConfigured);
+        Assert.False(options.CanLogin);
         Assert.False(new ChzzkOptions().IsConfigured);
         Assert.False(new ChzzkOptions { ClientId = "id" }.IsConfigured);
+        Assert.True(new ChzzkOptions
+        {
+            ClientId = "private-client-id",
+            ClientSecret = "private-client-secret",
+            RedirectUri = "https://example.invalid/auth/chzzk/callback",
+        }.CanLogin);
     }
 }

@@ -8,6 +8,11 @@ public sealed class ChzzkOptions
 
     public string ClientSecret { get; init; } = string.Empty;
 
+    public string RedirectUri { get; init; } = string.Empty;
+
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret);
+
+    public bool CanLogin =>
+        IsConfigured && !string.IsNullOrWhiteSpace(RedirectUri);
 }

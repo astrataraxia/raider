@@ -83,6 +83,9 @@ Program
 ├── Favorites
 │   ├── FavoriteStore
 │   └── FavoriteCatalog
+├── Recap
+│   ├── ChatCountStore
+│   └── Recap
 └── Web
     ├── Pages
     └── wwwroot
@@ -95,7 +98,8 @@ Program
 | `Platforms.Soop` | SOOP HTTP 계약과 공통 모델 변환. | CHZZK 규칙, 화면 표현. |
 | `Collection` | 독립 주기 실행, 실패 격리, 병합, 스냅샷 교체. | HTML 렌더링, 플랫폼 응답 직접 해석. |
 | `Web` | 기본 홈은 스냅샷 한 번 읽기, 필터, 검색, Razor 렌더링, 헬스 엔드포인트. | 외부 플랫폼 호출, 수집 실행. |
-| `Favorites` | 공용 즐겨찾기 SQLite 저장과 현재 스냅샷 기반 라이브 상태 결합. | 사용자 계정, 외부 플랫폼 호출, 수집 worker 쓰기, Redis, 메모리 캐시. |
+| `Favorites` | 공용 즐겨찾기 SQLite 저장과 현재 스냅샷 기반 라이브 상태 결합. | 채팅 본문, 외부 플랫폼 호출, 수집 worker 쓰기, Redis, 메모리 캐시. |
+| `Recap` | CHZZK 즐겨찾기 라이브 채팅 날짜 건수, 방송일, 본인 리캡 집계. | 채팅 본문, 피라미드 순위, SOOP, 홈 HTML. |
 | `Program` | 설정과 의존성 조립, 시작, 정상 종료. | 도메인 규칙과 응답 파싱. |
 
 인터페이스는 안정적인 테스트 경계가 필요하거나 두 구현이 실제 존재할 때만 만든다. 플랫폼 어댑터의 공통 수집 계약은 필요하지만 모든 클래스에 인터페이스를 붙이지 않는다.
@@ -178,7 +182,7 @@ BaseService
 - 원본 응답 전체, 인증 헤더, 쿠키, 토큰은 저장하거나 일반 로그에 출력하지 않는다.
 - 자동 테스트는 외부 네트워크를 호출하지 않고 최소 익명 fixture와 로컬 HTTP 서버를 사용한다.
 
-CHZZK과 SOOP 모두 공식 API를 운영 경로로 사용한다. SOOP의 공식 `broad/list`와 `broad/category/list`는 Client ID가 필요하며, `result` 코드와 필수 JSON 구조 검사를 수행한다. `total_view_cnt`는 현재 시청자 수로 매핑하고 `broad_no`를 기존과 동일한 `ChannelId`로 사용한다. API 변경은 계약 테스트와 오류 상태로 드러낸다.
+CHZZK 라이브 목록과 이용자 로그인은 공식 API를 운영 경로로 사용한다. 즐겨찾기 CHZZK 채널 채팅 수집은 읽기 전용 비공식 웹소켓이다. 본문은 파싱 직후 버리고 날짜 건수만 남긴다. SOOP은 공식 API를 운영 경로로 사용한다. SOOP의 공식 `broad/list`와 `broad/category/list`는 Client ID가 필요하며, `result` 코드와 필수 JSON 구조 검사를 수행한다. `total_view_cnt`는 현재 시청자 수로 매핑하고 `broad_no`를 기존과 동일한 `ChannelId`로 사용한다. API 변경은 계약 테스트와 오류 상태로 드러낸다.
 
 ## 9. 수집과 동시성.
 
@@ -226,6 +230,10 @@ retry_attempt
 | Method | 경로 | 책임 |
 | --- | --- | --- |
 | `GET` | `/` | 현재 라이브 타일, 플랫폼·태그·검색 필터. |
+| `GET` | `/recap` | 치지직 로그인 이용자의 CHZZK 채팅 리캡. 미로그인은 로그인으로 보낸다. |
+| `GET` | `/auth/chzzk` | 치지직 OAuth 시작. |
+| `GET` | `/auth/chzzk/callback` | 치지직 OAuth 콜백. |
+| `POST` | `/auth/logout` | 리캡 세션 종료. |
 | `GET` | `/health/live` | 프로세스가 HTTP 요청을 처리할 수 있는지 확인. |
 | `GET` | `/health/ready` | 첫 수집 시도가 완료됐는지 확인. |
 

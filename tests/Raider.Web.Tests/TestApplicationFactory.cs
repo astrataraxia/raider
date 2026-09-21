@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Raider.Web.Tests;
 
-internal sealed class TestApplicationFactory : WebApplicationFactory<Program>
+internal class TestApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -18,7 +18,9 @@ internal sealed class TestApplicationFactory : WebApplicationFactory<Program>
                 ["Raider:Soop:ClientId"] = "fixture-soop-client-id",
                 ["Raider:Collection:Chzzk:Enabled"] = "false",
                 ["Raider:Collection:Soop:Enabled"] = "false",
+                ["Raider:Chat:Enabled"] = "false",
                 ["Raider:Favorites:DatabasePath"] = Path.Combine(Path.GetTempPath(), $"raider-test-{Guid.NewGuid():N}.db"),
+                ["Raider:Chzzk:RedirectUri"] = "https://localhost/auth/chzzk/callback",
             });
         });
     }

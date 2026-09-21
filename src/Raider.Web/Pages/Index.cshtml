@@ -23,6 +23,7 @@
                     <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
                 </a>
                 <span class="stream-count"><strong>@Model.TotalResultCount.ToString("N0")</strong>개 방송 중</span>
+                <a class="recap-link" asp-page="/Recap">리캡</a>
             </div>
             <div class="sync-state">
                 @if (Model.IsRefreshing)
