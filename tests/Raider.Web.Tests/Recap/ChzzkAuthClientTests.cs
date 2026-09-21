@@ -55,6 +55,16 @@ public sealed class ChzzkAuthClientTests
         Assert.Equal("Viewer", user.ChannelName);
     }
 
+    [Fact]
+    public async Task ExchangeReturnsNullWhenOpenApiIsUnreachable()
+    {
+        var client = new ChzzkAuthClient(
+            new HttpClient(new FailingHandler()) { BaseAddress = new Uri("https://openapi.chzzk.naver.com/") },
+            Options.Create(new ChzzkOptions { ClientId = "id", ClientSecret = "secret", RedirectUri = "https://localhost/callback" }));
+
+        Assert.Null(await client.ExchangeAsync("code-1", "state-1", CancellationToken.None));
+    }
+
     private static HttpResponseMessage Json(string json)
         => new(HttpStatusCode.OK) { Content = new StringContent(json) };
 
@@ -62,5 +72,11 @@ public sealed class ChzzkAuthClientTests
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             => Task.FromResult(respond(request));
+    }
+
+    private sealed class FailingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            => throw new HttpRequestException("Resource temporarily unavailable (openapi.chzzk.naver.com:443)");
     }
 }

@@ -31,6 +31,26 @@ public sealed class ChzzkAuthClient(HttpClient httpClient, IOptions<ChzzkOptions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
         ArgumentException.ThrowIfNullOrWhiteSpace(state);
+        try
+        {
+            return await ExchangeCoreAsync(code, state, cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return null;
+        }
+    }
+
+    private async Task<ChzzkUser?> ExchangeCoreAsync(string code, string state, CancellationToken cancellationToken)
+    {
         using var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "auth/v1/token")
         {
             Content = new StringContent(

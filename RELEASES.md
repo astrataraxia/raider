@@ -2,7 +2,7 @@
 
 ## v2.2.1. 2026-09-21.
 
-- **운영 500 수정**: 읽기 전용 컨테이너에서 쿠키 로그인용 Data Protection 키를 `/data/dp-keys`에 저장한다. Traefik `X-Forwarded-Proto`를 반영한다. 채팅 워커 예외가 프로세스를 끄지 않는다.
+- **운영 500 수정**: 읽기 전용 컨테이너에서 쿠키 로그인용 Data Protection 키를 `/data/dp-keys`에 저장한다. Traefik `X-Forwarded-Proto`를 반영한다. 채팅 워커 예외가 프로세스를 끄지 않는다. 치지직 토큰 교환이 네트워크/DNS로 실패해도 `/auth/chzzk/callback`이 500 대신 로그인 실패 화면으로 돌아간다.
 
 ### 검증 결과.
 
