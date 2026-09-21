@@ -32,7 +32,8 @@ public sealed class RecapModel(ChatCountStore store, FavoriteStore favorites) : 
         IsSignedIn = true;
 
         var names = (await favorites.ListAsync(cancellationToken))
-            .ToDictionary(favorite => favorite.ChannelId, favorite => favorite.StreamerName, StringComparer.Ordinal);
+            .GroupBy(favorite => favorite.ChannelId, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First().StreamerName, StringComparer.Ordinal);
         var days = await store.ListViewerDaysAsync(channelId, cancellationToken);
         CollectionStartedOn = days.IsDefaultOrEmpty ? null : days.Min(day => day.Date);
         var homeId = days

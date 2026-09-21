@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Raider.Web.Chzzk;
 using Raider.Web.Collection;
 using Raider.Web.Configuration;
@@ -20,6 +22,23 @@ builder.Services
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<CollectionRegistry>();
 builder.Services.AddRazorPages();
+builder.Services.Configure<HostOptions>(options =>
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+var dataProtectionDirectory = CreateWritableDirectory("/data/dp-keys")
+    ?? CreateWritableDirectory(Path.Combine(Path.GetTempPath(), "raider-dp-keys"));
+if (dataProtectionDirectory is not null)
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("Raider")
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionDirectory));
+}
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -92,6 +111,7 @@ catch (Exception exception)
     app.Logger.LogError(exception, "Store initialization failed.");
 }
 
+app.UseForwardedHeaders();
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -119,6 +139,22 @@ app.MapGet("/api/refresh/status", (CollectionRegistry registry, SnapshotStore sn
 }));
 
 app.Run();
+
+static string? CreateWritableDirectory(string path)
+{
+    try
+    {
+        Directory.CreateDirectory(path);
+        var probe = Path.Combine(path, ".write-test");
+        File.WriteAllText(probe, "ok");
+        File.Delete(probe);
+        return path;
+    }
+    catch (Exception)
+    {
+        return null;
+    }
+}
 
 static string ResolveDatabasePath(IServiceProvider services)
     => services.GetRequiredService<IConfiguration>()["Raider:Favorites:DatabasePath"]
