@@ -30,8 +30,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
-var dataProtectionDirectory = CreateWritableDirectory("/data/dp-keys")
-    ?? CreateWritableDirectory(Path.Combine(Path.GetTempPath(), "raider-dp-keys"));
+var dataProtectionDirectory = ResolveDataProtectionDirectory(builder.Configuration);
 if (dataProtectionDirectory is not null)
 {
     builder.Services.AddDataProtection()
@@ -101,6 +100,9 @@ builder.Services.AddHostedService<ChzzkChatWorker>();
 
 var app = builder.Build();
 
+app.Logger.LogInformation(
+    "Data protection keys directory: {Directory}",
+    dataProtectionDirectory ?? "ephemeral");
 try
 {
     await app.Services.GetRequiredService<FavoriteStore>().InitializeAsync(CancellationToken.None);
@@ -139,6 +141,33 @@ app.MapGet("/api/refresh/status", (CollectionRegistry registry, SnapshotStore sn
 }));
 
 app.Run();
+
+static string? ResolveDataProtectionDirectory(IConfiguration configuration)
+{
+    var candidates = new List<string>();
+    var databasePath = configuration["Raider:Favorites:DatabasePath"];
+    if (!string.IsNullOrWhiteSpace(databasePath))
+    {
+        var parent = Path.GetDirectoryName(Path.GetFullPath(databasePath));
+        if (!string.IsNullOrWhiteSpace(parent))
+        {
+            candidates.Add(Path.Combine(parent, "dp-keys"));
+        }
+    }
+
+    candidates.Add("/data/dp-keys");
+    candidates.Add(Path.Combine(Path.GetTempPath(), "raider-dp-keys"));
+    foreach (var candidate in candidates.Distinct(StringComparer.Ordinal))
+    {
+        var created = CreateWritableDirectory(candidate);
+        if (created is not null)
+        {
+            return created;
+        }
+    }
+
+    return null;
+}
 
 static string? CreateWritableDirectory(string path)
 {

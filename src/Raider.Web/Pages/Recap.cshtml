@@ -38,8 +38,9 @@
         {
             @if (Model.LoginFailed)
             {
-                <p class="recap-note">치지직 로그인에 실패했습니다. 다시 시도하거나, Redirect URI가 콘솔 값과 같은지 확인하세요.</p>
+                <p class="recap-note">치지직 로그인에 실패했습니다. 서버가 치지직 OpenAPI에 잠시 못 붙었을 수 있습니다. 다시 시도하세요.</p>
             }
+            <p class="recap-note">채팅 건수는 SQLite에 남습니다. 로그인만 풀린 것이면 같은 계정으로 다시 들어오면 통계가 이어집니다.</p>
             <p><a class="recap-link" href="/auth/chzzk">치지직으로 로그인</a></p>
         }
         else if (Model.CollectionStartedOn is { } started)
@@ -48,7 +49,7 @@
         }
         else
         {
-            <p class="recap-note">아직 모은 채팅이 없습니다. 치지직은 과거 채팅 목록을 주지 않습니다. Raider가 켜져 있는 동안, 홈 즐겨찾기의 CHZZK 채널이 라이브일 때 친 채팅만 앞으로 쌓입니다.</p>
+            <p class="recap-note">아직 모은 채팅이 없습니다. 치지직은 과거 채팅 목록을 주지 않습니다. Raider가 켜져 있는 동안, 홈 즐겨찾기의 CHZZK 채널이 라이브일 때 친 채팅만 앞으로 쌓입니다. 쌓인 건수는 SQLite에 남고, 로그인 쿠키와는 별개입니다.</p>
         }
 
         @if (recap.TotalChats > 0 && recap.HomeChannelId is not null)

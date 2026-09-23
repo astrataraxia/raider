@@ -3,7 +3,7 @@ services:
     image: ${RAIDER_IMAGE:-raider:local}
     pull_policy: always
     user: root
-    entrypoint: ["bash", "-c", "chown app:app /data; [ ! -e /data/raider.db ] || chown app:app /data/raider.db; exit 0"]
+    entrypoint: ["bash", "-c", "mkdir -p /data/dp-keys; chown app:app /data /data/dp-keys; [ ! -e /data/raider.db ] || chown app:app /data/raider.db; exit 0"]
     volumes:
       - "${RAIDER_DATA_PATH:-./data}:/data"
     restart: "no"
@@ -30,6 +30,10 @@ services:
       RAIDER__SOOP__CLIENTID: ${RAIDER__SOOP__CLIENTID}
       RAIDER__FAVORITES__DATABASEPATH: /data/raider.db
       ASPNETCORE_ENVIRONMENT: Production
+      DOTNET_SYSTEM_NET_DISABLEIPV6: "1"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - "${RAIDER_DATA_PATH:-./data}:/data"
     security_opt:

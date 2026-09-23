@@ -138,8 +138,12 @@ services:
       RAIDER__CHZZK__CLIENTSECRET: ${RAIDER__CHZZK__CLIENTSECRET}
       RAIDER__CHZZK__REDIRECTURI: ${RAIDER__CHZZK__REDIRECTURI}
       RAIDER__SOOP__CLIENTID: ${RAIDER__SOOP__CLIENTID}
+      DOTNET_SYSTEM_NET_DISABLEIPV6: "1"
     networks:
       - proxy
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - "${RAIDER_DATA_PATH}:/data"
     labels:

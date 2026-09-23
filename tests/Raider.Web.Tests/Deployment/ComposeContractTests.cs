@@ -11,7 +11,8 @@ public sealed class ComposeContractTests
         var buildOverride = File.ReadAllText(Path.Combine(repositoryRoot, "docker-compose.build.yml"));
 
         Assert.Contains("raider-data-init:", compose, StringComparison.Ordinal);
-        Assert.Contains("chown app:app /data;", compose, StringComparison.Ordinal);
+        Assert.Contains("mkdir -p /data/dp-keys;", compose, StringComparison.Ordinal);
+        Assert.Contains("chown app:app /data /data/dp-keys;", compose, StringComparison.Ordinal);
         Assert.Contains("chown app:app /data/raider.db;", compose, StringComparison.Ordinal);
         Assert.DoesNotContain("chown -R", compose, StringComparison.Ordinal);
         Assert.Contains("exit 0", compose, StringComparison.Ordinal);
