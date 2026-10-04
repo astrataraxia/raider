@@ -40,12 +40,22 @@ public sealed class ChzzkChatWorkerTests : IDisposable
 
         await worker.IngestFrameAsync(
             "channel-alpha",
-            """{"cmd":93101,"bdy":[{"uid":"me","msg":"do-not-store","msgTime":1}]}""",
+            """{"cmd":93101,"bdy":[{"uid":"me","msg":"do-not-store","msgTime":1},{"uid":"me","msg":"also-dropped","msgTime":2},{"uid":"other","msg":"nope","msgTime":3}]}""",
+            CancellationToken.None);
+        await worker.IngestFrameAsync(
+            "channel-alpha",
+            """{"cmd":93101,"bdy":[{"uid":"me","msg":"third","msgTime":4}]}""",
             CancellationToken.None);
 
-        var row = Assert.Single(await store.ListViewerDaysAsync("me", CancellationToken.None));
-        Assert.Equal("channel-alpha", row.ChannelId);
-        Assert.Equal(1, row.Count);
+        Assert.Empty(await store.ListViewerDaysAsync("me", CancellationToken.None));
+
+        await worker.FlushPendingChatsAsync(CancellationToken.None);
+
+        var mine = Assert.Single(await store.ListViewerDaysAsync("me", CancellationToken.None));
+        var other = Assert.Single(await store.ListViewerDaysAsync("other", CancellationToken.None));
+        Assert.Equal("channel-alpha", mine.ChannelId);
+        Assert.Equal(3, mine.Count);
+        Assert.Equal(1, other.Count);
     }
 
     public void Dispose()

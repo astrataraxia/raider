@@ -62,24 +62,48 @@ public sealed class ChatCountStore
     }
 
     public Task AddChatAsync(string channelId, string senderChannelId, DateOnly date, CancellationToken cancellationToken)
+        => AddChatCountsAsync([new ChatCountDelta(channelId, senderChannelId, date, 1)], cancellationToken);
+
+    public Task AddChatCountsAsync(IReadOnlyList<ChatCountDelta> counts, CancellationToken cancellationToken)
     {
-        RequireId(channelId, nameof(channelId));
-        RequireId(senderChannelId, nameof(senderChannelId));
+        if (counts.Count == 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        foreach (var count in counts)
+        {
+            RequireId(count.ChannelId, nameof(count.ChannelId));
+            RequireId(count.SenderChannelId, nameof(count.SenderChannelId));
+            if (count.Count <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(counts), "A chat count must be positive.");
+            }
+        }
+
         return ExecuteAsync(
             async connection =>
             {
-                await using var command = connection.CreateCommand();
-                command.CommandText =
-                    """
-                    INSERT INTO chat_day_counts (channel_id, sender_channel_id, date_kst, count)
-                    VALUES ($channelId, $senderChannelId, $date, 1)
-                    ON CONFLICT(channel_id, sender_channel_id, date_kst) DO UPDATE SET
-                        count = count + 1;
-                    """;
-                command.Parameters.AddWithValue("$channelId", channelId);
-                command.Parameters.AddWithValue("$senderChannelId", senderChannelId);
-                command.Parameters.AddWithValue("$date", FormatDate(date));
-                await command.ExecuteNonQueryAsync(cancellationToken);
+                await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+                foreach (var count in counts)
+                {
+                    await using var command = connection.CreateCommand();
+                    command.Transaction = transaction;
+                    command.CommandText =
+                        """
+                        INSERT INTO chat_day_counts (channel_id, sender_channel_id, date_kst, count)
+                        VALUES ($channelId, $senderChannelId, $date, $count)
+                        ON CONFLICT(channel_id, sender_channel_id, date_kst) DO UPDATE SET
+                            count = count + $count;
+                        """;
+                    command.Parameters.AddWithValue("$channelId", count.ChannelId);
+                    command.Parameters.AddWithValue("$senderChannelId", count.SenderChannelId);
+                    command.Parameters.AddWithValue("$date", FormatDate(count.Date));
+                    command.Parameters.AddWithValue("$count", count.Count);
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
                 return true;
             },
             cancellationToken);

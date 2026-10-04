@@ -21,7 +21,10 @@ public sealed class ChzzkChatWorker(
     IOptions<ChatOptions> options,
     ILogger<ChzzkChatWorker> logger) : BackgroundService
 {
-    private readonly ConcurrentDictionary<string, CancellationTokenSource> sockets = new(StringComparer.Ordinal);
+    private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(15);
+    private readonly object pendingLock = new();
+    private readonly Dictionary<PendingChat, int> pending = [];
+    private readonly ConcurrentDictionary<string, ChatSocket> sockets = new(StringComparer.Ordinal);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -53,21 +56,33 @@ public sealed class ChzzkChatWorker(
 
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
+                await Task.Delay(FlushInterval, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
                 break;
             }
+
+            try
+            {
+                await FlushPendingChatsAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(
+                    exception,
+                    "CHZZK chat count flush failed. Platform: {Platform}, Operation: {Operation}, ErrorKind: {ErrorKind}",
+                    Platform.Chzzk,
+                    "chat-flush",
+                    "Transient");
+            }
         }
 
-        foreach (var source in sockets.Values)
-        {
-            source.Cancel();
-            source.Dispose();
-        }
-
-        sockets.Clear();
+        await StopSocketsAndFlushAsync();
     }
 
     public async Task ObserveLiveFavoritesAsync(CancellationToken cancellationToken)
@@ -80,13 +95,62 @@ public sealed class ChzzkChatWorker(
         }
     }
 
-    public async Task IngestFrameAsync(string channelId, string json, CancellationToken cancellationToken)
+    public Task IngestFrameAsync(string channelId, string json, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(channelId);
         var day = SeoulCalendar.DateFrom(timeProvider.GetUtcNow());
-        foreach (var sender in ChzzkChatFrame.Read(json))
+        var senders = ChzzkChatFrame.Read(json);
+        lock (pendingLock)
         {
-            await store.AddChatAsync(channelId, sender.SenderChannelId, day, cancellationToken);
+            foreach (var sender in senders)
+            {
+                var chat = new PendingChat(channelId, sender.SenderChannelId, day);
+                pending.TryGetValue(chat, out var count);
+                pending[chat] = count + 1;
+            }
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.CompletedTask;
+    }
+
+    public async Task FlushPendingChatsAsync(CancellationToken cancellationToken)
+    {
+        ChatCountDelta[] batch;
+        lock (pendingLock)
+        {
+            if (pending.Count == 0)
+            {
+                return;
+            }
+
+            batch = new ChatCountDelta[pending.Count];
+            var index = 0;
+            foreach (var (chat, count) in pending)
+            {
+                batch[index++] = new ChatCountDelta(chat.ChannelId, chat.SenderChannelId, chat.Date, count);
+            }
+
+            pending.Clear();
+        }
+
+        try
+        {
+            await store.AddChatCountsAsync(batch, cancellationToken);
+        }
+        catch (Exception)
+        {
+            lock (pendingLock)
+            {
+                foreach (var delta in batch)
+                {
+                    var chat = new PendingChat(delta.ChannelId, delta.SenderChannelId, delta.Date);
+                    pending.TryGetValue(chat, out var count);
+                    pending[chat] = count + delta.Count;
+                }
+            }
+
+            throw;
         }
     }
 
@@ -98,8 +162,8 @@ public sealed class ChzzkChatWorker(
             sockets.GetOrAdd(channelId, id =>
             {
                 var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                _ = ReadChannelAsync(id, linked.Token);
-                return linked;
+                var reader = ReadChannelAsync(id, linked.Token);
+                return new ChatSocket(linked, reader);
             });
         }
 
@@ -110,11 +174,54 @@ public sealed class ChzzkChatWorker(
                 continue;
             }
 
-            if (sockets.TryRemove(channelId, out var source))
+            if (sockets.TryRemove(channelId, out var socket))
             {
-                source.Cancel();
-                source.Dispose();
+                socket.Source.Cancel();
+                socket.Source.Dispose();
             }
+        }
+    }
+
+    private async Task StopSocketsAndFlushAsync()
+    {
+        var running = sockets.Values.ToArray();
+        foreach (var socket in running)
+        {
+            socket.Source.Cancel();
+        }
+
+        try
+        {
+            await Task.WhenAll(running.Select(socket => socket.Reader));
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "CHZZK chat socket stop failed. Platform: {Platform}, Operation: {Operation}, ErrorKind: {ErrorKind}",
+                Platform.Chzzk,
+                "chat-stop",
+                "Transient");
+        }
+
+        foreach (var socket in running)
+        {
+            socket.Source.Dispose();
+        }
+
+        sockets.Clear();
+        try
+        {
+            await FlushPendingChatsAsync(CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "CHZZK chat count flush failed. Platform: {Platform}, Operation: {Operation}, ErrorKind: {ErrorKind}",
+                Platform.Chzzk,
+                "chat-flush",
+                "Transient");
         }
     }
 
@@ -214,4 +321,12 @@ public sealed class ChzzkChatWorker(
             tid = 1,
             bdy = new { accTkn = session.AccessToken, auth = "READ", devType = 2001 },
         });
+
+    private readonly record struct PendingChat(string ChannelId, string SenderChannelId, DateOnly Date);
+
+    private sealed class ChatSocket(CancellationTokenSource source, Task reader)
+    {
+        public CancellationTokenSource Source { get; } = source;
+        public Task Reader { get; } = reader;
+    }
 }

@@ -31,6 +31,54 @@ public sealed class ChatCountStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task BatchAddsCountsForSeveralSendersAndSurvivesReopen()
+    {
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "raider.db");
+        var store = new ChatCountStore(path);
+        await store.InitializeAsync(CancellationToken.None);
+        var day = new DateOnly(2026, 9, 18);
+
+        await store.AddChatAsync("home", "me", day, CancellationToken.None);
+        await store.AddChatCountsAsync(
+            [
+                new ChatCountDelta("home", "me", day, 3),
+                new ChatCountDelta("home", "other", day, 2),
+            ],
+            CancellationToken.None);
+
+        var reopened = new ChatCountStore(path);
+        await reopened.InitializeAsync(CancellationToken.None);
+        var counts = await reopened.ListViewerDaysAsync("me", CancellationToken.None);
+        var other = await reopened.ListViewerDaysAsync("other", CancellationToken.None);
+
+        Assert.Equal(4, Assert.Single(counts).Count);
+        Assert.Equal(2, Assert.Single(other).Count);
+    }
+
+    [Fact]
+    public async Task EmptyBatchWritesNothing()
+    {
+        Directory.CreateDirectory(directory);
+        var store = new ChatCountStore(Path.Combine(directory, "raider.db"));
+        await store.InitializeAsync(CancellationToken.None);
+
+        await store.AddChatCountsAsync([], CancellationToken.None);
+
+        Assert.Empty(await store.ListViewerDaysAsync("me", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task NonPositiveBatchCountIsRejected()
+    {
+        var store = new ChatCountStore(Path.Combine(directory, "raider.db"));
+        var day = new DateOnly(2026, 9, 18);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            store.AddChatCountsAsync([new ChatCountDelta("home", "me", day, 0)], CancellationToken.None));
+    }
+
+    [Fact]
     public async Task DifferentDaysAndSendersStaySeparate()
     {
         Directory.CreateDirectory(directory);

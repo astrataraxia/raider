@@ -3,4 +3,6 @@ namespace Raider.Web.Recap;
 
 public sealed record ChatDayCount(string ChannelId, string SenderChannelId, DateOnly Date, int Count);
 
+public sealed record ChatCountDelta(string ChannelId, string SenderChannelId, DateOnly Date, int Count);
+
 public sealed record ChannelFirstSeen(string SenderChannelId, DateOnly FirstSeen);
