@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Raider.Web.Collection;
 using Raider.Web.Favorites;
 using Raider.Web.Live;
+using Raider.Web.Status;
 
 namespace Raider.Web.Recap;
 
@@ -19,12 +20,39 @@ public sealed class ChzzkChatWorker(
     ChzzkChatAccess access,
     TimeProvider timeProvider,
     IOptions<ChatOptions> options,
-    ILogger<ChzzkChatWorker> logger) : BackgroundService
+    ILogger<ChzzkChatWorker> logger,
+    StatusLog? statusLog = null) : BackgroundService
 {
     private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(15);
+    private readonly bool chatEnabled = options.Value.Enabled;
     private readonly object pendingLock = new();
+    private readonly object activityLock = new();
     private readonly Dictionary<PendingChat, int> pending = [];
     private readonly ConcurrentDictionary<string, ChatSocket> sockets = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, byte> connected = new(StringComparer.Ordinal);
+    private int wantedChannels;
+    private DateTimeOffset? lastTickAt;
+    private bool lastTickFailed;
+    private DateTimeOffset? lastFlushAt;
+    private bool? lastFlushSucceeded;
+
+    public ChatActivity ReadActivity()
+    {
+        var pendingCount = PendingCount();
+        var connectedCount = connected.Count;
+        lock (activityLock)
+        {
+            return new ChatActivity(
+                chatEnabled,
+                wantedChannels,
+                connectedCount,
+                pendingCount,
+                lastTickAt,
+                lastTickFailed,
+                lastFlushAt,
+                lastFlushSucceeded);
+        }
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -39,6 +67,11 @@ public sealed class ChzzkChatWorker(
             {
                 await ObserveLiveFavoritesAsync(stoppingToken);
                 await SyncSocketsAsync(stoppingToken);
+                lock (activityLock)
+                {
+                    lastTickAt = timeProvider.GetUtcNow();
+                    lastTickFailed = false;
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -46,12 +79,19 @@ public sealed class ChzzkChatWorker(
             }
             catch (Exception exception)
             {
+                lock (activityLock)
+                {
+                    lastTickAt = timeProvider.GetUtcNow();
+                    lastTickFailed = true;
+                }
+
                 logger.LogWarning(
                     exception,
                     "CHZZK chat collection tick failed. Platform: {Platform}, Operation: {Operation}, ErrorKind: {ErrorKind}",
                     Platform.Chzzk,
                     "chat-tick",
                     "Transient");
+                statusLog?.Add(timeProvider.GetUtcNow(), "CHZZK", "chat-tick", "Transient");
             }
 
             try
@@ -79,6 +119,7 @@ public sealed class ChzzkChatWorker(
                     Platform.Chzzk,
                     "chat-flush",
                     "Transient");
+                statusLog?.Add(timeProvider.GetUtcNow(), "CHZZK", "chat-flush", "Transient");
             }
         }
 
@@ -150,7 +191,33 @@ public sealed class ChzzkChatWorker(
                 }
             }
 
+            lock (activityLock)
+            {
+                lastFlushAt = timeProvider.GetUtcNow();
+                lastFlushSucceeded = false;
+            }
+
             throw;
+        }
+
+        lock (activityLock)
+        {
+            lastFlushAt = timeProvider.GetUtcNow();
+            lastFlushSucceeded = true;
+        }
+    }
+
+    private int PendingCount()
+    {
+        lock (pendingLock)
+        {
+            var total = 0;
+            foreach (var count in pending.Values)
+            {
+                total += count;
+            }
+
+            return total;
         }
     }
 
@@ -180,6 +247,11 @@ public sealed class ChzzkChatWorker(
                 socket.Source.Dispose();
             }
         }
+
+        lock (activityLock)
+        {
+            wantedChannels = wanted.Count;
+        }
     }
 
     private async Task StopSocketsAndFlushAsync()
@@ -202,6 +274,7 @@ public sealed class ChzzkChatWorker(
                 Platform.Chzzk,
                 "chat-stop",
                 "Transient");
+            statusLog?.Add(timeProvider.GetUtcNow(), "CHZZK", "chat-stop", "Transient");
         }
 
         foreach (var socket in running)
@@ -222,6 +295,7 @@ public sealed class ChzzkChatWorker(
                 Platform.Chzzk,
                 "chat-flush",
                 "Transient");
+            statusLog?.Add(timeProvider.GetUtcNow(), "CHZZK", "chat-flush", "Transient");
         }
     }
 
@@ -255,35 +329,43 @@ public sealed class ChzzkChatWorker(
                 await socket.ConnectAsync(
                     new Uri($"wss://kr-ss{server}.chat.naver.com/chat"),
                     cancellationToken);
-                await socket.SendAsync(
-                    Encoding.UTF8.GetBytes(ConnectPayload(session)),
-                    WebSocketMessageType.Text,
-                    true,
-                    cancellationToken);
-
-                var buffer = new byte[64 * 1024];
-                while (socket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
+                connected[channelId] = 0;
+                try
                 {
-                    var result = await socket.ReceiveAsync(buffer, cancellationToken);
-                    if (result.MessageType == WebSocketMessageType.Close)
-                    {
-                        break;
-                    }
+                    await socket.SendAsync(
+                        Encoding.UTF8.GetBytes(ConnectPayload(session)),
+                        WebSocketMessageType.Text,
+                        true,
+                        cancellationToken);
 
-                    // ponytail: one WS frame per JSON message; assemble if CHZZK starts splitting
-                    var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    using var document = JsonDocument.Parse(json);
-                    if (document.RootElement.TryGetProperty("cmd", out var command) && command.GetInt32() == 0)
+                    var buffer = new byte[64 * 1024];
+                    while (socket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
                     {
-                        await socket.SendAsync(
-                            Encoding.UTF8.GetBytes("""{"cmd":10000,"ver":"2"}"""),
-                            WebSocketMessageType.Text,
-                            true,
-                            cancellationToken);
-                        continue;
-                    }
+                        var result = await socket.ReceiveAsync(buffer, cancellationToken);
+                        if (result.MessageType == WebSocketMessageType.Close)
+                        {
+                            break;
+                        }
 
-                    await IngestFrameAsync(channelId, json, cancellationToken);
+                        // ponytail: one WS frame per JSON message; assemble if CHZZK starts splitting
+                        var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        using var document = JsonDocument.Parse(json);
+                        if (document.RootElement.TryGetProperty("cmd", out var command) && command.GetInt32() == 0)
+                        {
+                            await socket.SendAsync(
+                                Encoding.UTF8.GetBytes("""{"cmd":10000,"ver":"2"}"""),
+                                WebSocketMessageType.Text,
+                                true,
+                                cancellationToken);
+                            continue;
+                        }
+
+                        await IngestFrameAsync(channelId, json, cancellationToken);
+                    }
+                }
+                finally
+                {
+                    connected.TryRemove(channelId, out _);
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -298,6 +380,7 @@ public sealed class ChzzkChatWorker(
                     Platform.Chzzk,
                     "chat-socket",
                     "Transient");
+                statusLog?.Add(timeProvider.GetUtcNow(), "CHZZK", "chat-socket", "Transient");
             }
 
             try
@@ -321,6 +404,16 @@ public sealed class ChzzkChatWorker(
             tid = 1,
             bdy = new { accTkn = session.AccessToken, auth = "READ", devType = 2001 },
         });
+
+    public readonly record struct ChatActivity(
+        bool Enabled,
+        int Wanted,
+        int Connected,
+        int PendingCount,
+        DateTimeOffset? LastTickAt,
+        bool LastTickFailed,
+        DateTimeOffset? LastFlushAt,
+        bool? LastFlushSucceeded);
 
     private readonly record struct PendingChat(string ChannelId, string SenderChannelId, DateOnly Date);
 

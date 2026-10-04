@@ -8,6 +8,7 @@ using Raider.Web.Favorites;
 using Raider.Web.Live;
 using Raider.Web.Recap;
 using Raider.Web.Soop;
+using Raider.Web.Status;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
@@ -20,6 +21,9 @@ builder.Services
     .AddOptions<ChatOptions>()
     .Bind(builder.Configuration.GetSection(ChatOptions.SectionName));
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton(new ProcessStatus(TimeProvider.System));
+builder.Services.AddSingleton<StoreGate>();
+builder.Services.AddSingleton<StatusLog>();
 builder.Services.AddSingleton<CollectionRegistry>();
 builder.Services.AddRazorPages();
 builder.Services.Configure<HostOptions>(options =>
@@ -31,6 +35,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 var dataProtectionDirectory = ResolveDataProtectionDirectory(builder.Configuration);
+builder.Services.AddSingleton(services => new AppPaths(
+    ResolveDatabasePath(services.GetRequiredService<IConfiguration>()),
+    dataProtectionDirectory));
 if (dataProtectionDirectory is not null)
 {
     builder.Services.AddDataProtection()
@@ -51,8 +58,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization();
 builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
-builder.Services.AddSingleton(services => new FavoriteStore(ResolveDatabasePath(services)));
-builder.Services.AddSingleton(services => new ChatCountStore(ResolveDatabasePath(services)));
+builder.Services.AddSingleton(services => new FavoriteStore(ResolveDatabasePath(services.GetRequiredService<IConfiguration>())));
+builder.Services.AddSingleton(services => new ChatCountStore(ResolveDatabasePath(services.GetRequiredService<IConfiguration>())));
 builder.Services.AddSingleton<FavoriteCatalog>();
 builder.Services.AddSingleton<OauthStateStore>();
 builder.Services.AddHttpClient<ChzzkClient>(client =>
@@ -96,7 +103,8 @@ builder.Services.AddHttpClient<ChzzkAuthClient>(client =>
     client.BaseAddress = new Uri("https://openapi.chzzk.naver.com/");
     client.Timeout = Timeout.InfiniteTimeSpan;
 });
-builder.Services.AddHostedService<ChzzkChatWorker>();
+builder.Services.AddSingleton<ChzzkChatWorker>();
+builder.Services.AddHostedService(services => services.GetRequiredService<ChzzkChatWorker>());
 
 var app = builder.Build();
 
@@ -107,6 +115,7 @@ try
 {
     await app.Services.GetRequiredService<FavoriteStore>().InitializeAsync(CancellationToken.None);
     await app.Services.GetRequiredService<ChatCountStore>().InitializeAsync(CancellationToken.None);
+    app.Services.GetRequiredService<StoreGate>().MarkReady();
 }
 catch (Exception exception)
 {
@@ -185,8 +194,8 @@ static string? CreateWritableDirectory(string path)
     }
 }
 
-static string ResolveDatabasePath(IServiceProvider services)
-    => services.GetRequiredService<IConfiguration>()["Raider:Favorites:DatabasePath"]
+static string ResolveDatabasePath(IConfiguration configuration)
+    => configuration["Raider:Favorites:DatabasePath"]
         ?? Path.Combine(AppContext.BaseDirectory, "data", "raider.db");
 
 static PlatformCollectorWorker CreateCollector(
@@ -201,7 +210,8 @@ static PlatformCollectorWorker CreateCollector(
         services.GetRequiredService<IConfiguration>().GetSection(section).Get<CollectionOptions>() ?? fallback,
         services.GetRequiredService<CollectionRegistry>(),
         services.GetRequiredService<TimeProvider>(),
-        services.GetRequiredService<ILogger<PlatformCollectorWorker>>());
+        services.GetRequiredService<ILogger<PlatformCollectorWorker>>(),
+        services.GetRequiredService<StatusLog>());
 }
 
 public partial class Program;

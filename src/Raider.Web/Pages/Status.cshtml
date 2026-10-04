@@ -1,0 +1,134 @@
+@page "/status"
+@model Raider.Web.Pages.StatusModel
+@{
+    ViewData["Title"] = "서버 상태";
+}
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1.3.8" />
+    <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg?v=1.3.8" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand-block">
+                <a class="brand" asp-page="/Index" aria-label="Raider 홈">
+                    <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
+                </a>
+                <a class="recap-link" asp-page="/Recap">리캡</a>
+                <a class="recap-link is-current" asp-page="/Status" aria-current="page">상태</a>
+            </div>
+            <div class="sync-state">
+                @if (Model.IsRefreshing)
+                {
+                    <span class="refresh-spinner" title="수집 진행 중"></span>
+                    <span class="sync-copy"><strong>수집 진행 중</strong><span>새 방송을 확인하고 있습니다...</span></span>
+                }
+                else
+                {
+                    <span class="status-dot @(Model.SyncIsWarning ? "is-warning" : "")" aria-hidden="true"></span>
+                    <span class="sync-copy"><strong>@Model.SyncTitle</strong><span>@Model.SyncDetail</span></span>
+                }
+            </div>
+        </div>
+    </header>
+    <main class="status-page">
+        <section class="hero">
+            <div>
+                <p class="eyebrow">STATUS</p>
+                <h1>서버 상태</h1>
+                <p class="hero-description">수집, 채팅, 저장이 마지막에 어떻게 끝났는지입니다.</p>
+            </div>
+            <div class="hero-stats" aria-label="프로세스 요약">
+                <div><span>가동</span><strong>@Model.UptimeText</strong></div>
+                <div><span>메모리</span><strong>@Model.MemoryText</strong></div>
+                @if (Model.MemoryLimitText is not null)
+                {
+                    <div><span>한도</span><strong>@Model.MemoryLimitText</strong></div>
+                }
+            </div>
+        </section>
+
+        @if (Model.Notice is not null)
+        {
+            <aside class="notice-banner" role="status"><strong>@Model.Notice</strong></aside>
+        }
+
+        <section aria-labelledby="collect-heading">
+            <p class="section-label" id="collect-heading">수집</p>
+            <div class="status-grid">
+                @foreach (var platform in Model.Platforms)
+                {
+                    <article class="status-card">
+                        <header>
+                            <span class="platform-dot @platform.DotClass" aria-hidden="true"></span>
+                            <h2>@platform.Name</h2>
+                            <span class="status-pill @platform.PillClass">@platform.Pill</span>
+                        </header>
+                        <p class="status-lead">@platform.Lead</p>
+                        <dl class="metrics">
+                            @foreach (var row in platform.Rows)
+                            {
+                                <div class="metric"><dt>@row.Label</dt><dd>@row.Value</dd></div>
+                            }
+                        </dl>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <div class="status-grid">
+            <section class="status-card" aria-labelledby="chat-heading">
+                <header>
+                    <h2 id="chat-heading">@Model.Chat.Title</h2>
+                    <span class="status-pill @Model.Chat.PillClass">@Model.Chat.Pill</span>
+                </header>
+                <p class="status-lead">@Model.Chat.Lead</p>
+                <dl class="metrics">
+                    @foreach (var row in Model.Chat.Rows)
+                    {
+                        <div class="metric"><dt>@row.Label</dt><dd>@row.Value</dd></div>
+                    }
+                </dl>
+            </section>
+            <section class="status-card" aria-labelledby="storage-heading">
+                <header>
+                    <h2 id="storage-heading">@Model.Storage.Title</h2>
+                    <span class="status-pill @Model.Storage.PillClass">@Model.Storage.Pill</span>
+                </header>
+                <p class="status-lead">@Model.Storage.Lead</p>
+                <dl class="metrics">
+                    @foreach (var row in Model.Storage.Rows)
+                    {
+                        <div class="metric"><dt>@row.Label</dt><dd>@row.Value</dd></div>
+                    }
+                </dl>
+            </section>
+        </div>
+
+        <section aria-labelledby="log-heading">
+            <p class="section-label" id="log-heading">최근 경고</p>
+            <div class="status-card log-list">
+                @if (Model.Warnings.Count == 0)
+                {
+                    <p class="status-lead">최근 경고가 없습니다.</p>
+                }
+                else
+                {
+                    @foreach (var warning in Model.Warnings)
+                    {
+                        <p class="log-line"><time datetime="@warning.At.ToString("o")">@Model.FormatEventTime(warning.At)</time><b>@warning.Platform</b><span>@warning.Operation</span><span>@warning.ErrorKind</span></p>
+                    }
+                }
+            </div>
+        </section>
+
+        <p class="status-note">수집 주기(기본 10분) 동안은 직전 결과가 남습니다. 컨테이너가 꺼지면 이 페이지도 열리지 않고, 그때는 /health/live 가 실패합니다.</p>
+    </main>
+</body>
+</html>

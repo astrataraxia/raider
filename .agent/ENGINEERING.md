@@ -231,6 +231,7 @@ retry_attempt
 | --- | --- | --- |
 | `GET` | `/` | 현재 라이브 타일, 플랫폼·태그·검색 필터. |
 | `GET` | `/recap` | 치지직 로그인 이용자의 CHZZK 채팅 리캡. 미로그인은 로그인으로 보낸다. |
+| `GET` | `/status` | 프로세스, 마지막 수집, 채팅 소켓, 저장, 최근 경고. 외부 플랫폼을 호출하지 않는다. |
 | `GET` | `/auth/chzzk` | 치지직 OAuth 시작. |
 | `GET` | `/auth/chzzk/callback` | 치지직 OAuth 콜백. |
 | `POST` | `/auth/logout` | 리캡 세션 종료. |

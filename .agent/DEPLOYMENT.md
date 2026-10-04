@@ -1,6 +1,6 @@
 # Raider 단일 앱 컨테이너 배포.
 
-현재 릴리스 버전은 `v2.2.2`이다.
+현재 릴리스 버전은 `v2.3.0`이다.
 
 ## 권장 환경.
 
@@ -23,7 +23,7 @@
 `.env`의 `RAIDER_IMAGE`에는 레지스트리에 게시한 이미지 주소를 입력한다.
 
 ```text
-RAIDER_IMAGE=ghcr.io/astrataraxia/raider:2.2.2
+RAIDER_IMAGE=ghcr.io/astrataraxia/raider:2.3.0
 RAIDER_BIND_ADDRESS=127.0.0.1
 RAIDER_PORT=8080
 RAIDER_DATA_PATH=./data
@@ -179,7 +179,8 @@ docker compose start raider
 ## 상태 확인.
 
 - `/health/live`: 프로세스가 HTTP 요청을 처리할 수 있는지 확인한다.
-- `/health/ready`: CHZZK과 SOOP의 첫 수집 시도가 모두 완료됐는지 확인한다.
+- `/health/ready`: CHZZK과 SOOP의 첫 수집 시도가 모두 완료됐는지 확인한다. 플랫폼 API가 건강한지는 보지 않는다.
+- `/status`: 사람이 보는 프로세스, 마지막 수집, 채팅 소켓, 저장 상태다. healthcheck로 쓰지 않고, 이 페이지를 연다고 플랫폼에 추가 요청을 보내지 않는다.
 - 이미지 healthcheck는 `/health/live`를 사용한다.
 
 ## 출시 검증.

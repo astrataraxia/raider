@@ -58,6 +58,31 @@ public sealed class ChzzkChatWorkerTests : IDisposable
         Assert.Equal(1, other.Count);
     }
 
+    [Fact]
+    public async Task FlushClearsPendingAndRecordsSuccess()
+    {
+        var (worker, _, _) = await CreateWorkerAsync(
+            [new Favorite(Platform.Chzzk, "channel-alpha", "Alpha")],
+            [Stream("alpha", Platform.Chzzk)]);
+
+        Assert.False(worker.ReadActivity().Enabled);
+        Assert.Equal(0, worker.ReadActivity().PendingCount);
+        Assert.Null(worker.ReadActivity().LastFlushSucceeded);
+
+        await worker.IngestFrameAsync(
+            "channel-alpha",
+            """{"cmd":93101,"bdy":[{"uid":"me","msg":"one","msgTime":1},{"uid":"me","msg":"two","msgTime":2}]}""",
+            CancellationToken.None);
+        Assert.Equal(2, worker.ReadActivity().PendingCount);
+
+        await worker.FlushPendingChatsAsync(CancellationToken.None);
+
+        var activity = worker.ReadActivity();
+        Assert.Equal(0, activity.PendingCount);
+        Assert.True(activity.LastFlushSucceeded);
+        Assert.NotNull(activity.LastFlushAt);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(directory))

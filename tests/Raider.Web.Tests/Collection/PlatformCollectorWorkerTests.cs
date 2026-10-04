@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Raider.Web.Collection;
 using Raider.Web.Live;
+using Raider.Web.Status;
 
 namespace Raider.Web.Tests.Collection;
 
@@ -120,11 +121,30 @@ public sealed class PlatformCollectorWorkerTests
             || message.Contains("private response", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task RecordsFinalFailureKindWithoutTheResponseText()
+    {
+        var log = new StatusLog();
+        var store = new SnapshotStore([Platform.Chzzk, Platform.Soop]);
+        var worker = Worker(
+            new FakeSource(Platform.Soop, [new PlatformCollectionException(new PlatformError(PlatformErrorKind.Contract), "private response")]),
+            store,
+            statusLog: log);
+
+        await worker.CollectOnceAsync(CancellationToken.None);
+
+        var entry = Assert.Single(log.Recent());
+        Assert.Equal("SOOP", entry.Platform);
+        Assert.Equal("collect", entry.Operation);
+        Assert.Equal("Contract", entry.ErrorKind);
+    }
+
     private static PlatformCollectorWorker Worker(
         ILiveSource source,
         SnapshotStore store,
         TimeSpan? pollInterval = null,
-        ILogger<PlatformCollectorWorker>? logger = null)
+        ILogger<PlatformCollectorWorker>? logger = null,
+        StatusLog? statusLog = null)
     {
         return new PlatformCollectorWorker(
             source,
@@ -138,7 +158,8 @@ public sealed class PlatformCollectorWorkerTests
             },
             new CollectionRegistry(),
             TimeProvider.System,
-            logger ?? NullLogger<PlatformCollectorWorker>.Instance);
+            logger ?? NullLogger<PlatformCollectorWorker>.Instance,
+            statusLog);
     }
 
     private sealed class ListLogger<T> : ILogger<T>

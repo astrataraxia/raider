@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Raider.Web.Live;
+using Raider.Web.Status;
 
 namespace Raider.Web.Collection;
 
@@ -14,6 +15,7 @@ public sealed class PlatformCollectorWorker : BackgroundService
     private readonly CollectionOptions options;
     private readonly TimeProvider timeProvider;
     private readonly ILogger<PlatformCollectorWorker> logger;
+    private readonly StatusLog? statusLog;
     private readonly SemaphoreSlim execution = new(1, 1);
 
     public PlatformCollectorWorker(
@@ -22,13 +24,15 @@ public sealed class PlatformCollectorWorker : BackgroundService
         CollectionOptions options,
         CollectionRegistry registry,
         TimeProvider timeProvider,
-        ILogger<PlatformCollectorWorker> logger)
+        ILogger<PlatformCollectorWorker> logger,
+        StatusLog? statusLog = null)
     {
         this.source = source;
         this.snapshots = snapshots;
         this.options = options;
         this.timeProvider = timeProvider;
         this.logger = logger;
+        this.statusLog = statusLog;
 
         registry.Register(this);
     }
@@ -77,6 +81,7 @@ public sealed class PlatformCollectorWorker : BackgroundService
                         "collect",
                         exception.Error.Kind,
                         attempt + 1);
+                    statusLog?.Add(timeProvider.GetUtcNow(), PlatformName(source.Platform), "collect 재시도", exception.Error.Kind.ToString());
                     await DelayBeforeRetryAsync(cancellationToken);
                 }
                 catch (PlatformCollectionException exception)
@@ -123,7 +128,15 @@ public sealed class PlatformCollectorWorker : BackgroundService
             "Failure",
             exception.Error.Kind,
             Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        statusLog?.Add(timeProvider.GetUtcNow(), PlatformName(source.Platform), "collect", exception.Error.Kind.ToString());
     }
+
+    private static string PlatformName(Platform platform) => platform switch
+    {
+        Platform.Chzzk => "CHZZK",
+        Platform.Soop => "SOOP",
+        _ => platform.ToString(),
+    };
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
