@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Raider.Web.Collection;
+using Raider.Web.Favorites;
 using Raider.Web.Live;
 using Raider.Web.Pages;
 
@@ -266,10 +267,66 @@ public sealed class HomePageTests : IDisposable
         Assert.DoesNotContain("data-broadcast-id=\"beta\"", categoryFilteredHtml, StringComparison.Ordinal);
         Assert.Contains("cat=Gaming", categoryFilteredHtml, StringComparison.Ordinal);
 
-        // 2. Fetch /?fav=true
         var allFavoritesHtml = WebUtility.HtmlDecode(await client.GetStringAsync("/?fav=true", CancellationToken.None));
         Assert.Contains("data-broadcast-id=\"alpha\"", allFavoritesHtml, StringComparison.Ordinal);
         Assert.Contains("data-broadcast-id=\"beta\"", allFavoritesHtml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task FeaturedPickUsesHighestViewerFavoriteOutsideThePageSlice()
+    {
+        var fillers = Enumerable.Range(0, 120)
+            .Select(index => Stream($"filler-{index}", Platform.Chzzk, $"Filler {index}", "Live", 50, []))
+            .ToArray();
+        snapshots.ApplySuccess(
+            Platform.Chzzk,
+            [
+                ..fillers,
+                Stream("outsider", Platform.Chzzk, "Outsider", "Busy", 500, []),
+                Stream("high", Platform.Chzzk, "High", "Popular", 100, ["tag-high"]),
+                Stream("low", Platform.Chzzk, "Low", "Quiet", 10, []),
+            ],
+            DateTimeOffset.UtcNow);
+        var favorites = application.Services.GetRequiredService<FavoriteStore>();
+        await favorites.UpsertAsync(new Favorite(Platform.Chzzk, "channel-high", "High"), CancellationToken.None);
+        await favorites.UpsertAsync(new Favorite(Platform.Chzzk, "channel-low", "Low"), CancellationToken.None);
+
+        var html = await client.GetStringAsync("/", CancellationToken.None);
+        var start = html.IndexOf("data-featured-slides", StringComparison.Ordinal);
+        var end = html.IndexOf("data-featured-slides-end", StringComparison.Ordinal);
+        var block = html[start..end];
+
+        Assert.Contains("시청자가 가장 많은 즐겨찾기 라이브", html, StringComparison.Ordinal);
+        Assert.True(block.IndexOf("channel-high", StringComparison.Ordinal) < block.IndexOf("channel-low", StringComparison.Ordinal));
+        Assert.DoesNotContain("channel-outsider", block, StringComparison.Ordinal);
+        Assert.DoesNotContain("channel-filler-0", block, StringComparison.Ordinal);
+        Assert.Contains("data-broadcast-id=\"high\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("data-broadcast-id=\"low\"", html, StringComparison.Ordinal);
+        Assert.Single(Regex.Matches(html, "type=\"module\""));
+        Assert.Contains("type=\"importmap\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("DOMContentLoaded", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task HomeScriptsAreModulesWithoutVar()
+    {
+        foreach (var name in new[]
+        {
+            "home.js",
+            "storage.js",
+            "favorites-api.js",
+            "favorites-sidebar.js",
+            "favorites-list.js",
+            "refresh.js",
+            "tags.js",
+            "featured.js",
+        })
+        {
+            var script = await client.GetStringAsync($"/js/{name}", CancellationToken.None);
+            Assert.DoesNotMatch(@"\bvar\b", script);
+            Assert.DoesNotContain("DOMContentLoaded", script, StringComparison.Ordinal);
+            Assert.DoesNotContain("RaiderFavorites", script, StringComparison.Ordinal);
+        }
     }
 
     private async Task PutFavoriteAsync(string channelId, string token)

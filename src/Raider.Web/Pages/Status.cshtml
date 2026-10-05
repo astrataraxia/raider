@@ -2,6 +2,7 @@
 @model Raider.Web.Pages.StatusModel
 @{
     ViewData["Title"] = "서버 상태";
+    var header = new Raider.Web.Pages.SiteHeader("status", null, false, Model.IsRefreshing, Model.SyncIsWarning, Model.SyncTitle, Model.SyncDetail, false, null, null, null, false, null);
 }
 <!doctype html>
 <html lang="ko">
@@ -14,29 +15,7 @@
     <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg?v=1.3.8" />
 </head>
 <body>
-    <header class="site-header">
-        <div class="header-inner">
-            <div class="brand-block">
-                <a class="brand" asp-page="/Index" aria-label="Raider 홈">
-                    <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
-                </a>
-                <a class="recap-link" asp-page="/Recap">리캡</a>
-                <a class="recap-link is-current" asp-page="/Status" aria-current="page">상태</a>
-            </div>
-            <div class="sync-state">
-                @if (Model.IsRefreshing)
-                {
-                    <span class="refresh-spinner" title="수집 진행 중"></span>
-                    <span class="sync-copy"><strong>수집 진행 중</strong><span>새 방송을 확인하고 있습니다...</span></span>
-                }
-                else
-                {
-                    <span class="status-dot @(Model.SyncIsWarning ? "is-warning" : "")" aria-hidden="true"></span>
-                    <span class="sync-copy"><strong>@Model.SyncTitle</strong><span>@Model.SyncDetail</span></span>
-                }
-            </div>
-        </div>
-    </header>
+    <partial name="_SiteHeader" model="header" />
     <main class="status-page">
         <section class="hero">
             <div>
@@ -44,7 +23,7 @@
                 <h1>서버 상태</h1>
                 <p class="hero-description">수집, 채팅, 저장이 마지막에 어떻게 끝났는지입니다.</p>
             </div>
-            <div class="hero-stats" aria-label="프로세스 요약">
+            <div class="hero-stats status-overview" aria-label="프로세스 요약">
                 <div><span>가동</span><strong>@Model.UptimeText</strong></div>
                 <div><span>메모리</span><strong>@Model.MemoryText</strong></div>
                 @if (Model.MemoryLimitText is not null)

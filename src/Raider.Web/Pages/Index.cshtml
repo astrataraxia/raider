@@ -1,8 +1,25 @@
 @* 현재 라이브 방송을 필터링 가능한 타일 화면으로 표시한다. *@
 @page
 @model Raider.Web.Pages.IndexModel
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider Versions
 @{
     ViewData["Title"] = "Raider - Live Radar";
+    var syncTitle = Model.HasConfigurationFailure
+        ? "일부 플랫폼 오류"
+        : Model.HasPartialFailure || Model.HasInitialFailure
+            ? "일부 수집 지연"
+            : "현재 스냅샷";
+    var syncDetail = $"{Model.SnapshotObservedAtText} 갱신";
+    var syncWarning = Model.HasPartialFailure || Model.HasInitialFailure || Model.HasConfigurationFailure || Model.IsStale;
+    var header = new Raider.Web.Pages.SiteHeader("live", Model.TotalResultCount, true, Model.IsRefreshing, syncWarning, syncTitle, syncDetail, false, Model.Platform, Model.Tag, Model.Query, Model.FavoritesOnly, Model.SelectedCategory);
+    var pathBase = ViewContext.HttpContext.Request.PathBase;
+    var storageUrl = Versions.AddFileVersionToPath(pathBase, "/js/storage.js");
+    var favoritesApiUrl = Versions.AddFileVersionToPath(pathBase, "/js/favorites-api.js");
+    var favoritesSidebarUrl = Versions.AddFileVersionToPath(pathBase, "/js/favorites-sidebar.js");
+    var favoritesListUrl = Versions.AddFileVersionToPath(pathBase, "/js/favorites-list.js");
+    var refreshUrl = Versions.AddFileVersionToPath(pathBase, "/js/refresh.js");
+    var tagsUrl = Versions.AddFileVersionToPath(pathBase, "/js/tags.js");
+    var featuredUrl = Versions.AddFileVersionToPath(pathBase, "/js/featured.js");
 }
 <!doctype html>
 <html lang="ko">
@@ -16,42 +33,7 @@
 </head>
 <body>
     <div class="visually-hidden" data-antiforgery-token>@Html.AntiForgeryToken()</div>
-    <header class="site-header">
-        <div class="header-inner">
-            <div class="brand-block">
-                <a class="brand" asp-page="/Index" aria-label="Raider 홈">
-                    <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
-                </a>
-                <span class="stream-count"><strong>@Model.TotalResultCount.ToString("N0")</strong>개 방송 중</span>
-                <a class="recap-link" asp-page="/Recap">리캡</a>
-                <a class="recap-link" asp-page="/Status">상태</a>
-            </div>
-            <div class="sync-state">
-                @if (Model.IsRefreshing)
-                {
-                    <span class="refresh-spinner" title="수집 진행 중"></span>
-                    <span class="sync-copy"><strong>수집 진행 중</strong><span>새 방송을 확인하고 있습니다...</span></span>
-                }
-                else
-                {
-                    <form method="post" asp-page-handler="Refresh" data-refresh-form>
-                        @if (!string.IsNullOrWhiteSpace(Model.Platform)) { <input type="hidden" name="platform" value="@Model.Platform" /> }
-                        @if (!string.IsNullOrWhiteSpace(Model.Tag)) { <input type="hidden" name="tag" value="@Model.Tag" /> }
-                        @if (!string.IsNullOrWhiteSpace(Model.Query)) { <input type="hidden" name="q" value="@Model.Query" /> }
-                        @if (Model.FavoritesOnly) { <input type="hidden" name="fav" value="true" /> }
-                        @if (!string.IsNullOrWhiteSpace(Model.SelectedCategory)) { <input type="hidden" name="cat" value="@Model.SelectedCategory" /> }
-                        <button type="submit" class="refresh-button" title="즉시 새로고침" aria-label="새로고침">
-                            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                            </svg>
-                        </button>
-                    </form>
-                    <span class="status-dot @(Model.HasPartialFailure || Model.HasInitialFailure || Model.HasConfigurationFailure || Model.IsStale ? "is-warning" : "")" aria-hidden="true"></span>
-                    <span class="sync-copy"><strong>@(Model.HasConfigurationFailure ? "일부 플랫폼 오류" : Model.HasPartialFailure || Model.HasInitialFailure ? "일부 수집 지연" : "현재 스냅샷")</strong><span>@Model.SnapshotObservedAtText 갱신</span></span>
-                }
-            </div>
-        </div>
-    </header>
+    <partial name="_SiteHeader" model="header" />
 
     <button type="button" class="favorites-mobile-toggle" aria-label="즐겨찾기 열기" aria-expanded="false" aria-controls="favorites-sidebar">즐겨찾기</button>
     <button type="button" class="favorites-backdrop" aria-label="즐겨찾기 배경 닫기"></button>
@@ -59,8 +41,8 @@
     <aside class="favorites-sidebar" id="favorites-sidebar" aria-label="즐겨찾기 방송인">
         <div class="favorites-heading">
             <strong>즐겨찾기</strong>
-            <div class="favorites-heading-actions" style="display: flex; gap: 4px;">
-                <button type="button" class="favorites-add-category" title="새 카테고리 추가" aria-label="새 카테고리 추가">➕</button>
+            <div class="favorites-heading-actions">
+                <button type="button" class="favorites-add-category" title="새 카테고리 추가" aria-label="새 카테고리 추가">+</button>
                 <button type="button" class="favorites-collapse" aria-label="즐겨찾기 접기" aria-expanded="true" aria-controls="favorites-list">‹</button>
             </div>
         </div>
@@ -68,6 +50,12 @@
         <div class="favorites-list" id="favorites-list"></div>
     </aside>
     <main class="page-shell">
+        <div data-featured-slot>
+            @if (Model.FeaturedPicks.Length > 0)
+            {
+                <partial name="_Featured" model="Model.FeaturedPicks" />
+            }
+        </div>
         <section class="hero" aria-labelledby="page-title">
             <div><p class="eyebrow">LIVE RADAR</p><h1 id="page-title">지금 볼 방송을 찾아보세요.</h1><p class="hero-description">CHZZK과 SOOP의 현재 라이브를 한곳에 모았습니다.</p></div>
             <div class="hero-stats" aria-label="현재 방송 통계"><div><span>검색 결과</span><strong>@Model.TotalResultCount.ToString("N0")</strong></div><div><span>총 시청자</span><strong>@Model.TotalViewers.ToString("N0")</strong></div></div>
@@ -234,38 +222,21 @@
         </div>
     </main>
     </div>
-    <script src="/js/favorites.js" asp-append-version="true"></script>
-    <script src="/js/refresh.js" asp-append-version="true"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var toggleBtn = document.getElementById("tag-toggle-btn");
-            var drawer = document.getElementById("tag-drawer");
-            if (toggleBtn && drawer) {
-                var isOpen = localStorage.getItem("tagDrawerOpen") === "true";
-                if (isOpen) {
-                    drawer.style.display = "block";
-                    toggleBtn.setAttribute("aria-expanded", "true");
-                    toggleBtn.textContent = "태그 접기 -";
-                    toggleBtn.classList.add("is-open");
-                }
-
-                toggleBtn.addEventListener("click", function() {
-                    var isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
-                    isExpanded = !isExpanded;
-                    toggleBtn.setAttribute("aria-expanded", isExpanded);
-                    localStorage.setItem("tagDrawerOpen", isExpanded ? "true" : "false");
-                    if (!isExpanded) {
-                        drawer.style.display = "none";
-                        toggleBtn.textContent = "태그 더 보기 +";
-                        toggleBtn.classList.remove("is-open");
-                    } else {
-                        drawer.style.display = "block";
-                        toggleBtn.textContent = "태그 접기 -";
-                        toggleBtn.classList.add("is-open");
-                    }
-                });
-            }
-        });
+    @Html.Raw($$"""
+    <script type="importmap">
+    {
+      "imports": {
+        "#storage": "{{storageUrl}}",
+        "#favorites-api": "{{favoritesApiUrl}}",
+        "#favorites-sidebar": "{{favoritesSidebarUrl}}",
+        "#favorites-list": "{{favoritesListUrl}}",
+        "#refresh": "{{refreshUrl}}",
+        "#tags": "{{tagsUrl}}",
+        "#featured": "{{featuredUrl}}"
+      }
+    }
     </script>
+    """)
+    <script type="module" src="/js/home.js" asp-append-version="true"></script>
 </body>
 </html>
