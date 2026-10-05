@@ -1,15 +1,14 @@
-@* 시청자가 가장 많은 즐겨찾기 라이브부터 보여주는 홈 피처드다. *@
+@* 새로고침마다 뽑은 즐겨찾기 라이브 가운데 큰 카드와 작은 카드 넷을 보여 준다. *@
 @model System.Collections.Immutable.ImmutableArray<Raider.Web.Pages.FeaturedPick>
 @{
-    var first = Model[0];
     var multiple = Model.Length >= 2;
     var controlsHidden = multiple ? null : "hidden";
-    var others = Model.Skip(1).Take(3).ToArray();
+    var mosaic = Model.Length >= 5 ? "is-mosaic" : null;
 }
 <section data-featured>
     <div class="featured-label">
         <span>TODAY'S PICK</span>
-        <span class="sub-label">시청자가 가장 많은 즐겨찾기 라이브</span>
+        <span class="sub-label">새로고침마다 고른 즐겨찾기 라이브</span>
         <span class="label-rule" aria-hidden="true"></span>
         <div class="carousel-controls" data-featured-controls hidden="@controlsHidden">
             <button type="button" data-step="-1" aria-label="이전 즐겨찾기">‹</button>
@@ -17,67 +16,45 @@
             <button type="button" data-step="1" aria-label="다음 즐겨찾기">›</button>
         </div>
     </div>
-    <article class="featured-card">
-        <div class="featured-media">
-            @if (!string.IsNullOrWhiteSpace(first.ThumbnailUrl))
-            {
-                <img class="featured-photo" src="@first.ThumbnailUrl" alt="@($"{first.StreamerName}의 방송 썸네일")" />
-            }
-            else
-            {
-                <img class="featured-photo" alt="" hidden />
-            }
-            <span class="featured-fallback" data-featured-fallback hidden="@(string.IsNullOrWhiteSpace(first.ThumbnailUrl) ? null : "hidden")"></span>
-            <span class="live-pill">LIVE</span>
-            <button type="button" class="media-arrow prev" data-step="-1" aria-label="이전 즐겨찾기" hidden="@controlsHidden">‹</button>
-            <button type="button" class="media-arrow next" data-step="1" aria-label="다음 즐겨찾기" hidden="@controlsHidden">›</button>
-        </div>
-        <div class="featured-info">
-            <p class="featured-platform" data-featured-line>@first.PlatformLabel · @first.Line</p>
-            <h2 data-featured-name>@first.StreamerName</h2>
-            <p class="featured-viewers"><span class="live-dot" aria-hidden="true"></span><strong data-featured-viewers>@first.ViewerCount.ToString("N0")</strong><span>시청</span></p>
-            <p class="featured-title" data-featured-title>@first.Title</p>
-            <div class="tags" data-featured-tags>
-                @foreach (var tag in first.Tags.Take(3))
-                {
-                    <span>@tag</span>
-                }
-            </div>
-            <a class="watch-link" data-featured-watch href="@first.WatchUrl" target="_blank" rel="noopener noreferrer">즐겨찾기 방송 바로 보기 <span aria-hidden="true">→</span></a>
-        </div>
-    </article>
-    <div class="carousel-dots" data-featured-dots hidden="@controlsHidden">
+    <div class="featured-deck @mosaic" data-featured-slides data-count="@Model.Length">
         @for (var index = 0; index < Model.Length; index++)
         {
-            <button type="button" data-go="@index" aria-label="@($"{index + 1}번째 즐겨찾기")" aria-current="@(index == 0 ? "true" : null)"></button>
-        }
-    </div>
-    <div class="other-live" data-other-row hidden="@controlsHidden">
-        <span class="other-live-label">다른 즐겨찾기 라이브</span>
-        <div data-other-list>
-            @foreach (var other in others)
-            {
-                <button type="button" data-other data-platform="@other.Platform" data-channel-id="@other.ChannelId">
-                    <span class="other-copy"><strong>@other.StreamerName</strong><span>@other.Line</span></span>
-                    <span class="other-count">@other.ViewerCount.ToString("N0")</span>
-                </button>
-            }
-        </div>
-    </div>
-    <div hidden data-featured-slides>
-        @foreach (var pick in Model)
-        {
-            <div data-featured-slide
-                 data-platform="@pick.Platform"
-                 data-platform-label="@pick.PlatformLabel"
-                 data-channel-id="@pick.ChannelId"
-                 data-name="@pick.StreamerName"
-                 data-title="@pick.Title"
-                 data-viewers="@pick.ViewerCount.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                 data-watch="@pick.WatchUrl"
-                 data-thumb="@pick.ThumbnailUrl"
-                 data-line="@pick.Line"
-                 data-tags="@string.Join('\u001f', pick.Tags)"></div>
+            var pick = Model[index];
+            var slot = mosaic is not null && index < 5 ? index.ToString() : null;
+            <article class="featured-card @(index == 0 ? "is-front" : null)"
+                     data-slot="@slot"
+                     data-featured-slide
+                     data-platform="@pick.Platform"
+                     data-platform-label="@pick.PlatformLabel"
+                     data-channel-id="@pick.ChannelId"
+                     data-name="@pick.StreamerName"
+                     data-title="@pick.Title"
+                     data-viewers="@pick.ViewerCount.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                     data-watch="@pick.WatchUrl"
+                     data-thumb="@pick.ThumbnailUrl"
+                     data-line="@pick.Line"
+                     data-tags="@string.Join('\u001f', pick.Tags)">
+                <a class="featured-face" href="@pick.WatchUrl" target="_blank" rel="noopener noreferrer" aria-current="@(index == 0 ? "true" : null)" aria-label="@($"{pick.StreamerName} 방송 바로 보기")">
+                    <span class="featured-media">
+                        @if (!string.IsNullOrWhiteSpace(pick.ThumbnailUrl))
+                        {
+                            <img class="featured-photo" src="@pick.ThumbnailUrl" alt="" />
+                        }
+                        else
+                        {
+                            <span class="featured-fallback"></span>
+                        }
+                        <span class="featured-badges">
+                            <span class="live-pill">LIVE</span>
+                            <span class="featured-viewers">@pick.ViewerCount.ToString("N0")명</span>
+                        </span>
+                        <span class="featured-caption">
+                            <span class="featured-platform platform-@pick.Platform">@pick.PlatformLabel</span>
+                            <strong>@pick.StreamerName</strong>
+                        </span>
+                    </span>
+                </a>
+            </article>
         }
     </div>
     <span hidden data-featured-slides-end></span>

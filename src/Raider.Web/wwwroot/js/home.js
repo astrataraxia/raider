@@ -8,8 +8,8 @@ const favorites = startFavorites();
 const featured = startFeatured();
 startTags();
 const refreshHtml = startRefresh(async () => {
+  featured.showDrawn();
   await favorites.refresh();
-  featured.restore();
 });
 favorites.setAfterWrite(refreshHtml);
 favorites.setOnLoaded(() => featured.restore());

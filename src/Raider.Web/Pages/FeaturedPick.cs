@@ -1,4 +1,4 @@
-// 홈 피처드 카드에 그릴 즐겨찾기 라이브 한 건이다.
+// 홈 피처드에 올릴 즐겨찾기 라이브 한 건이다.
 using System.Collections.Immutable;
 using Raider.Web.Favorites;
 using Raider.Web.Live;
@@ -17,7 +17,12 @@ public sealed record FeaturedPick(
     string Line,
     ImmutableArray<string> Tags)
 {
-    public static ImmutableArray<FeaturedPick> FromSnapshot(ImmutableArray<LiveStream> streams, ImmutableArray<Favorite> favorites)
+    public const int MaxCount = 10;
+
+    public static ImmutableArray<FeaturedPick> FromSnapshot(
+        ImmutableArray<LiveStream> streams,
+        ImmutableArray<Favorite> favorites,
+        Random? random = null)
     {
         if (streams.IsDefaultOrEmpty || favorites.IsDefaultOrEmpty)
         {
@@ -30,11 +35,13 @@ public sealed record FeaturedPick(
             byChannel.TryAdd((favorite.Platform, favorite.ChannelId), favorite);
         }
 
-        return streams
+        var matches = streams
             .Where(stream => byChannel.ContainsKey((stream.Platform, stream.ChannelId)))
-            .OrderByDescending(stream => stream.ViewerCount)
-            .ThenBy(stream => stream.StreamerName, StringComparer.Ordinal)
-            .ThenBy(stream => stream.ChannelId, StringComparer.Ordinal)
+            .ToArray();
+        (random ?? Random.Shared).Shuffle(matches);
+
+        return matches
+            .Take(MaxCount)
             .Select(stream =>
             {
                 var favorite = byChannel[(stream.Platform, stream.ChannelId)];

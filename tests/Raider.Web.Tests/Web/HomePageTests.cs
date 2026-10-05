@@ -273,7 +273,7 @@ public sealed class HomePageTests : IDisposable
     }
 
     [Fact]
-    public async Task FeaturedPickUsesHighestViewerFavoriteOutsideThePageSlice()
+    public async Task FeaturedPickIncludesLiveFavoritesOutsideThePageSlice()
     {
         var fillers = Enumerable.Range(0, 120)
             .Select(index => Stream($"filler-{index}", Platform.Chzzk, $"Filler {index}", "Live", 50, []))
@@ -292,19 +292,53 @@ public sealed class HomePageTests : IDisposable
         await favorites.UpsertAsync(new Favorite(Platform.Chzzk, "channel-low", "Low"), CancellationToken.None);
 
         var html = await client.GetStringAsync("/", CancellationToken.None);
-        var start = html.IndexOf("data-featured-slides", StringComparison.Ordinal);
-        var end = html.IndexOf("data-featured-slides-end", StringComparison.Ordinal);
-        var block = html[start..end];
+        var block = FeaturedBlock(html);
 
-        Assert.Contains("시청자가 가장 많은 즐겨찾기 라이브", html, StringComparison.Ordinal);
-        Assert.True(block.IndexOf("channel-high", StringComparison.Ordinal) < block.IndexOf("channel-low", StringComparison.Ordinal));
+        Assert.Contains("새로고침마다 고른 즐겨찾기 라이브", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("시청자가 가장 많은 즐겨찾기 라이브", html, StringComparison.Ordinal);
+        Assert.Equal(2, Regex.Matches(block, "data-featured-slide(?!s)").Count);
+        Assert.Contains("channel-high", block, StringComparison.Ordinal);
+        Assert.Contains("channel-low", block, StringComparison.Ordinal);
         Assert.DoesNotContain("channel-outsider", block, StringComparison.Ordinal);
         Assert.DoesNotContain("channel-filler-0", block, StringComparison.Ordinal);
         Assert.Contains("data-broadcast-id=\"high\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("data-broadcast-id=\"low\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("loading=\"", block, StringComparison.Ordinal);
         Assert.Single(Regex.Matches(html, "type=\"module\""));
         Assert.Contains("type=\"importmap\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("DOMContentLoaded", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task FeaturedPickShowsAtMostTenLiveFavorites()
+    {
+        var favorites = Enumerable.Range(0, 12)
+            .Select(index => Stream($"fav-{index:00}", Platform.Chzzk, $"Fav {index}", "Live", index, []))
+            .ToArray();
+        snapshots.ApplySuccess(
+            Platform.Chzzk,
+            [Stream("outsider", Platform.Chzzk, "Outsider", "Busy", 9000, []), .. favorites],
+            DateTimeOffset.UtcNow);
+        var store = application.Services.GetRequiredService<FavoriteStore>();
+        foreach (var index in Enumerable.Range(0, 12))
+        {
+            await store.UpsertAsync(new Favorite(Platform.Chzzk, $"channel-fav-{index:00}", $"Fav {index}"), CancellationToken.None);
+        }
+
+        var block = FeaturedBlock(await client.GetStringAsync("/", CancellationToken.None));
+        var present = Enumerable.Range(0, 12).Count(index => block.Contains($"channel-fav-{index:00}", StringComparison.Ordinal));
+
+        Assert.Equal(FeaturedPick.MaxCount, Regex.Matches(block, "data-featured-slide(?!s)").Count);
+        Assert.Equal(FeaturedPick.MaxCount, present);
+        Assert.DoesNotContain("channel-outsider", block, StringComparison.Ordinal);
+    }
+
+    private static string FeaturedBlock(string html)
+    {
+        var start = html.IndexOf("data-featured-slides", StringComparison.Ordinal);
+        var end = html.IndexOf("data-featured-slides-end", StringComparison.Ordinal);
+        Assert.True(start >= 0 && end > start);
+        return html[start..end];
     }
 
     [Fact]
