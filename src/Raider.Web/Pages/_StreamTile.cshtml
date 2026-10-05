@@ -26,23 +26,28 @@
         {
             <div class="thumbnail-placeholder" role="img" aria-label="@alt" data-default-thumbnail="true"><span>RAIDER</span></div>
         }
-        <span class="platform-badge @platformClass">@platform</span>
-        <span class="viewer-badge"><span aria-hidden="true"></span>@Model.ViewerCount.ToString("N0")</span>
+        <span class="tile-badges">
+            <span class="live-pill">LIVE</span>
+            <span class="viewer-badge">@Model.ViewerCount.ToString("N0")명</span>
+        </span>
+        <div class="tile-caption">
+            <span class="tile-who">
+                <span class="platform-badge @platformClass">@platform</span>
+                <strong>@Model.StreamerName</strong>
+            </span>
+            <h3 class="tile-title">@Model.Title</h3>
+            @if (!Model.Tags.IsEmpty)
+            {
+                <div class="card-tags" aria-label="방송 태그">
+                    @foreach (var tag in Model.Tags.Take(3))
+                    {
+                        <object>
+                            <a class="card-tag-link" href="@Url.Page("/Index", new { platform = Model.Platform.ToString().ToLowerInvariant(), tag = tag })">@tag</a>
+                        </object>
+                    }
+                </div>
+            }
         </div>
-        <div class="card-copy">
-        <h3>@Model.Title</h3>
-        <p>@Model.StreamerName</p>
-        @if (!Model.Tags.IsEmpty)
-        {
-            <div class="card-tags" aria-label="방송 태그">
-                @foreach (var tag in Model.Tags.Take(3))
-                {
-                    <object>
-                        <a class="card-tag-link" href="@Url.Page("/Index", new { platform = Model.Platform.ToString().ToLowerInvariant(), tag = tag })">@tag</a>
-                    </object>
-                }
-            </div>
-        }
         </div>
     </a>
 </article>

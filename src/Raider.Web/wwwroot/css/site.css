@@ -785,8 +785,8 @@ button.favorite-item {
 .favorite-toggle {
   position: absolute;
   z-index: 4;
+  top: 0;
   right: 0;
-  bottom: 0;
   display: grid;
   width: 44px;
   height: 44px;
@@ -888,33 +888,56 @@ button:focus-visible {
     0 0 0 70px #ffffff04;
 }
 
-.thumbnail::after {
-  inset: auto 0 0;
-  height: 65%;
-  background: linear-gradient(transparent, #06070bb3);
-}
-
-.platform-badge,
-.viewer-badge {
+.tile-badges {
   position: absolute;
   z-index: 2;
   top: 10px;
-  min-height: 24px;
-  border: 1px solid #ffffff10;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
+  left: 10px;
+  display: flex;
   align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 58px);
+}
+
+.tile-badges .viewer-badge {
+  padding: 4px 8px;
+  border-radius: 99px;
   color: white;
-  background: #050609b8;
-  backdrop-filter: blur(8px);
-  font-size: 10px;
+  background: #050609c9;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tile-caption {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 36px 10px 8px;
+  background: linear-gradient(transparent, #06070be6);
+  text-shadow: 0 1px 2px #000000b3;
+}
+
+.tile-who {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
 }
 
 .platform-badge {
-  left: 10px;
-  padding: 0 8px;
+  flex: none;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 .platform-badge.chzzk {
@@ -925,57 +948,34 @@ button:focus-visible {
   color: #9cc4ff;
 }
 
-.viewer-badge {
-  right: 10px;
-  gap: 6px;
-  padding: 0 8px;
-  font-variant-numeric: tabular-nums;
-}
-
-.viewer-badge span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-live);
-  box-shadow: 0 0 0 3px #ff4d6725;
-}
-
-.card-copy {
-  min-height: 84px;
-  padding: 10px 12px 12px;
-}
-
-.card-copy h3 {
-  min-height: 40px;
-  margin: 0 0 4px;
+.tile-who strong,
+.tile-title {
+  min-width: 0;
   overflow: hidden;
-  color: var(--color-text-primary);
-  display: -webkit-box;
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 20px;
-  letter-spacing: -0.02em;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.card-copy p {
-  margin: 0;
-  overflow: hidden;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  font-weight: 520;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.tile-who strong {
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tile-title {
+  margin: 0;
+  color: #f3f4f6;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
 .card-tags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
-  min-height: 16px;
-  margin-top: 8px;
-  padding-right: 36px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .card-tag-link {
@@ -1050,7 +1050,7 @@ button:focus-visible {
 }
 
 .skeleton-grid span {
-  aspect-ratio: 16 / 12;
+  aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
   background: var(--color-surface-2);
   animation: pulse 1.8s ease-in-out infinite alternate;
@@ -1414,11 +1414,6 @@ button:focus-visible {
 
   .stream-grid {
     gap: 10px;
-  }
-
-  .card-copy {
-    min-height: 84px;
-    padding: 10px;
   }
 
 }
