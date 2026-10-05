@@ -111,6 +111,7 @@ public sealed class RecapPageTests
         Assert.Contains("본진", html, StringComparison.Ordinal);
         Assert.Contains("총 채팅", html, StringComparison.Ordinal);
         Assert.Contains("2건", html, StringComparison.Ordinal);
+        Assert.Contains("비중", html, StringComparison.Ordinal);
         Assert.DoesNotContain("피라미드", html, StringComparison.Ordinal);
         Assert.DoesNotContain("N명 중", html, StringComparison.Ordinal);
     }

@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180">
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101114"/><stop offset=".48" stop-color="#0d0e12"/><stop offset="1" stop-color="#121318"/></linearGradient>
+    <linearGradient id="top" x2="1"><stop stop-color="#1e1f24"/><stop offset=".5" stop-color="#15161b"/><stop offset="1" stop-color="#1e1f24"/></linearGradient>
+    <linearGradient id="searchGlass" x2="0" y2="1"><stop stop-color="#eff0f3" stop-opacity=".13"/><stop offset=".48" stop-color="#b3b6c0" stop-opacity=".045"/><stop offset="1" stop-color="#eff0f3" stop-opacity=".075"/></linearGradient>
+    <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#2a2b32" stop-opacity=".94"/><stop offset="1" stop-color="#191a20" stop-opacity=".92"/></linearGradient>
+    <linearGradient id="scene" x2=".9" y2="1"><stop stop-color="#5e5541"/><stop offset=".45" stop-color="#393833"/><stop offset="1" stop-color="#302e29"/></linearGradient>
+    <linearGradient id="fade" x2="0" y2="1"><stop offset=".48" stop-color="#080e10" stop-opacity="0"/><stop offset="1" stop-color="#080e10" stop-opacity=".9"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="180%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity=".48"/></filter>
+    <filter id="blur"><feGaussianBlur stdDeviation="50"/></filter>
+    <style>
+      text{font-family:Inter,"Noto Sans KR","Malgun Gothic",sans-serif;fill:#eff0f3} .muted{fill:#b3b6c0}.dim{fill:#818590}.accent{fill:#dc887e}.small{font-size:13px}.tiny{font-size:11px}.label{font-size:12px;font-weight:700;letter-spacing:1.6px}
+    </style>
+  </defs>
+  <rect width="1600" height="1180" fill="url(#bg)"/>
+  <ellipse cx="820" cy="0" rx="650" ry="230" fill="#eff0f3" opacity=".025" filter="url(#blur)"/>
+  <rect width="1600" height="84" fill="url(#top)" opacity=".92"/>
+  <path d="M0 83H1600" stroke="#fff" stroke-opacity=".14"/>
+  <g transform="translate(44 27)">
+    <circle cx="17" cy="15" r="14" fill="#dc887e"/><path d="M9 16l7-8 8 8-8 7z" fill="#f4fffb"/>
+    <text x="43" y="22" font-size="23" font-weight="750">Raider</text><text x="147" y="22" class="small muted">1,284개 방송 중</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="580" y="9" width="430" height="62" rx="31" fill="#eff0f3" fill-opacity=".045" stroke="#eff0f3" stroke-opacity=".2"/>
+    <rect x="589" y="16" width="123" height="48" rx="24" fill="#dc887e" fill-opacity=".17"/>
+    <text x="614" y="46" font-size="16" font-weight="700" fill="#f0b1aa">◉ 라이브</text><text x="753" y="46" font-size="16" font-weight="650" fill="#b3b6c0">▣ 리캡</text><text x="885" y="46" font-size="16" font-weight="650" fill="#b3b6c0">☷ 상태</text>
+  </g>
+  <g transform="translate(1240 27)"><circle cx="7" cy="11" r="5" fill="#8ef0be"/><text x="21" y="11" font-size="12" font-weight="700">현재 스냅샷</text><text x="21" y="28" class="tiny muted">12:48 갱신</text></g>
+
+  <!-- floating glass favorites rail -->
+  <g filter="url(#shadow)">
+    <rect x="22" y="105" width="278" height="990" rx="22" fill="url(#glass)" stroke="#eff0f3" stroke-opacity=".14"/>
+    <path d="M42 158H280" stroke="#fff" stroke-opacity=".12"/>
+  </g>
+  <text x="45" y="140" font-size="17" font-weight="750">즐겨찾기</text><text x="245" y="140" font-size="21" class="muted">‹</text>
+  <text x="45" y="183" class="tiny dim">8명 · 라이브 3명</text>
+  <text x="47" y="220" class="tiny muted" font-weight="700">⌄  📁 게임</text>
+  <g>
+    <rect x="38" y="232" width="246" height="62" rx="14" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".09"/><circle cx="57" cy="263" r="5" fill="#ff5572"/><text x="73" y="259" font-size="13" font-weight="700">이상혁 (Faker)</text><text x="73" y="278" class="tiny muted">리그 오브 레전드</text><text x="229" y="266" class="tiny purple">12.5k</text>
+    <rect x="38" y="301" width="246" height="62" rx="14" fill="#fff" fill-opacity=".045"/><circle cx="57" cy="332" r="5" fill="#ff5572"/><text x="73" y="328" font-size="13" font-weight="700">클템</text><text x="73" y="347" class="tiny muted">LCK 분석 중</text><text x="238" y="335" class="tiny purple">1,249</text>
+    <rect x="38" y="370" width="246" height="62" rx="14" fill="#fff" fill-opacity=".035"/><circle cx="57" cy="401" r="5" fill="#666171"/><text x="73" y="397" font-size="13" font-weight="700">도티</text><text x="73" y="416" class="tiny dim">오프라인</text>
+    <rect x="38" y="439" width="246" height="62" rx="14" fill="#fff" fill-opacity=".045"/><circle cx="57" cy="470" r="5" fill="#ff5572"/><text x="73" y="466" font-size="13" font-weight="700">김된모</text><text x="73" y="485" class="tiny muted">발로란트</text><text x="238" y="473" class="tiny purple">388</text>
+  </g>
+  <text x="47" y="541" class="tiny muted" font-weight="700">⌄  📁 버라이어티</text>
+  <g fill="#fff" fill-opacity=".035">
+    <rect x="38" y="553" width="246" height="62" rx="14"/><rect x="38" y="622" width="246" height="62" rx="14"/><rect x="38" y="691" width="246" height="62" rx="14"/>
+  </g>
+  <g font-size="13"><circle cx="57" cy="584" r="5" fill="#666171"/><text x="73" y="580" font-weight="700">침착맨</text><text x="73" y="599" class="tiny dim">오프라인</text><circle cx="57" cy="653" r="5" fill="#666171"/><text x="73" y="649" font-weight="700">옥냥이</text><text x="73" y="668" class="tiny dim">방송 알림 대기</text><circle cx="57" cy="722" r="5" fill="#666171"/><text x="73" y="718" font-weight="700">풍월량</text><text x="73" y="737" class="tiny dim">오프라인</text></g>
+
+  <!-- featured random live favorite -->
+  <g transform="translate(330 111)">
+    <text x="0" y="11" class="label purple">✦  TODAY'S PICK</text><text x="145" y="11" class="small dim">즐겨찾기 라이브에서 랜덤으로 골랐어요</text><path d="M430 7H1007" stroke="#dc887e" stroke-opacity=".18"/>
+    <g><circle cx="1118" cy="5" r="19" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".2"/><path d="M1123 0l-6 5 6 6" fill="none" stroke="#eee8f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="1166" cy="5" r="19" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".2"/><path d="M1161 0l6 5-6 6" fill="none" stroke="#eee8f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="1195" y="10" class="tiny dim">1 / 3</text></g>
+    <g filter="url(#shadow)">
+      <rect x="0" y="34" width="1220" height="394" rx="24" fill="#191a20" stroke="#fff" stroke-opacity=".17"/>
+      <rect x="0" y="34" width="785" height="394" rx="24" fill="url(#scene)"/>
+      <path d="M760 34h35v394h-35z" fill="#191a20"/>
+      <rect x="33" y="65" width="716" height="316" rx="17" fill="#243945" stroke="#fff" stroke-opacity=".3"/>
+      <path d="M34 245l128-100 120 69 125-120 148 102 117-54 77 75v164H34z" fill="#33645b"/>
+      <path d="M34 298l135-63 112 44 119-93 130 91 147-80 72 49v135H34z" fill="#223247"/>
+      <circle cx="244" cy="171" r="87" fill="#a2d889" opacity=".18"/><circle cx="244" cy="171" r="45" fill="#bbf1a2" opacity=".24"/><circle cx="586" cy="277" r="58" fill="#f1a98a" opacity=".18"/>
+      <rect x="34" y="65" width="716" height="316" rx="17" fill="url(#fade)"/>
+      <rect x="27" y="56" width="104" height="31" rx="16" fill="#ff496e"/><text x="42" y="77" font-size="12" font-weight="800">● LIVE NOW</text>
+      <text x="58" y="351" class="tiny" fill="#fff" opacity=".72">LIVE STREAM PREVIEW</text>
+      <circle cx="31" cy="232" r="23" fill="#101018" fill-opacity=".56" stroke="#fff" stroke-opacity=".35"/><path d="M36 224l-8 8 8 8" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="754" cy="232" r="23" fill="#101018" fill-opacity=".56" stroke="#fff" stroke-opacity=".35"/><path d="M749 224l8 8-8 8" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="850" cy="117" r="29" fill="#a862bd"/><text x="836" y="127" font-size="26">🎮</text>
+      <text x="895" y="112" font-size="24" font-weight="750">이상혁 (Faker)</text><text x="895" y="137" class="small muted">CHZZK  ·  리그 오브 레전드</text>
+      <text x="830" y="194" font-size="14" fill="#ff6079">●</text><text x="851" y="194" class="small muted">시청자</text><text x="915" y="194" font-size="19" font-weight="750">12,504</text><text x="981" y="194" class="small muted">명</text>
+      <text x="830" y="237" font-size="15" fill="#d8d0e0">솔로랭크 1위 도전 / 미드 라인 집중 플레이</text>
+      <rect x="830" y="260" width="125" height="28" rx="14" fill="#fff" fill-opacity=".1"/><text x="847" y="279" class="tiny muted">#LeagueofLegends</text><rect x="963" y="260" width="42" height="28" rx="14" fill="#fff" fill-opacity=".1"/><text x="975" y="279" class="tiny muted">#T1</text>
+      <path d="M830 335h346" stroke="#fff" stroke-opacity=".1"/><text x="830" y="372" class="small purple" font-weight="700">즐겨찾기 방송 바로 보기</text><text x="1157" y="372" font-size="20" class="accent">↗</text>
+    </g>
+  </g>
+  <g transform="translate(330 556)">
+    <text x="0" y="15" class="tiny dim" font-weight="700" letter-spacing=".5">다른 즐겨찾기 라이브</text>
+    <g transform="translate(191 -5)">
+      <rect width="300" height="48" rx="13" fill="#fff" fill-opacity=".055" stroke="#fff" stroke-opacity=".12"/><circle cx="25" cy="24" r="14" fill="#b77979"/><text x="49" y="21" font-size="12" font-weight="700">클템</text><text x="49" y="37" class="tiny muted">CHZZK · LCK 분석</text><circle cx="272" cy="24" r="4" fill="#ff5572"/><text x="282" y="28" class="tiny muted">1,249</text>
+    </g>
+    <g transform="translate(502 -5)">
+      <rect width="300" height="48" rx="13" fill="#fff" fill-opacity=".055" stroke="#fff" stroke-opacity=".12"/><circle cx="25" cy="24" r="14" fill="#6f81b5"/><text x="49" y="21" font-size="12" font-weight="700">김된모</text><text x="49" y="37" class="tiny muted">CHZZK · 발로란트</text><circle cx="272" cy="24" r="4" fill="#ff5572"/><text x="282" y="28" class="tiny muted">388</text>
+    </g>
+    <g transform="translate(813 -5)">
+      <rect width="300" height="48" rx="13" fill="#fff" fill-opacity=".055" stroke="#fff" stroke-opacity=".12"/><circle cx="25" cy="24" r="14" fill="#8f7775"/><text x="49" y="21" font-size="12" font-weight="700">침착맨</text><text x="49" y="37" class="tiny muted">SOOP · 잡담</text><circle cx="272" cy="24" r="4" fill="#ff5572"/><text x="282" y="28" class="tiny muted">203</text>
+    </g>
+  </g>
+  <g transform="translate(330 643)">
+    <text x="0" y="0" class="label purple">LIVE RADAR</text><text x="0" y="40" font-size="27" font-weight="750">지금 볼 방송을 찾아보세요.</text><text x="0" y="65" class="small muted">CHZZK과 SOOP의 현재 라이브를 한곳에 모았습니다.</text>
+    <rect x="1004" y="2" width="216" height="67" rx="14" fill="#fff" fill-opacity=".045" stroke="#fff" stroke-opacity=".1"/><text x="1022" y="27" class="tiny dim">전체 방송</text><text x="1022" y="53" font-size="17" font-weight="700">1,284</text><path d="M1109 13v44" stroke="#fff" stroke-opacity=".1"/><text x="1123" y="27" class="tiny dim">총 시청자</text><text x="1123" y="53" font-size="17" font-weight="700">86.2만</text>
+  </g>
+  <g transform="translate(330 732)">
+    <rect width="1220" height="135" rx="18" fill="url(#searchGlass)" stroke="#fff" stroke-opacity=".23" filter="url(#shadow)"/>
+    <path d="M18 1H1202" stroke="#fff" stroke-opacity=".24" stroke-linecap="round"/>
+    <rect x="16" y="16" width="120" height="36" rx="11" fill="#fff" fill-opacity=".18"/><text x="42" y="39" font-size="13" font-weight="700">전체</text><text x="155" y="39" class="small muted">● CHZZK</text><text x="258" y="39" class="small muted">● SOOP</text><text x="355" y="39" class="small muted">☆ 즐겨찾기</text>
+    <rect x="771" y="14" width="430" height="42" rx="12" fill="#101114" fill-opacity=".52" stroke="#eff0f3" stroke-opacity=".22"/><path d="M785 15H1188" stroke="#eff0f3" stroke-opacity=".14" stroke-linecap="round"/><text x="791" y="41" font-size="20" class="muted">⌕</text><text x="821" y="40" class="small muted">방송인, 제목 또는 태그 검색</text><rect x="1122" y="19" width="69" height="32" rx="9" fill="#eff0f3" fill-opacity=".11" stroke="#eff0f3" stroke-opacity=".14"/><text x="1140" y="40" class="tiny">검색</text>
+    <path d="M16 69H1204" stroke="#fff" stroke-opacity=".08"/><text x="17" y="99" class="tiny dim">추천 태그:</text>
+    <g class="tiny"><rect x="95" y="80" width="90" height="29" rx="15" fill="#fff" fill-opacity=".13"/><text x="112" y="99">모든 태그</text><rect x="194" y="80" width="145" height="29" rx="15" fill="#fff" fill-opacity=".06"/><text x="210" y="99" class="muted">리그 오브 레전드</text><rect x="348" y="80" width="121" height="29" rx="15" fill="#fff" fill-opacity=".06"/><text x="366" y="99" class="muted">마인크래프트</text><rect x="479" y="80" width="98" height="29" rx="15" fill="#fff" fill-opacity=".06"/><text x="497" y="99" class="muted">버라이어티</text><rect x="587" y="80" width="92" height="29" rx="15" fill="#fff" fill-opacity=".06"/><text x="607" y="99" class="muted">발로란트</text></g>
+  </g>
+  <g transform="translate(330 902)">
+    <text x="0" y="0" font-size="21" font-weight="750">현재 인기 방송</text><text x="1100" y="0" class="small dim">시청자 수 높은 순</text>
+    <g transform="translate(0 20)" filter="url(#shadow)">
+      <g><rect width="390" height="220" rx="17" fill="#191922" stroke="#fff" stroke-opacity=".13"/><rect width="390" height="133" rx="17" fill="#263944"/><path d="M0 108l74-57 70 42 71-61 79 55 96-35v81H0" fill="#386b5e"/><rect y="68" width="390" height="65" fill="url(#fade)"/><rect x="14" y="13" width="67" height="25" rx="12" fill="#19d67a"/><text x="25" y="30" font-size="10" font-weight="800" fill="#07160f">CHZZK</text><text x="321" y="31" class="tiny">● 9,820</text><text x="16" y="163" font-size="14" font-weight="700">챌린저 랭크 게임, 오늘은 어디까지?</text><text x="16" y="188" class="small muted">쵸비</text></g>
+      <g transform="translate(405)"><rect width="390" height="220" rx="17" fill="#191922" stroke="#fff" stroke-opacity=".13"/><rect width="390" height="133" rx="17" fill="#432a38"/><path d="M0 108l74-57 70 42 71-61 79 55 96-35v81H0" fill="#65513f"/><rect y="68" width="390" height="65" fill="url(#fade)"/><rect x="14" y="13" width="57" height="25" rx="12" fill="#3b87ff"/><text x="25" y="30" font-size="10" font-weight="800">SOOP</text><text x="321" y="31" class="tiny">● 4,126</text><text x="16" y="163" font-size="14" font-weight="700">마인크래프트 생존기 3일차</text><text x="16" y="188" class="small muted">양띵</text></g>
+      <g transform="translate(810)"><rect width="390" height="220" rx="17" fill="#191922" stroke="#fff" stroke-opacity=".13"/><rect width="390" height="133" rx="17" fill="#32283e"/><path d="M0 108l74-57 70 42 71-61 79 55 96-35v81H0" fill="#645080"/><rect y="68" width="390" height="65" fill="url(#fade)"/><rect x="14" y="13" width="67" height="25" rx="12" fill="#19d67a"/><text x="25" y="30" font-size="10" font-weight="800" fill="#07160f">CHZZK</text><text x="321" y="31" class="tiny">● 2,941</text><text x="16" y="163" font-size="14" font-weight="700">오늘의 발로란트 경쟁전</text><text x="16" y="188" class="small muted">김된모</text></g>
+    </g>
+  </g>
+</svg>

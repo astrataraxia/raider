@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raider · UI 목업</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101114;
+      --surface: #191a20;
+      --surface-raised: #2a2c33;
+      --line: rgba(239, 240, 243, .12);
+      --text: #eff0f3;
+      --muted: #b3b6c0;
+      --quiet: #818590;
+      --accent: #dc887e;
+      --live: #ff5572;
+      font-family: Inter, Pretendard, "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 360px;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 52% -15%, rgba(220, 136, 126, .055), transparent 42rem),
+        linear-gradient(135deg, #141519, var(--bg) 48%, #141519);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      background: linear-gradient(100deg, rgba(30,31,36,.97), rgba(21,22,27,.96) 50%, rgba(30,31,36,.97));
+      backdrop-filter: blur(24px);
+    }
+    .header-inner {
+      width: min(100% - 48px, 1680px);
+      min-height: 84px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 24px;
+    }
+    .brand-block { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 22px; font-weight: 780; letter-spacing: -.04em; }
+    .brand-mark { display: grid; width: 29px; height: 29px; place-items: center; border-radius: 50%; background: linear-gradient(145deg,#e99b92,#a95d57); color: #282117; font-size: 15px; }
+    .stream-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .stream-count strong { color: var(--text); font-variant-numeric: tabular-nums; }
+    .main-nav { display: flex; gap: 5px; padding: 5px; border: 1px solid rgba(239,240,243,.2); border-radius: 999px; background: rgba(239,240,243,.045); box-shadow: inset 0 1px rgba(255,255,255,.1), 0 12px 36px #0003; backdrop-filter: blur(20px); }
+    .main-nav a { min-width: 120px; padding: 11px 18px; border-radius: 999px; color: var(--muted); text-align: center; text-decoration: none; font-size: 15px; font-weight: 680; }
+    .main-nav a[aria-current="page"] { color: #f0b1aa; background: rgba(220,136,126,.17); box-shadow: inset 0 1px rgba(255,255,255,.15); }
+    .sync-state { justify-self: end; display: flex; align-items: center; gap: 11px; padding: 8px 14px; border: 1px solid rgba(239,240,243,.14); border-radius: 999px; background: rgba(239,240,243,.045); }
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #8ef0be; box-shadow: 0 0 14px rgba(142,240,190,.4); }
+    .sync-copy { display: grid; gap: 2px; }
+    .sync-copy strong { font-size: 12px; }
+    .sync-copy span { color: var(--muted); font-size: 11px; }
+
+    .app-layout { width: min(100%, 1920px); margin: 0 auto; padding: 20px 22px 36px; display: grid; grid-template-columns: 278px minmax(0, 1fr); align-items: start; gap: 30px; }
+    .favorites-sidebar { position: sticky; top: 104px; min-height: calc(100vh - 126px); padding: 20px 14px; overflow: hidden; border: 1px solid rgba(239,240,243,.14); border-radius: 22px; background: linear-gradient(180deg, rgba(38,39,46,.92), rgba(25,26,32,.96)); box-shadow: 0 18px 54px #0005, inset 0 1px rgba(255,255,255,.09); backdrop-filter: blur(22px); }
+    .favorites-heading { display: flex; justify-content: space-between; align-items: center; padding: 0 6px 14px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .favorites-heading strong { font-size: 16px; }
+    .collapse { border: 0; color: var(--muted); background: transparent; font-size: 22px; cursor: pointer; }
+    .favorites-status { margin: 15px 8px 23px; color: var(--quiet); font-size: 11px; }
+    .category-title { margin: 0 8px 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .favorite-list { display: grid; gap: 7px; }
+    .favorite-row { width: 100%; min-width: 0; min-height: 62px; padding: 8px 10px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,.055); border-radius: 14px; color: inherit; background: rgba(255,255,255,.035); text-align: left; cursor: pointer; transition: transform .16s ease, background .16s ease, border-color .16s ease; }
+    .favorite-row:hover, .favorite-row[aria-pressed="true"] { transform: translateY(-2px); border-color: rgba(220,136,126,.28); background: rgba(220,136,126,.085); }
+    .favorite-avatar { flex: 0 0 auto; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(145deg,#8fb9ab,#536e76); font-size: 16px; }
+    .favorite-copy { display: grid; gap: 3px; min-width: 0; flex: 1; }
+    .favorite-copy strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .favorite-copy span { overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .favorite-live { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+    .favorite-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
+    .category { margin-top: 23px; }
+
+    .page-shell { width: min(100%, 1220px); padding: 8px 0 40px; }
+    .featured-label { display: flex; align-items: center; gap: 13px; margin: 0 0 12px; color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .14em; }
+    .featured-label .sub-label { color: var(--quiet); font-size: 12px; font-weight: 500; letter-spacing: 0; }
+    .label-rule { height: 1px; flex: 1; background: linear-gradient(90deg, rgba(220,136,126,.24), transparent); }
+    .carousel-controls { display: flex; align-items: center; gap: 9px; }
+    .carousel-controls button { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid rgba(239,240,243,.18); border-radius: 50%; color: var(--text); background: rgba(239,240,243,.055); cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+    .carousel-controls button:hover { border-color: rgba(220,136,126,.45); background: rgba(220,136,126,.14); }
+    .slide-count { color: var(--quiet); font-size: 11px; letter-spacing: 0; white-space: nowrap; }
+    .featured-card { min-height: 394px; display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(360px, 1fr); overflow: hidden; border: 1px solid rgba(239,240,243,.16); border-radius: 24px; background: linear-gradient(115deg,#22232a,#191a20); box-shadow: 0 24px 70px #0008, inset 0 1px rgba(255,255,255,.08); }
+    .featured-media { position: relative; min-height: 394px; overflow: hidden; background: linear-gradient(145deg,#397b70,#263e48 52%,#273b3a); isolation: isolate; }
+    .featured-media::before { position: absolute; z-index: -1; inset: 8% 5% 8%; border: 1px solid rgba(255,255,255,.23); border-radius: 18px; background: linear-gradient(150deg,transparent 0 40%,rgba(15,27,35,.5) 41%), radial-gradient(ellipse at 30% 40%,rgba(179,229,158,.32),transparent 24%), linear-gradient(162deg,#316a61 0 32%,#284554 33% 57%,#263a3e 58%); box-shadow: 0 18px 46px #0007; content: ""; transform: perspective(900px) rotateY(-3deg); }
+    .featured-media::after { position: absolute; z-index: -1; inset: 42% 0 0; background: linear-gradient(transparent,#080e10e8); content: ""; }
+    .featured-media[data-scene="2"] { background: linear-gradient(145deg,#4f5546,#243d37 55%,#263b38); }
+    .featured-media[data-scene="2"]::before { background: radial-gradient(ellipse at 58% 42%,rgba(195,179,119,.3),transparent 23%), linear-gradient(160deg,#4a6952 0 34%,#354535 35% 57%,#242f30 58%); }
+    .featured-media[data-scene="3"] { background: linear-gradient(145deg,#3b4951,#273d46 55%,#243c3a); }
+    .featured-media[data-scene="3"]::before { background: radial-gradient(ellipse at 35% 38%,rgba(118,192,179,.34),transparent 25%), linear-gradient(160deg,#35665d 0 33%,#294852 34% 59%,#273939 60%); }
+    .live-pill { position: absolute; top: 21px; left: 24px; padding: 7px 12px; border-radius: 99px; color: white; background: var(--live); font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+    .scene-caption { position: absolute; bottom: 27px; left: 30px; color: rgba(255,255,255,.7); font-size: 11px; letter-spacing: .13em; }
+    .scene-caption::before { content: "LIVE STREAM PREVIEW"; }
+    .media-arrow { position: absolute; top: 50%; width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.36); border-radius: 50%; color: white; background: rgba(12,18,21,.56); font-size: 25px; cursor: pointer; transform: translateY(-50%); backdrop-filter: blur(10px); }
+    .media-arrow:hover { background: rgba(12,18,21,.82); }
+    .media-arrow.prev { left: 16px; }
+    .media-arrow.next { right: 16px; }
+    .featured-info { display: flex; flex-direction: column; justify-content: center; padding: 30px 34px; }
+    .channel-avatar { width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; background: linear-gradient(145deg,#75aa98,#45646a); box-shadow: 0 0 0 5px rgba(255,255,255,.045); font-size: 26px; }
+    .featured-info h1 { margin: 19px 0 4px; font-size: 25px; letter-spacing: -.035em; }
+    .featured-platform { margin: 0; color: var(--muted); font-size: 13px; }
+    .featured-viewers { display: flex; align-items: center; gap: 7px; margin: 21px 0 0; color: var(--muted); font-size: 13px; }
+    .featured-viewers strong { color: var(--text); font-size: 18px; font-variant-numeric: tabular-nums; }
+    .featured-viewers .live-dot { color: var(--live); }
+    .featured-title { margin: 19px 0; color: #d5d7dd; font-size: 14px; line-height: 1.65; }
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tags span { padding: 5px 10px; border: 1px solid rgba(255,255,255,.05); border-radius: 99px; color: #c7c9d1; background: rgba(255,255,255,.075); font-size: 11px; }
+    .watch-link { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.1); color: var(--accent); font-size: 13px; font-weight: 700; text-decoration: none; }
+    .watch-link span:last-child { font-size: 20px; }
+    .other-live { display: grid; grid-template-columns: 180px repeat(3,minmax(0,1fr)); align-items: center; gap: 12px; margin: 16px 0 30px; }
+    .other-live-label { color: var(--quiet); font-size: 11px; font-weight: 700; }
+    .other-live button { min-width: 0; min-height: 52px; padding: 6px 10px; display: flex; align-items: center; gap: 9px; border: 1px solid rgba(239,240,243,.1); border-radius: 13px; color: inherit; background: rgba(239,240,243,.045); text-align: left; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+    .other-live button:hover { border-color: rgba(220,136,126,.3); background: rgba(220,136,126,.08); }
+    .other-avatar { flex: 0 0 auto; width: 29px; height: 29px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(145deg,#8fb9ab,#536e76); font-size: 13px; }
+    .other-copy { min-width: 0; flex: 1; display: grid; gap: 3px; }
+    .other-copy strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .other-copy span { overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .other-count { color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .other-count::before { margin-right: 4px; color: var(--live); content: "●"; }
+
+    .hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin: 25px 0 17px; }
+    .eyebrow { margin: 0 0 5px; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+    .hero h2 { margin: 0; font-size: 27px; letter-spacing: -.04em; }
+    .hero-description { margin: 6px 0 0; color: var(--quiet); font-size: 13px; }
+    .hero-stats { display: flex; align-items: center; gap: 0; padding: 7px 11px; border: 1px solid rgba(239,240,243,.1); border-radius: 14px; background: rgba(239,240,243,.04); }
+    .hero-stats div { min-width: 95px; padding: 0 8px; }
+    .hero-stats div + div { border-left: 1px solid rgba(255,255,255,.1); }
+    .hero-stats span { display: block; color: var(--quiet); font-size: 10px; }
+    .hero-stats strong { display: block; margin-top: 3px; font-size: 16px; font-variant-numeric: tabular-nums; }
+
+    .controls { margin: 0 0 25px; padding: 14px 16px 13px; border: 1px solid rgba(239,240,243,.2); border-radius: 18px; background: linear-gradient(180deg,rgba(239,240,243,.105),rgba(239,240,243,.035)); box-shadow: inset 0 1px rgba(255,255,255,.16), 0 14px 35px #0003; backdrop-filter: blur(20px); }
+    .controls-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .platform-filter { display: flex; align-items: center; gap: 4px; }
+    .filter-button { min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid transparent; border-radius: 11px; color: var(--muted); background: transparent; font-size: 12px; font-weight: 650; text-decoration: none; white-space: nowrap; }
+    .filter-button.active { color: var(--text); background: rgba(255,255,255,.14); }
+    .platform-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .platform-dot.chzzk { background: #00e56b; }
+    .platform-dot.soop { background: #4b9dff; }
+    .platform-dot.fav { background: var(--accent); }
+    .search-box { width: min(430px, 48%); min-height: 42px; padding: 0 8px 0 13px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(239,240,243,.24); border-radius: 12px; background: linear-gradient(180deg,rgba(16,17,20,.38),rgba(16,17,20,.62)); box-shadow: inset 0 1px rgba(255,255,255,.12); }
+    .search-glyph { color: var(--muted); font-size: 20px; line-height: 1; }
+    .search-box input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--text); background: transparent; font-size: 12px; }
+    .search-box input::placeholder { color: var(--muted); }
+    .search-box button { min-height: 30px; padding: 0 12px; border: 1px solid rgba(239,240,243,.12); border-radius: 9px; color: var(--text); background: rgba(239,240,243,.1); font-size: 11px; cursor: pointer; }
+    .controls-tags { display: flex; align-items: center; gap: 11px; margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(255,255,255,.08); }
+    .tags-label { flex: 0 0 auto; color: var(--quiet); font-size: 10px; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tag { padding: 5px 10px; border: 1px solid rgba(255,255,255,.04); border-radius: 99px; color: var(--muted); background: rgba(255,255,255,.045); font-size: 10px; }
+    .tag.active { color: var(--text); background: rgba(255,255,255,.13); }
+    .section-heading { display: flex; justify-content: space-between; align-items: center; margin: 0 0 14px; }
+    .section-heading h2 { margin: 0; font-size: 20px; }
+    .section-heading span { color: var(--quiet); font-size: 11px; }
+    .stream-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+    .stream-card { overflow: hidden; border: 1px solid rgba(239,240,243,.12); border-radius: 17px; background: rgba(25,26,32,.94); box-shadow: 0 13px 32px #0004; }
+    .thumbnail { position: relative; height: 145px; overflow: hidden; background: linear-gradient(145deg,#263944,#386b5e); }
+    .thumbnail::before { position: absolute; inset: 20% -5% -35%; background: linear-gradient(145deg,transparent 0 33%,rgba(102,151,122,.8) 34% 50%,#243b3d 51%); content: ""; transform: skewY(-8deg); }
+    .thumbnail.alt-2 { background: linear-gradient(145deg,#432a38,#65513f); }
+    .thumbnail.alt-2::before { background: linear-gradient(145deg,transparent 0 33%,#817552 34% 50%,#34372f 51%); }
+    .thumbnail.alt-3 { background: linear-gradient(145deg,#32283e,#645080); }
+    .thumbnail.alt-3::before { background: linear-gradient(145deg,transparent 0 33%,#71628c 34% 50%,#292f3d 51%); }
+    .platform-badge, .viewer-badge { position: absolute; top: 12px; padding: 5px 9px; border-radius: 99px; color: #07160f; background: #19d67a; font-size: 9px; font-weight: 800; }
+    .platform-badge { left: 12px; }
+    .platform-badge.soop { color: white; background: #3b87ff; }
+    .viewer-badge { right: 12px; color: white; background: rgba(9,14,16,.75); font-weight: 650; }
+    .card-copy { min-height: 78px; padding: 12px 14px; }
+    .card-copy h3 { overflow: hidden; margin: 0 0 7px; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .card-copy p { margin: 0; color: var(--muted); font-size: 11px; }
+    .carousel-dots { display: flex; justify-content: center; gap: 6px; margin: 13px 0 0; }
+    .carousel-dots button { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.26); cursor: pointer; }
+    .carousel-dots button[aria-current="true"] { width: 19px; border-radius: 9px; background: var(--accent); }
+    [hidden] { display: none !important; }
+    .page-intro { margin: 15px 0 25px; }
+    .page-intro h1 { margin: 0; font-size: clamp(27px,3vw,35px); letter-spacing: -.045em; }
+    .page-intro > p:last-child { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .panel-kicker { margin: 0 0 8px; color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+    .glass-card { border: 1px solid rgba(239,240,243,.11); border-radius: 18px; background: linear-gradient(145deg,rgba(42,43,50,.86),rgba(25,26,32,.94)); box-shadow: inset 0 1px rgba(255,255,255,.055), 0 16px 40px #0002; backdrop-filter: blur(18px); }
+    .recap-home-card { min-height: 160px; padding: 27px 30px; display: flex; justify-content: space-between; align-items: center; gap: 24px; border: 1px solid rgba(220,136,126,.2); border-radius: 22px; background: linear-gradient(125deg,#29262c,#1a1a20 70%); box-shadow: inset 0 1px rgba(255,255,255,.07),0 20px 44px #0003; }
+    .recap-home-card h2 { margin: 0; font-size: 22px; }
+    .recap-home-card p:last-child { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .home-share { display: grid; justify-items: end; }
+    .home-share strong { color: #e99b92; font-size: 45px; line-height: 1; letter-spacing: -.05em; }
+    .home-share strong span { font-size: 24px; }
+    .home-share > span { margin-top: 6px; color: var(--muted); font-size: 11px; }
+    .recap-stats,.status-overview { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 13px; margin-top: 14px; }
+    .stat-card,.status-overview article { min-height: 123px; padding: 20px 21px; display: grid; align-content: center; gap: 6px; }
+    .stat-card > span,.status-overview article > span { color: var(--muted); font-size: 11px; }
+    .stat-card strong,.status-overview article strong { font-size: 25px; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+    .stat-card small { color: var(--quiet); font-size: 10px; }
+    .recap-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .recap-two-col > article { min-height: 198px; padding: 21px 23px; }
+    .recap-two-col h2,.panel-heading h2 { margin: 0; font-size: 17px; letter-spacing: -.025em; }
+    .streak-number { display: block; margin-top: 16px; color: #e99b92; font-size: 30px; }
+    .streak-number span { margin-left: 7px; color: var(--muted); font-size: 12px; font-weight: 500; }
+    .streak-card > p:last-of-type { margin: 6px 0 14px; color: var(--muted); font-size: 11px; }
+    .week-dots { display: flex; gap: 7px; }
+    .week-dots i { width: 17px; height: 17px; border: 1px solid rgba(220,136,126,.2); border-radius: 5px; background: rgba(220,136,126,.64); }
+    .week-dots i.off { border-color: rgba(255,255,255,.08); background: rgba(255,255,255,.07); }
+    .badge-list { display: grid; gap: 9px; margin-top: 15px; }
+    .badge-list span { padding: 8px 10px; display: flex; justify-content: space-between; gap: 10px; border: 1px solid rgba(220,136,126,.14); border-radius: 10px; color: #efc0ba; background: rgba(220,136,126,.06); font-size: 11px; }
+    .badge-list b { color: var(--muted); font-weight: 500; }
+    .lower-recap > article { min-height: 250px; }
+    .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .panel-heading > span { color: var(--quiet); font-size: 10px; }
+    .channel-table { margin-top: 16px; }
+    .table-row { min-height: 37px; display: grid; grid-template-columns: 1fr 95px 54px; align-items: center; gap: 9px; border-bottom: 1px solid rgba(255,255,255,.055); font-size: 11px; }
+    .table-row:last-child { border-bottom: 0; }
+    .table-row span:nth-child(2),.table-row span:last-child,.table-row b { text-align: right; font-variant-numeric: tabular-nums; }
+    .table-row b { font-weight: 650; }
+    .table-head { min-height: 30px; color: var(--quiet); font-size: 10px; }
+    .bar-chart { height: 112px; margin-top: 20px; padding: 0 5px; display: flex; align-items: end; justify-content: space-around; gap: 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .bar-chart > div { height: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: end; gap: 7px; color: var(--quiet); font-size: 9px; }
+    .bar-chart i { width: min(28px,80%); height: var(--bar); border: 1px solid rgba(220,136,126,.18); border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg,rgba(220,136,126,.82),rgba(169,93,87,.45)); }
+    .bar-chart i.current { background: linear-gradient(180deg,#f0b1aa,#b96c65); box-shadow: 0 0 17px rgba(220,136,126,.16); }
+    .chart-total { margin: 13px 0 0; display: flex; justify-content: space-between; gap: 10px; font-size: 10px; }
+    .chart-total strong { color: #efc0ba; }
+    .chart-total span { color: var(--quiet); }
+    .page-footnote { margin: 21px 0 0; color: var(--quiet); font-size: 10px; line-height: 1.6; }
+    .status-intro { margin-bottom: 20px; }
+    .status-overview { margin: 0 0 25px; }
+    .status-overview article { min-height: 105px; }
+    .status-overview article strong { font-size: 21px; }
+    .status-section { margin-top: 26px; }
+    .status-section > .panel-heading { margin-bottom: 13px; }
+    .status-section .panel-kicker { margin-bottom: 4px; }
+    .updated-at { color: var(--quiet); font-size: 10px; }
+    .status-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+    .service-card { padding: 20px 22px; }
+    .service-card header { display: flex; align-items: center; gap: 10px; }
+    .service-card h3 { margin: 0; flex: 1; font-size: 15px; }
+    .service-mark { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 10px; color: #171a1e; background: #b8c0cc; font-size: 13px; font-weight: 800; }
+    .chzzk-mark { color: #062013; background: #57d693; }
+    .soop-mark { color: white; background: #4d87e8; }
+    .chat-mark,.storage-mark { color: #f0b1aa; background: rgba(220,136,126,.16); }
+    .service-pill { padding: 5px 9px; border: 1px solid rgba(220,136,126,.16); border-radius: 99px; color: #f0b1aa; background: rgba(220,136,126,.09); font-size: 10px; font-weight: 650; }
+    .service-pill.ok { border-color: rgba(122,203,156,.18); color: #a6d8b5; background: rgba(122,203,156,.08); }
+    .service-pill.quiet-pill { color: var(--muted); border-color: rgba(255,255,255,.1); background: rgba(255,255,255,.04); }
+    .service-card > p { min-height: 34px; margin: 13px 0 8px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .service-card dl { margin: 0; }
+    .service-card dl > div { min-height: 33px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(255,255,255,.06); font-size: 10px; }
+    .service-card dt { color: var(--quiet); }
+    .service-card dd { margin: 0; color: #dfe1e6; text-align: right; font-variant-numeric: tabular-nums; }
+    .secondary-status { margin-top: 14px; }
+    .secondary-status .service-card { min-height: 190px; }
+    .event-list { padding: 4px 19px; }
+    .event-empty { min-height: 73px; display: flex; align-items: center; gap: 12px; }
+    .event-empty > span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; color: #a6d8b5; background: rgba(122,203,156,.1); }
+    .event-empty strong { font-size: 11px; }
+    .event-empty p { margin: 4px 0 0; color: var(--quiet); font-size: 10px; }
+    .event-empty time { margin-left: auto; color: var(--quiet); font-size: 10px; }
+
+    @media (max-width: 1120px) {
+      .app-layout { grid-template-columns: 240px minmax(0,1fr); gap: 20px; }
+      .featured-card { grid-template-columns: minmax(0,1.25fr) minmax(280px,1fr); }
+      .other-live { grid-template-columns: 1fr 1fr; }
+      .other-live-label { grid-column: 1 / -1; }
+      .other-live button:last-child { display: none; }
+      .header-inner { grid-template-columns: 1fr auto; }
+      .main-nav { grid-column: 1; grid-row: 2; justify-self: start; margin: -10px 0 12px; }
+      .site-header .header-inner { padding-top: 10px; }
+      .sync-state { grid-column: 2; grid-row: 1; }
+      .other-live { grid-template-columns: 1fr 1fr; }
+      .other-live-label { grid-column: 1 / -1; }
+      .status-overview { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    }
+    @media (max-width: 760px) {
+      .header-inner { width: calc(100% - 24px); min-height: 72px; gap: 8px; }
+      .brand-block { gap: 9px; }
+      .brand { font-size: 19px; }
+      .stream-count { display: none; }
+      .main-nav { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; justify-content: center; margin: 0 0 10px; }
+      .main-nav a { min-width: 0; flex: 1; padding: 9px 10px; font-size: 13px; }
+      .sync-state { grid-column: 2; grid-row: 1; padding: 7px 10px; }
+      .sync-copy span { display: none; }
+      .app-layout { display: block; padding: 14px 12px 30px; }
+      .favorites-sidebar { display: none; }
+      .page-shell { width: 100%; padding: 6px 0 30px; }
+      .recap-two-col,.status-grid { grid-template-columns: 1fr; }
+      .recap-stats,.status-overview { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+      .stat-card,.status-overview article { padding: 15px 12px; }
+      .stat-card strong { font-size: 20px; }
+      .status-overview article strong { font-size: 16px; }
+      .recap-home-card { padding: 21px 19px; }
+      .home-share strong { font-size: 36px; }
+      .featured-label { flex-wrap: wrap; gap: 8px; }
+      .featured-label .sub-label { flex: 1; }
+      .label-rule { display: none; }
+      .carousel-controls { margin-left: auto; }
+      .carousel-controls button { width: 32px; height: 32px; }
+      .featured-card { grid-template-columns: 1fr; }
+      .featured-media { min-height: 235px; }
+      .featured-info { padding: 22px; }
+      .channel-avatar { width: 46px; height: 46px; font-size: 21px; }
+      .featured-info h1 { margin-top: 13px; font-size: 21px; }
+      .featured-title { margin: 12px 0; }
+      .watch-link { margin-top: 18px; padding-top: 16px; }
+      .other-live { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+      .other-live button:last-child { display: none; }
+      .hero { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .hero h2 { font-size: 23px; }
+      .hero-stats { width: 100%; }
+      .hero-stats div { flex: 1; }
+      .controls-top { align-items: stretch; flex-direction: column; }
+      .platform-filter { justify-content: space-between; }
+      .filter-button { padding: 0 8px; }
+      .search-box { width: 100%; }
+      .controls-tags { align-items: flex-start; flex-direction: column; gap: 8px; }
+      .stream-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+      .thumbnail { height: 112px; }
+      .card-copy { min-height: 72px; padding: 10px; }
+    }
+    @media (max-width: 430px) {
+      .sync-copy strong { font-size: 10px; }
+      .status-dot { width: 7px; height: 7px; }
+      .featured-label { letter-spacing: .08em; }
+      .featured-label .sub-label { order: 3; flex-basis: 100%; }
+      .carousel-controls { position: absolute; right: 12px; }
+      .other-live { grid-template-columns: 1fr; }
+      .other-live button:nth-of-type(n+2) { display: none; }
+      .stream-grid { grid-template-columns: 1fr; }
+      .thumbnail { height: 175px; }
+      .recap-stats,.status-overview { grid-template-columns: 1fr; }
+      .stat-card,.status-overview article { min-height: 90px; }
+      .table-row { grid-template-columns: 1fr 75px 43px; }
+      .recap-home-card { align-items: flex-start; }
+      .recap-home-card h2 { font-size: 18px; }
+      .home-share strong { font-size: 30px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-block">
+        <a class="brand" href="#top" aria-label="Raider 홈"><span class="brand-mark" aria-hidden="true">◆</span><span>Raider</span></a>
+        <span class="stream-count"><strong>1,284</strong>개 방송 중</span>
+      </div>
+      <nav class="main-nav" aria-label="주요 메뉴">
+        <a href="#live" data-view-link="live" aria-current="page">◉&nbsp; 라이브</a>
+        <a href="#recap" data-view-link="recap">▣&nbsp; 리캡</a>
+        <a href="#status" data-view-link="status">☷&nbsp; 상태</a>
+      </nav>
+      <div class="sync-state"><span class="status-dot" aria-hidden="true"></span><span class="sync-copy"><strong>현재 스냅샷</strong><span>12:48 갱신</span></span></div>
+    </div>
+  </header>
+
+  <div class="app-layout" id="top">
+    <aside class="favorites-sidebar" aria-label="즐겨찾기 방송인">
+      <div class="favorites-heading"><strong>즐겨찾기</strong><button class="collapse" type="button" aria-label="즐겨찾기 접기">‹</button></div>
+      <p class="favorites-status">8명 · 라이브 3명</p>
+      <p class="category-title">⌄ &nbsp;📁 게임</p>
+      <div class="favorite-list">
+        <button class="favorite-row" type="button" data-slide="0" aria-pressed="true"><span class="favorite-avatar">🎮</span><span class="favorite-copy"><strong>이상혁 (Faker)</strong><span>리그 오브 레전드</span></span><span class="favorite-live"><i></i>12.5k</span></button>
+        <button class="favorite-row" type="button" data-slide="1" aria-pressed="false"><span class="favorite-avatar">🎙</span><span class="favorite-copy"><strong>클템</strong><span>LCK 분석 중</span></span><span class="favorite-live"><i></i>1,249</span></button>
+        <button class="favorite-row" type="button" aria-pressed="false"><span class="favorite-avatar">🧱</span><span class="favorite-copy"><strong>도티</strong><span>오프라인</span></span></button>
+        <button class="favorite-row" type="button" data-slide="2" aria-pressed="false"><span class="favorite-avatar">🎯</span><span class="favorite-copy"><strong>김된모</strong><span>발로란트</span></span><span class="favorite-live"><i></i>388</span></button>
+      </div>
+      <p class="category-title category">⌄ &nbsp;📁 버라이어티</p>
+      <div class="favorite-list">
+        <button class="favorite-row" type="button"><span class="favorite-avatar">☕</span><span class="favorite-copy"><strong>침착맨</strong><span>오프라인</span></span></button>
+        <button class="favorite-row" type="button"><span class="favorite-avatar">🌙</span><span class="favorite-copy"><strong>옥냥이</strong><span>방송 알림 대기</span></span></button>
+        <button class="favorite-row" type="button"><span class="favorite-avatar">🎧</span><span class="favorite-copy"><strong>풍월량</strong><span>오프라인</span></span></button>
+      </div>
+    </aside>
+
+    <main class="page-shell">
+      <div class="app-view is-active" data-view="live" id="live">
+      <section aria-labelledby="pick-title">
+        <div class="featured-label"><span id="pick-title">✦&nbsp; TODAY'S PICK</span><span class="sub-label">즐겨찾기 라이브에서 랜덤으로 골랐어요</span><span class="label-rule"></span>
+          <div class="carousel-controls" aria-label="추천 방송 넘기기"><button type="button" data-step="-1" aria-label="이전 방송">‹</button><button type="button" data-step="1" aria-label="다음 방송">›</button><span class="slide-count" aria-live="polite">1 / 3</span></div>
+        </div>
+        <article class="featured-card" aria-live="polite">
+          <div class="featured-media" data-scene="1">
+            <span class="live-pill">● LIVE NOW</span><span class="scene-caption" aria-hidden="true"></span>
+            <button class="media-arrow prev" type="button" data-step="-1" aria-label="이전 즐겨찾기 방송">‹</button><button class="media-arrow next" type="button" data-step="1" aria-label="다음 즐겨찾기 방송">›</button>
+          </div>
+          <div class="featured-info">
+            <span class="channel-avatar" aria-hidden="true">🎮</span>
+            <h1 class="streamer-name">이상혁 (Faker)</h1>
+            <p class="featured-platform">CHZZK &nbsp;·&nbsp; 리그 오브 레전드</p>
+            <p class="featured-viewers"><span class="live-dot">●</span> 시청자 <strong>12,504</strong>명</p>
+            <p class="featured-title">솔로랭크 1위 도전 / 미드 라인 집중 플레이</p>
+            <div class="tags"><span>#LeagueofLegends</span><span>#T1</span></div>
+            <a class="watch-link" href="#watch"><span>즐겨찾기 방송 바로 보기</span><span aria-hidden="true">↗</span></a>
+          </div>
+        </article>
+        <div class="carousel-dots" aria-label="추천 방송 위치"><button type="button" aria-label="첫 번째 방송" aria-current="true" data-go="0"></button><button type="button" aria-label="두 번째 방송" aria-current="false" data-go="1"></button><button type="button" aria-label="세 번째 방송" aria-current="false" data-go="2"></button></div>
+      </section>
+
+      <section class="other-live" aria-label="다른 즐겨찾기 라이브">
+        <span class="other-live-label">다른 즐겨찾기 라이브</span>
+        <button type="button" data-slide="1"><span class="other-avatar">🎙</span><span class="other-copy"><strong>클템</strong><span>CHZZK · LCK 분석</span></span><span class="other-count">1,249</span></button>
+        <button type="button" data-slide="2"><span class="other-avatar">🎯</span><span class="other-copy"><strong>김된모</strong><span>CHZZK · 발로란트</span></span><span class="other-count">388</span></button>
+        <button type="button" data-slide="0"><span class="other-avatar">🎮</span><span class="other-copy"><strong>이상혁 (Faker)</strong><span>CHZZK · LoL</span></span><span class="other-count">12.5k</span></button>
+      </section>
+
+      <section class="hero">
+        <div><p class="eyebrow">LIVE RADAR</p><h2>지금 볼 방송을 찾아보세요.</h2><p class="hero-description">CHZZK과 SOOP의 현재 라이브를 한곳에 모았습니다.</p></div>
+        <div class="hero-stats" aria-label="현재 방송 통계"><div><span>전체 방송</span><strong>1,284</strong></div><div><span>총 시청자</span><strong>86.2만</strong></div></div>
+      </section>
+
+      <section class="controls" aria-label="방송 필터와 검색">
+        <div class="controls-top">
+          <nav class="platform-filter" aria-label="플랫폼 필터"><a class="filter-button active" href="#all">전체</a><a class="filter-button" href="#chzzk"><i class="platform-dot chzzk"></i>CHZZK</a><a class="filter-button" href="#soop"><i class="platform-dot soop"></i>SOOP</a><a class="filter-button" href="#favorites"><i class="platform-dot fav"></i>즐겨찾기</a></nav>
+          <form class="search-box" role="search" onsubmit="event.preventDefault()"><span class="search-glyph" aria-hidden="true">⌕</span><input type="search" aria-label="방송 검색" placeholder="방송인, 제목 또는 태그 검색"><button type="submit">검색</button></form>
+        </div>
+        <div class="controls-tags"><span class="tags-label">추천 태그:</span><div class="tag-list"><span class="tag active">모든 태그</span><span class="tag">리그 오브 레전드</span><span class="tag">마인크래프트</span><span class="tag">버라이어티</span><span class="tag">발로란트</span></div></div>
+      </section>
+
+      <section aria-labelledby="popular-title">
+        <div class="section-heading"><h2 id="popular-title">현재 인기 방송</h2><span>시청자 수 높은 순</span></div>
+        <div class="stream-grid">
+          <article class="stream-card"><div class="thumbnail"><span class="platform-badge">CHZZK</span><span class="viewer-badge">● 9,820</span></div><div class="card-copy"><h3>챌린저 랭크 게임, 오늘은 어디까지?</h3><p>쵸비</p></div></article>
+          <article class="stream-card"><div class="thumbnail alt-2"><span class="platform-badge soop">SOOP</span><span class="viewer-badge">● 4,126</span></div><div class="card-copy"><h3>마인크래프트 생존기 3일차</h3><p>양띵</p></div></article>
+          <article class="stream-card"><div class="thumbnail alt-3"><span class="platform-badge">CHZZK</span><span class="viewer-badge">● 2,941</span></div><div class="card-copy"><h3>오늘의 발로란트 경쟁전</h3><p>김된모</p></div></article>
+        </div>
+      </section>
+      </div>
+
+      <div class="app-view" data-view="recap" id="recap" hidden>
+        <section class="page-intro">
+          <p class="eyebrow">CHAT RECAP</p>
+          <h1>나의 채팅 리캡</h1>
+          <p>2026년 1월부터 모은 라이브 채팅 기록이에요. 즐겨찾기한 CHZZK 방송에서 보낸 채팅만 집계합니다.</p>
+        </section>
+        <section class="recap-home-card">
+          <div><p class="panel-kicker">MY HOME CHANNEL</p><h2>이상혁 (Faker)</h2><p>본진 방송에서 가장 많은 시간을 함께했어요.</p></div>
+          <div class="home-share"><strong>68<span>%</span></strong><span>전체 채팅 비중</span></div>
+        </section>
+        <section class="recap-stats" aria-label="나의 채팅 통계">
+          <article class="glass-card stat-card"><span>총 채팅</span><strong>128,450</strong><small>라이브 채팅 집계</small></article>
+          <article class="glass-card stat-card"><span>활동 채널</span><strong>6</strong><small>즐겨찾기 채널 기준</small></article>
+          <article class="glass-card stat-card"><span>활동 일수</span><strong>147</strong><small>채팅을 보낸 날짜</small></article>
+        </section>
+        <section class="recap-two-col">
+          <article class="glass-card streak-card"><p class="panel-kicker">ATTENDANCE</p><h2>꾸준히 함께한 날들</h2><strong class="streak-number">24<span>일 연속</span></strong><p>최장 연속 출석 31일 · 방송이 있던 날 기준</p><div class="week-dots" aria-label="이번 주 활동"><i></i><i></i><i></i><i></i><i></i><i class="off"></i><i class="off"></i></div></article>
+          <article class="glass-card badges-card"><p class="panel-kicker">BADGES</p><h2>이번 리캡 배지</h2><div class="badge-list"><span>✦ 개근 <b>출석률 92%</b></span><span>◈ 일편단심 <b>본진 비중 68%</b></span><span>⌁ 고인물 <b>누적 채팅 10만+</b></span></div></article>
+        </section>
+        <section class="recap-two-col lower-recap">
+          <article class="glass-card table-card"><div class="panel-heading"><div><p class="panel-kicker">CHANNELS</p><h2>채널별 채팅</h2></div><span>총 128,450건</span></div><div class="channel-table"><div class="table-row table-head"><span>채널</span><span>채팅 수</span><span>비중</span></div><div class="table-row"><span>이상혁 (Faker)</span><b>87,374</b><span>68%</span></div><div class="table-row"><span>클템</span><b>18,611</b><span>14%</span></div><div class="table-row"><span>침착맨</span><b>11,906</b><span>9%</span></div><div class="table-row"><span>그 외 3개 채널</span><b>10,559</b><span>9%</span></div></div></article>
+          <article class="glass-card months-card"><div class="panel-heading"><div><p class="panel-kicker">MONTHLY ACTIVITY</p><h2>월별 채팅</h2></div><span>최근 6개월</span></div><div class="bar-chart" aria-label="월별 채팅 그래프"><div><i style="--bar:38%"></i><span>5월</span></div><div><i style="--bar:61%"></i><span>6월</span></div><div><i style="--bar:48%"></i><span>7월</span></div><div><i style="--bar:82%"></i><span>8월</span></div><div><i style="--bar:66%"></i><span>9월</span></div><div><i class="current" style="--bar:94%"></i><span>10월</span></div></div><p class="chart-total"><strong>이번 달 18,240건</strong><span>지난달보다 12% 늘었어요</span></p></article>
+        </section>
+        <p class="page-footnote">수집 시작일 이전의 채팅과 방송 중이 아닌 채널의 기록은 포함되지 않습니다.</p>
+      </div>
+
+      <div class="app-view" data-view="status" id="status" hidden>
+        <section class="page-intro status-intro">
+          <p class="eyebrow">SYSTEM STATUS</p>
+          <h1>Raider 상태</h1>
+          <p>라이브 수집, 채팅 집계, 저장소가 정상적으로 동작하고 있는지 확인합니다.</p>
+        </section>
+        <section class="status-overview" aria-label="프로세스 요약"><article class="glass-card"><span>프로세스 가동</span><strong>12일 08시간</strong></article><article class="glass-card"><span>메모리 사용량</span><strong>74 MB</strong></article><article class="glass-card"><span>메모리 한도</span><strong>256 MB</strong></article></section>
+        <section class="status-section"><div class="panel-heading"><div><p class="panel-kicker">LIVE COLLECTION</p><h2>플랫폼 수집</h2></div><span class="updated-at">마지막 갱신 12:48</span></div>
+          <div class="status-grid">
+            <article class="glass-card service-card"><header><span class="service-mark chzzk-mark">C</span><h3>CHZZK</h3><span class="service-pill ok">정상</span></header><p>전체 라이브 방송을 확인하고 있습니다.</p><dl><div><dt>마지막 성공</dt><dd>12:48 · 2분 전</dd></div><div><dt>수집 방송</dt><dd>3,842개</dd></div><div><dt>수집 소요 시간</dt><dd>4.2초</dd></div></dl></article>
+            <article class="glass-card service-card"><header><span class="service-mark soop-mark">S</span><h3>SOOP</h3><span class="service-pill ok">정상</span></header><p>전체 라이브 방송을 확인하고 있습니다.</p><dl><div><dt>마지막 성공</dt><dd>12:47 · 3분 전</dd></div><div><dt>수집 방송</dt><dd>3,116개</dd></div><div><dt>수집 소요 시간</dt><dd>1.8초</dd></div></dl></article>
+          </div>
+        </section>
+        <section class="status-grid secondary-status">
+          <article class="glass-card service-card"><header><span class="service-mark chat-mark">◉</span><h3>채팅 집계</h3><span class="service-pill ok">수집 중</span></header><p>즐겨찾기한 CHZZK 라이브의 채팅 건수만 기록합니다.</p><dl><div><dt>감시 중인 채널</dt><dd>3개</dd></div><div><dt>마지막 저장</dt><dd>12:45 · 3분 전</dd></div></dl></article>
+          <article class="glass-card service-card"><header><span class="service-mark storage-mark">▤</span><h3>저장소</h3><span class="service-pill ok">정상</span></header><p>즐겨찾기와 채팅 집계 데이터가 저장되어 있습니다.</p><dl><div><dt>즐겨찾기 데이터베이스</dt><dd>연결됨</dd></div><div><dt>암호화 키 저장소</dt><dd>사용 가능</dd></div></dl></article>
+        </section>
+        <section class="status-section"><div class="panel-heading"><div><p class="panel-kicker">RECENT EVENTS</p><h2>최근 경고</h2></div><span class="service-pill quiet-pill">최근 24시간</span></div>
+          <div class="glass-card event-list"><div class="event-empty"><span>✓</span><div><strong>최근 경고가 없습니다.</strong><p>수집과 저장이 정상적으로 이어지고 있어요.</p></div><time>현재</time></div></div>
+        </section>
+        <p class="page-footnote">수집 간격 동안에는 직전 정상 결과가 유지됩니다. 서버가 종료되면 이 화면도 열리지 않습니다.</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const views = [...document.querySelectorAll("[data-view]")];
+      const viewLinks = [...document.querySelectorAll("[data-view-link]")];
+      const pageTitles = { live: "Raider · 라이브", recap: "Raider · 채팅 리캡", status: "Raider · 서버 상태" };
+      viewLinks.forEach((link) => link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const selected = link.dataset.viewLink;
+        views.forEach((view) => { view.hidden = view.dataset.view !== selected; });
+        viewLinks.forEach((item) => {
+          if (item.dataset.viewLink === selected) item.setAttribute("aria-current", "page");
+          else item.removeAttribute("aria-current");
+        });
+        document.title = pageTitles[selected];
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }));
+
+      const slides = [
+        { name: "이상혁 (Faker)", platform: "CHZZK", game: "리그 오브 레전드", viewers: "12,504", title: "솔로랭크 1위 도전 / 미드 라인 집중 플레이", tags: ["#LeagueofLegends", "#T1"], icon: "🎮" },
+        { name: "클템", platform: "CHZZK", game: "LCK 분석", viewers: "1,249", title: "오늘 경기 리뷰와 밴픽 이야기", tags: ["#LCK", "#롤분석"], icon: "🎙" },
+        { name: "김된모", platform: "CHZZK", game: "발로란트", viewers: "388", title: "경쟁전 솔로랭크, 오늘은 몇 연승?", tags: ["#발로란트", "#경쟁전"], icon: "🎯" }
+      ];
+      let current = 0;
+      const media = document.querySelector(".featured-media");
+      const name = document.querySelector(".streamer-name");
+      const platform = document.querySelector(".featured-platform");
+      const viewers = document.querySelector(".featured-viewers strong");
+      const title = document.querySelector(".featured-title");
+      const avatar = document.querySelector(".channel-avatar");
+      const tags = document.querySelector(".tags");
+      const counter = document.querySelector(".slide-count");
+      const dots = [...document.querySelectorAll(".carousel-dots button")];
+      const favoriteRows = [...document.querySelectorAll(".favorite-row[data-slide]")];
+
+      function showSlide(index) {
+        current = (index + slides.length) % slides.length;
+        const slide = slides[current];
+        name.textContent = slide.name;
+        platform.textContent = `${slide.platform}  ·  ${slide.game}`;
+        viewers.textContent = slide.viewers;
+        title.textContent = slide.title;
+        avatar.textContent = slide.icon;
+        tags.replaceChildren(...slide.tags.map((tag) => {
+          const chip = document.createElement("span");
+          chip.textContent = tag;
+          return chip;
+        }));
+        media.dataset.scene = String(current + 1);
+        counter.textContent = `${current + 1} / ${slides.length}`;
+        dots.forEach((dot, i) => dot.setAttribute("aria-current", String(i === current)));
+        favoriteRows.forEach((row) => row.setAttribute("aria-pressed", String(Number(row.dataset.slide) === current)));
+      }
+
+      document.querySelectorAll("[data-step]").forEach((button) => button.addEventListener("click", () => showSlide(current + Number(button.dataset.step))));
+      document.querySelectorAll("[data-go]").forEach((button) => button.addEventListener("click", () => showSlide(Number(button.dataset.go))));
+      document.querySelectorAll("[data-slide]").forEach((button) => button.addEventListener("click", () => showSlide(Number(button.dataset.slide))));
+    })();
+  </script>
+</body>
+</html>

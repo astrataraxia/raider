@@ -23,7 +23,8 @@ public sealed record ViewerRecap(
     int LongestStreak,
     int CurrentStreak,
     ImmutableArray<RecapChannel> Channels,
-    ImmutableArray<RecapMonth> Months)
+    ImmutableArray<RecapMonth> Months,
+    ImmutableArray<bool> RecentHomeDays)
 {
     public const double AttendanceThreshold = 0.5;
     public const double LoyaltyThreshold = 0.5;
@@ -58,6 +59,7 @@ public sealed record ViewerRecap(
                 null,
                 0,
                 0,
+                [],
                 [],
                 []);
         }
@@ -102,6 +104,13 @@ public sealed record ViewerRecap(
             .OrderBy(pair => pair.Key)
             .Select(pair => new RecapMonth(pair.Key, pair.Value))
             .ToImmutableArray();
+        var recentHomeDays = homeBroadcastDays.IsDefaultOrEmpty
+            ? []
+            : homeBroadcastDays
+                .OrderBy(day => day)
+                .TakeLast(7)
+                .Select(day => chattedHomeDays.Contains(day))
+                .ToImmutableArray();
 
         return new ViewerRecap(
             home.Key,
@@ -119,7 +128,8 @@ public sealed record ViewerRecap(
             longest,
             current,
             channels,
-            monthRows);
+            monthRows,
+            recentHomeDays);
     }
 
     private static bool IsVeteran(string viewerChannelId, ImmutableArray<ChannelFirstSeen> homeFirstSeen)

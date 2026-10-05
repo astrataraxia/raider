@@ -42,6 +42,8 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
 
     public ImmutableArray<string> FavoriteCategories { get; private set; } = [];
 
+    public ImmutableArray<FeaturedPick> FeaturedPicks { get; private set; } = [];
+
     public CollectionSnapshot Snapshot { get; private set; } = null!;
 
     public Raider.Web.Live.Platform? SelectedPlatform { get; private set; }
@@ -90,12 +92,26 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
         Snapshot = snapshots.Current;
         SelectedPlatform = ParsePlatform(Platform);
         var results = Snapshot.Live.Search(SelectedPlatform, Tag, Query);
+        var favoritesFailed = false;
+        ImmutableArray<Favorite> favorites = [];
+        try
+        {
+            favorites = await favoriteStore.ListAsync(HttpContext.RequestAborted);
+        }
+        catch (Exception)
+        {
+            favoritesFailed = true;
+        }
 
+        FeaturedPicks = favoritesFailed ? [] : FeaturedPick.FromSnapshot(Snapshot.Live.Streams, favorites);
         if (FavoritesOnly)
         {
-            try
+            if (favoritesFailed)
             {
-                var favorites = await favoriteStore.ListAsync(HttpContext.RequestAborted);
+                results = [];
+            }
+            else
+            {
                 FavoriteCategories = favorites
                     .Select(f => f.Category)
                     .Where(c => !string.IsNullOrWhiteSpace(c))
@@ -103,8 +119,6 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
                     .OrderBy(c => c == "기본" ? 0 : 1)
                     .ThenBy(c => c, StringComparer.OrdinalIgnoreCase)
                     .ToImmutableArray();
-
-                var favKeys = favorites.Select(f => (f.Platform, f.ChannelId)).ToHashSet();
 
                 if (!string.IsNullOrWhiteSpace(SelectedCategory))
                 {
@@ -119,15 +133,11 @@ public sealed class IndexModel(SnapshotStore snapshots, CollectionRegistry regis
                 }
                 else
                 {
+                    var favKeys = favorites.Select(f => (f.Platform, f.ChannelId)).ToHashSet();
                     results = results
                         .Where(stream => favKeys.Contains((stream.Platform, stream.ChannelId)))
                         .ToImmutableArray();
                 }
-            }
-            catch (Exception)
-            {
-                // Isolate SQLite failure
-                results = [];
             }
         }
 

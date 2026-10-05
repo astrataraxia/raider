@@ -3,6 +3,12 @@
 @{
     ViewData["Title"] = "채팅 리캡";
     var recap = Model.Recap;
+    var bars = recap.Months.TakeLast(6).ToArray();
+    var maxCount = bars.Length == 0 ? 1 : Math.Max(1, bars.Max(month => month.Count));
+    var latest = bars.Length == 0 ? null : bars[^1];
+    var previousMonth = latest?.Month.AddMonths(-1);
+    var previous = previousMonth is null ? null : recap.Months.FirstOrDefault(month => month.Month == previousMonth);
+    var header = new Raider.Web.Pages.SiteHeader("recap", null, false, false, false, null, null, Model.IsSignedIn, null, null, null, false, null);
 }
 <!doctype html>
 <html lang="ko">
@@ -15,26 +21,16 @@
 </head>
 <body>
     <div class="visually-hidden" data-antiforgery-token>@Html.AntiForgeryToken()</div>
-    <header class="site-header">
-        <div class="header-inner">
-            <div class="brand-block">
-                <a class="brand" asp-page="/Index" aria-label="Raider 홈">
-                    <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
-                </a>
-                <a class="recap-link is-current" asp-page="/Recap">리캡</a>
-                <a class="recap-link" asp-page="/Status">상태</a>
-            </div>
-            @if (Model.IsSignedIn)
-            {
-                <form method="post" action="/auth/logout">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="refresh-button">로그아웃</button>
-                </form>
-            }
-        </div>
-    </header>
+    <partial name="_SiteHeader" model="header" />
     <main class="recap-page">
-        <h1>@(string.IsNullOrWhiteSpace(Model.ViewerName) ? "채팅 리캡" : Model.ViewerName)</h1>
+        <header class="page-intro">
+            <p class="eyebrow">RECAP</p>
+            <h1>나의 채팅 리캡</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.ViewerName))
+            {
+                <p>@Model.ViewerName</p>
+            }
+        </header>
         @if (!Model.IsSignedIn)
         {
             @if (Model.LoginFailed)
@@ -55,62 +51,99 @@
 
         @if (recap.TotalChats > 0 && recap.HomeChannelId is not null)
         {
-            <section class="recap-card recap-home">
-                <p class="recap-label">본진</p>
-                <p class="recap-hero">@((recap.HomeShare * 100).ToString("0"))%</p>
-                <p>채팅 @recap.TotalChats.ToString("N0")건 중 @recap.Channels[0].Count.ToString("N0")건이 @recap.HomeChannelName</p>
+            <section class="recap-home-card">
+                <div>
+                    <p class="panel-kicker">본진</p>
+                    <h2>@recap.HomeChannelName</h2>
+                    <p>채팅 @recap.TotalChats.ToString("N0")건 중 @recap.Channels[0].Count.ToString("N0")건</p>
+                </div>
+                <div class="home-share">
+                    <strong>@((recap.HomeShare * 100).ToString("0"))<span>%</span></strong>
+                    <span>본진 비중</span>
+                </div>
             </section>
             <section class="recap-stats">
-                <div class="recap-card"><p class="recap-label">총 채팅</p><p class="recap-hero">@recap.TotalChats.ToString("N0")</p></div>
-                <div class="recap-card"><p class="recap-label">활동 채널</p><p class="recap-hero">@recap.ActiveChannels</p></div>
-                <div class="recap-card"><p class="recap-label">활동 일수</p><p class="recap-hero">@recap.ActiveDays</p></div>
+                <div class="recap-card"><span>총 채팅</span><strong>@recap.TotalChats.ToString("N0")</strong></div>
+                <div class="recap-card"><span>활동 채널</span><strong>@recap.ActiveChannels</strong></div>
+                <div class="recap-card"><span>활동 일수</span><strong>@recap.ActiveDays</strong></div>
             </section>
-            <section class="recap-badges" aria-label="뱃지">
-                @if (recap.HasAttendanceBadge)
-                {
-                    <span class="recap-badge">개근 @recap.HomeChannelName 출석률 @((recap.AttendanceRate * 100).ToString("0"))%</span>
-                }
-                @if (recap.HasVeteranBadge)
-                {
-                    <span class="recap-badge">고인물 @recap.HomeChannelName</span>
-                }
-                @if (recap.HasLoyaltyBadge)
-                {
-                    <span class="recap-badge">일편단심 본진 비중 @((recap.HomeShare * 100).ToString("0"))%</span>
-                }
-                @if (recap.HasHopperBadge)
-                {
-                    <span class="recap-badge">메뚜기 @(recap.ActiveChannels)개 채널</span>
-                }
-            </section>
-            <section class="recap-card">
-                <p class="recap-label">최장 연속 출석</p>
-                <p class="recap-hero">@(recap.LongestStreak)회</p>
-                <p>지금 @(recap.CurrentStreak)회 연속. 본진 방송이 있던 날 기준, 휴방은 건너뜁니다.</p>
-            </section>
-            <table class="recap-table">
-                <thead>
-                    <tr><th>채널</th><th>채팅</th></tr>
-                </thead>
-                <tbody>
-                @foreach (var channel in recap.Channels)
-                {
-                    <tr>
-                        <td>@channel.Name</td>
-                        <td>@channel.Count.ToString("N0")</td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-            <section class="recap-card">
-                <p class="recap-label">월별 채팅 수</p>
-                <ul class="recap-months">
-                    @foreach (var month in recap.Months)
+            <div class="recap-two-col">
+                <section class="recap-card streak-card">
+                    <h2>최장 연속 출석</h2>
+                    <p class="streak-number">@(recap.LongestStreak)<span>회</span></p>
+                    <p>지금 @(recap.CurrentStreak)회 연속. 본진 방송이 있던 날 기준, 휴방은 건너뜁니다.</p>
+                    @if (recap.RecentHomeDays.Length > 0)
                     {
-                        <li>@month.Month.ToString("yyyy-MM") @month.Count.ToString("N0")건</li>
+                        <div class="week-dots" aria-label="최근 본진 방송일 출석">
+                            @foreach (var attended in recap.RecentHomeDays)
+                            {
+                                <i class="@(attended ? "" : "off")"></i>
+                            }
+                        </div>
                     }
-                </ul>
-            </section>
+                </section>
+                <section class="recap-card" aria-label="뱃지">
+                    <h2>뱃지</h2>
+                    <div class="badge-list">
+                        @if (recap.HasAttendanceBadge)
+                        {
+                            <span>개근 @recap.HomeChannelName <b>출석률 @((recap.AttendanceRate * 100).ToString("0"))%</b></span>
+                        }
+                        @if (recap.HasVeteranBadge)
+                        {
+                            <span>고인물 @recap.HomeChannelName</span>
+                        }
+                        @if (recap.HasLoyaltyBadge)
+                        {
+                            <span>일편단심 <b>본진 비중 @((recap.HomeShare * 100).ToString("0"))%</b></span>
+                        }
+                        @if (recap.HasHopperBadge)
+                        {
+                            <span>메뚜기 <b>@(recap.ActiveChannels)개 채널</b></span>
+                        }
+                    </div>
+                </section>
+            </div>
+            <div class="recap-two-col">
+                <section class="recap-card">
+                    <h2>채널</h2>
+                    <table class="recap-table">
+                        <thead>
+                            <tr><th>채널</th><th>채팅</th><th>비중</th></tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var channel in recap.Channels)
+                        {
+                            var share = recap.TotalChats == 0 ? 0 : (double)channel.Count / recap.TotalChats;
+                            <tr>
+                                <td>@channel.Name</td>
+                                <td>@channel.Count.ToString("N0")</td>
+                                <td>@((share * 100).ToString("0"))%</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </section>
+                <section class="recap-card">
+                    <h2>월별 채팅 수</h2>
+                    @if (latest is not null && previous is not null)
+                    {
+                        var delta = latest.Count - previous.Count;
+                        <p class="month-delta">@(delta >= 0 ? $"지난달보다 {delta:N0}건 늘었습니다." : $"지난달보다 {Math.Abs(delta):N0}건 줄었습니다.")</p>
+                    }
+                    <div class="bar-chart" aria-label="최근 월별 채팅">
+                        @foreach (var month in bars)
+                        {
+                            var height = Math.Max(8, (int)Math.Round(month.Count * 100.0 / maxCount));
+                            <div class="bar-col">
+                                <span class="bar" style="height: @(height)%"></span>
+                                <span>@month.Month.ToString("yyyy-MM")</span>
+                                <span>@month.Count.ToString("N0")건</span>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
         }
     </main>
 </body>

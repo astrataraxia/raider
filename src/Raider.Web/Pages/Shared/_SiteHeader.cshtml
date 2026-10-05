@@ -1,0 +1,77 @@
+@* 홈, 리캡, 상태가 같이 쓰는 상단 바다. *@
+@model Raider.Web.Pages.SiteHeader
+<header class="site-header">
+    <div class="header-inner">
+        <div class="brand-block">
+            <a class="brand" asp-page="/Index" aria-label="Raider 홈">
+                <span class="brand-mark" aria-hidden="true"></span><span>Raider</span>
+            </a>
+            @if (Model.StreamCount is int count)
+            {
+                <span class="stream-count"><strong>@count.ToString("N0")</strong>개 방송 중</span>
+            }
+        </div>
+        <nav class="main-nav" aria-label="주요 페이지">
+            <a asp-page="/Index" aria-current="@(Model.CurrentPage == "live" ? "page" : null)">라이브</a>
+            <a asp-page="/Recap" aria-current="@(Model.CurrentPage == "recap" ? "page" : null)">리캡</a>
+            <a asp-page="/Status" aria-current="@(Model.CurrentPage == "status" ? "page" : null)">상태</a>
+        </nav>
+        <div class="header-tools">
+            @if (Model.ShowLogout)
+            {
+                <form method="post" action="/auth/logout">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="header-text-button">로그아웃</button>
+                </form>
+            }
+            @if (Model.ShowRefresh || Model.SyncTitle is not null)
+            {
+                <div class="sync-state">
+                    @if (Model.IsRefreshing)
+                    {
+                        <span class="refresh-spinner" title="수집 진행 중"></span>
+                        <span class="sync-copy"><strong>수집 진행 중</strong><span>새 방송을 확인하고 있습니다...</span></span>
+                    }
+                    else
+                    {
+                        @if (Model.ShowRefresh)
+                        {
+                            <form method="post" asp-page-handler="Refresh" data-refresh-form>
+                                @if (!string.IsNullOrWhiteSpace(Model.Platform))
+                                {
+                                    <input type="hidden" name="platform" value="@Model.Platform" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Tag))
+                                {
+                                    <input type="hidden" name="tag" value="@Model.Tag" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Query))
+                                {
+                                    <input type="hidden" name="q" value="@Model.Query" />
+                                }
+                                @if (Model.FavoritesOnly)
+                                {
+                                    <input type="hidden" name="fav" value="true" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.Category))
+                                {
+                                    <input type="hidden" name="cat" value="@Model.Category" />
+                                }
+                                <button type="submit" class="refresh-button" title="즉시 새로고침" aria-label="새로고침">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        }
+                        @if (Model.SyncTitle is not null)
+                        {
+                            <span class="status-dot @(Model.SyncWarning ? "is-warning" : "")" aria-hidden="true"></span>
+                            <span class="sync-copy"><strong>@Model.SyncTitle</strong><span>@Model.SyncDetail</span></span>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</header>

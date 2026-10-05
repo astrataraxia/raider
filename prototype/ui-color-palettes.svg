@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120">
+<defs><linearGradient id="canvas" x2="1" y2="1"><stop stop-color="#202124"/><stop offset="1" stop-color="#101113"/></linearGradient><style>text{font-family:Inter,"Noto Sans KR","Malgun Gothic",sans-serif}.title{fill:#f0eee8;font-size:27px;font-weight:700}.subtitle{fill:#aaa69d;font-size:14px}.name{fill:#efede7;font-size:18px;font-weight:650}.note{fill:#aaa69d;font-size:12px}.uiText{font-size:11px;font-weight:600}.uiSmall{font-size:9px}.role{fill:#aaa69d;font-size:9px}.hex{fill:#d2cfc6;font-size:9px}</style></defs>
+<rect width="1600" height="1120" rx="24" fill="url(#canvas)"/>
+<text x="42" y="54" class="title">Raider · 팔레트 적용 예시</text>
+<text x="42" y="82" class="subtitle">색상별로 상단 메뉴, 유리 패널, 선택 상태와 검색창에 적용했을 때의 느낌을 비교해보세요.</text>
+<g transform="translate(40 125)">
+<rect width="490" height="465" rx="18" fill="#1a1b1d" stroke="#ffffff" stroke-opacity=".08"/>
+<text x="20" y="31" class="name">차콜 · 웜 앰버</text><text x="20" y="51" class="note">따뜻하고 차분한 포인트</text>
+<rect x="17" y="67" width="456" height="263" rx="15" fill="#101113" stroke="#3A3833" stroke-opacity=".75"/>
+<rect x="25" y="75" width="440" height="38" rx="11" fill="#1A1B1D" stroke="#3A3833" stroke-opacity=".7"/>
+<rect x="36" y="85" width="18" height="18" rx="9" fill="#D7B36A"/><text x="41" y="98" font-size="10" font-weight="800" fill="#101113">R</text>
+<text x="60" y="99" class="uiText" fill="#EEEAE2">Raider</text>
+<rect x="155" y="81" width="205" height="26" rx="13" fill="#242427" stroke="#3A3833" stroke-opacity=".65"/>
+<rect x="159" y="84" width="68" height="20" rx="10" fill="#D7B36A"/><text x="171" y="98" class="uiSmall" fill="#101113" font-weight="700">라이브</text><text x="239" y="98" class="uiSmall" fill="#EEEAE2" opacity=".78">리캡</text><text x="302" y="98" class="uiSmall" fill="#EEEAE2" opacity=".78">상태</text>
+<text x="36" y="135" class="uiSmall" fill="#D7B36A" letter-spacing="1.3">TODAY’S PICK</text><text x="131" y="135" class="uiSmall" fill="#EEEAE2" opacity=".58">즐겨찾기 라이브</text>
+<rect x="31" y="146" width="428" height="103" rx="13" fill="#1A1B1D" stroke="#3A3833" stroke-opacity=".85"/>
+<rect x="39" y="154" width="143" height="87" rx="9" fill="#242427"/>
+<path d="M39 221l32-30 27 16 32-34 52 31v37H39z" fill="#101113" opacity=".72"/><circle cx="83" cy="180" r="16" fill="#D7B36A" opacity=".4"/>
+<rect x="46" y="160" width="39" height="15" rx="8" fill="#e55767"/><text x="52" y="171" font-size="7" font-weight="800" fill="#ffffff">LIVE</text>
+<text x="195" y="173" class="uiText" fill="#EEEAE2">이상혁 (Faker)</text><text x="195" y="190" class="uiSmall" fill="#EEEAE2" opacity=".66">CHZZK · 리그 오브 레전드</text>
+<text x="195" y="210" class="uiSmall" fill="#D7B36A">●</text><text x="207" y="210" class="uiSmall" fill="#EEEAE2" opacity=".74">시청자 12,504명</text>
+<rect x="195" y="220" width="75" height="19" rx="9" fill="#D7B36A"/><text x="211" y="233" class="uiSmall" fill="#101113" font-weight="700">방송 보기 ↗</text>
+<rect x="31" y="260" width="428" height="39" rx="11" fill="#242427" stroke="#3A3833" stroke-opacity=".8"/><circle cx="48" cy="279" r="6" fill="none" stroke="#EEEAE2" stroke-opacity=".65" stroke-width="1.5"/><path d="M52 283l5 5" stroke="#EEEAE2" stroke-opacity=".65" stroke-width="1.5"/><text x="66" y="283" class="uiSmall" fill="#EEEAE2" opacity=".63">방송인, 제목 또는 태그 검색</text><path d="M31 261h428" stroke="#EEEAE2" stroke-opacity=".09"/>
+<rect x="20" y="350" width="65" height="24" rx="6" fill="#101113" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="20" y="391" class="role">배경</text><text x="20" y="408" class="hex">#101113</text>
+<rect x="95" y="350" width="65" height="24" rx="6" fill="#1A1B1D" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="95" y="391" class="role">패널</text><text x="95" y="408" class="hex">#1A1B1D</text>
+<rect x="170" y="350" width="65" height="24" rx="6" fill="#242427" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="170" y="391" class="role">글래스</text><text x="170" y="408" class="hex">#242427</text>
+<rect x="245" y="350" width="65" height="24" rx="6" fill="#3A3833" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="245" y="391" class="role">테두리</text><text x="245" y="408" class="hex">#3A3833</text>
+<rect x="320" y="350" width="65" height="24" rx="6" fill="#EEEAE2" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="320" y="391" class="role">글자</text><text x="320" y="408" class="hex">#EEEAE2</text>
+<rect x="395" y="350" width="65" height="24" rx="6" fill="#D7B36A" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="395" y="391" class="role">포인트</text><text x="395" y="408" class="hex">#D7B36A</text>
+</g>
+<g transform="translate(555 125)">
+<rect width="490" height="465" rx="18" fill="#1a1b1d" stroke="#ffffff" stroke-opacity=".08"/>
+<text x="20" y="31" class="name">카본 · 스틸 블루</text><text x="20" y="51" class="note">차갑고 선명한 대비</text>
+<rect x="17" y="67" width="456" height="263" rx="15" fill="#0D1116" stroke="#394653" stroke-opacity=".75"/>
+<rect x="25" y="75" width="440" height="38" rx="11" fill="#171E26" stroke="#394653" stroke-opacity=".7"/>
+<rect x="36" y="85" width="18" height="18" rx="9" fill="#90AAC5"/><text x="41" y="98" font-size="10" font-weight="800" fill="#0D1116">R</text>
+<text x="60" y="99" class="uiText" fill="#EDF1F5">Raider</text>
+<rect x="155" y="81" width="205" height="26" rx="13" fill="#202B36" stroke="#394653" stroke-opacity=".65"/>
+<rect x="159" y="84" width="68" height="20" rx="10" fill="#90AAC5"/><text x="171" y="98" class="uiSmall" fill="#0D1116" font-weight="700">라이브</text><text x="239" y="98" class="uiSmall" fill="#EDF1F5" opacity=".78">리캡</text><text x="302" y="98" class="uiSmall" fill="#EDF1F5" opacity=".78">상태</text>
+<text x="36" y="135" class="uiSmall" fill="#90AAC5" letter-spacing="1.3">TODAY’S PICK</text><text x="131" y="135" class="uiSmall" fill="#EDF1F5" opacity=".58">즐겨찾기 라이브</text>
+<rect x="31" y="146" width="428" height="103" rx="13" fill="#171E26" stroke="#394653" stroke-opacity=".85"/>
+<rect x="39" y="154" width="143" height="87" rx="9" fill="#202B36"/>
+<path d="M39 221l32-30 27 16 32-34 52 31v37H39z" fill="#0D1116" opacity=".72"/><circle cx="83" cy="180" r="16" fill="#90AAC5" opacity=".4"/>
+<rect x="46" y="160" width="39" height="15" rx="8" fill="#e55767"/><text x="52" y="171" font-size="7" font-weight="800" fill="#ffffff">LIVE</text>
+<text x="195" y="173" class="uiText" fill="#EDF1F5">이상혁 (Faker)</text><text x="195" y="190" class="uiSmall" fill="#EDF1F5" opacity=".66">CHZZK · 리그 오브 레전드</text>
+<text x="195" y="210" class="uiSmall" fill="#90AAC5">●</text><text x="207" y="210" class="uiSmall" fill="#EDF1F5" opacity=".74">시청자 12,504명</text>
+<rect x="195" y="220" width="75" height="19" rx="9" fill="#90AAC5"/><text x="211" y="233" class="uiSmall" fill="#0D1116" font-weight="700">방송 보기 ↗</text>
+<rect x="31" y="260" width="428" height="39" rx="11" fill="#202B36" stroke="#394653" stroke-opacity=".8"/><circle cx="48" cy="279" r="6" fill="none" stroke="#EDF1F5" stroke-opacity=".65" stroke-width="1.5"/><path d="M52 283l5 5" stroke="#EDF1F5" stroke-opacity=".65" stroke-width="1.5"/><text x="66" y="283" class="uiSmall" fill="#EDF1F5" opacity=".63">방송인, 제목 또는 태그 검색</text><path d="M31 261h428" stroke="#EDF1F5" stroke-opacity=".09"/>
+<rect x="20" y="350" width="65" height="24" rx="6" fill="#0D1116" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="20" y="391" class="role">배경</text><text x="20" y="408" class="hex">#0D1116</text>
+<rect x="95" y="350" width="65" height="24" rx="6" fill="#171E26" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="95" y="391" class="role">패널</text><text x="95" y="408" class="hex">#171E26</text>
+<rect x="170" y="350" width="65" height="24" rx="6" fill="#202B36" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="170" y="391" class="role">글래스</text><text x="170" y="408" class="hex">#202B36</text>
+<rect x="245" y="350" width="65" height="24" rx="6" fill="#394653" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="245" y="391" class="role">테두리</text><text x="245" y="408" class="hex">#394653</text>
+<rect x="320" y="350" width="65" height="24" rx="6" fill="#EDF1F5" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="320" y="391" class="role">글자</text><text x="320" y="408" class="hex">#EDF1F5</text>
+<rect x="395" y="350" width="65" height="24" rx="6" fill="#90AAC5" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="395" y="391" class="role">포인트</text><text x="395" y="408" class="hex">#90AAC5</text>
+</g>
+<g transform="translate(1070 125)">
+<rect width="490" height="465" rx="18" fill="#1a1b1d" stroke="#ffffff" stroke-opacity=".08"/>
+<text x="20" y="31" class="name">모노크롬 · 펄</text><text x="20" y="51" class="note">색을 줄이고 명암에 집중</text>
+<rect x="17" y="67" width="456" height="263" rx="15" fill="#101010" stroke="#393939" stroke-opacity=".75"/>
+<rect x="25" y="75" width="440" height="38" rx="11" fill="#1B1B1B" stroke="#393939" stroke-opacity=".7"/>
+<rect x="36" y="85" width="18" height="18" rx="9" fill="#C7CBD0"/><text x="41" y="98" font-size="10" font-weight="800" fill="#101010">R</text>
+<text x="60" y="99" class="uiText" fill="#F1F1F1">Raider</text>
+<rect x="155" y="81" width="205" height="26" rx="13" fill="#242424" stroke="#393939" stroke-opacity=".65"/>
+<rect x="159" y="84" width="68" height="20" rx="10" fill="#C7CBD0"/><text x="171" y="98" class="uiSmall" fill="#101010" font-weight="700">라이브</text><text x="239" y="98" class="uiSmall" fill="#F1F1F1" opacity=".78">리캡</text><text x="302" y="98" class="uiSmall" fill="#F1F1F1" opacity=".78">상태</text>
+<text x="36" y="135" class="uiSmall" fill="#C7CBD0" letter-spacing="1.3">TODAY’S PICK</text><text x="131" y="135" class="uiSmall" fill="#F1F1F1" opacity=".58">즐겨찾기 라이브</text>
+<rect x="31" y="146" width="428" height="103" rx="13" fill="#1B1B1B" stroke="#393939" stroke-opacity=".85"/>
+<rect x="39" y="154" width="143" height="87" rx="9" fill="#242424"/>
+<path d="M39 221l32-30 27 16 32-34 52 31v37H39z" fill="#101010" opacity=".72"/><circle cx="83" cy="180" r="16" fill="#C7CBD0" opacity=".4"/>
+<rect x="46" y="160" width="39" height="15" rx="8" fill="#e55767"/><text x="52" y="171" font-size="7" font-weight="800" fill="#ffffff">LIVE</text>
+<text x="195" y="173" class="uiText" fill="#F1F1F1">이상혁 (Faker)</text><text x="195" y="190" class="uiSmall" fill="#F1F1F1" opacity=".66">CHZZK · 리그 오브 레전드</text>
+<text x="195" y="210" class="uiSmall" fill="#C7CBD0">●</text><text x="207" y="210" class="uiSmall" fill="#F1F1F1" opacity=".74">시청자 12,504명</text>
+<rect x="195" y="220" width="75" height="19" rx="9" fill="#C7CBD0"/><text x="211" y="233" class="uiSmall" fill="#101010" font-weight="700">방송 보기 ↗</text>
+<rect x="31" y="260" width="428" height="39" rx="11" fill="#242424" stroke="#393939" stroke-opacity=".8"/><circle cx="48" cy="279" r="6" fill="none" stroke="#F1F1F1" stroke-opacity=".65" stroke-width="1.5"/><path d="M52 283l5 5" stroke="#F1F1F1" stroke-opacity=".65" stroke-width="1.5"/><text x="66" y="283" class="uiSmall" fill="#F1F1F1" opacity=".63">방송인, 제목 또는 태그 검색</text><path d="M31 261h428" stroke="#F1F1F1" stroke-opacity=".09"/>
+<rect x="20" y="350" width="65" height="24" rx="6" fill="#101010" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="20" y="391" class="role">배경</text><text x="20" y="408" class="hex">#101010</text>
+<rect x="95" y="350" width="65" height="24" rx="6" fill="#1B1B1B" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="95" y="391" class="role">패널</text><text x="95" y="408" class="hex">#1B1B1B</text>
+<rect x="170" y="350" width="65" height="24" rx="6" fill="#242424" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="170" y="391" class="role">글래스</text><text x="170" y="408" class="hex">#242424</text>
+<rect x="245" y="350" width="65" height="24" rx="6" fill="#393939" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="245" y="391" class="role">테두리</text><text x="245" y="408" class="hex">#393939</text>
+<rect x="320" y="350" width="65" height="24" rx="6" fill="#F1F1F1" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="320" y="391" class="role">글자</text><text x="320" y="408" class="hex">#F1F1F1</text>
+<rect x="395" y="350" width="65" height="24" rx="6" fill="#C7CBD0" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="395" y="391" class="role">포인트</text><text x="395" y="408" class="hex">#C7CBD0</text>
+</g>
+<g transform="translate(40 625)">
+<rect width="490" height="465" rx="18" fill="#1a1b1d" stroke="#ffffff" stroke-opacity=".08"/>
+<text x="20" y="31" class="name">스모키 스톤 · 세이지</text><text x="20" y="51" class="note">낮은 채도의 자연스러운 톤</text>
+<rect x="17" y="67" width="456" height="263" rx="15" fill="#11120F" stroke="#404036" stroke-opacity=".75"/>
+<rect x="25" y="75" width="440" height="38" rx="11" fill="#1D1E19" stroke="#404036" stroke-opacity=".7"/>
+<rect x="36" y="85" width="18" height="18" rx="9" fill="#B9B28C"/><text x="41" y="98" font-size="10" font-weight="800" fill="#11120F">R</text>
+<text x="60" y="99" class="uiText" fill="#EEEDE3">Raider</text>
+<rect x="155" y="81" width="205" height="26" rx="13" fill="#292A23" stroke="#404036" stroke-opacity=".65"/>
+<rect x="159" y="84" width="68" height="20" rx="10" fill="#B9B28C"/><text x="171" y="98" class="uiSmall" fill="#11120F" font-weight="700">라이브</text><text x="239" y="98" class="uiSmall" fill="#EEEDE3" opacity=".78">리캡</text><text x="302" y="98" class="uiSmall" fill="#EEEDE3" opacity=".78">상태</text>
+<text x="36" y="135" class="uiSmall" fill="#B9B28C" letter-spacing="1.3">TODAY’S PICK</text><text x="131" y="135" class="uiSmall" fill="#EEEDE3" opacity=".58">즐겨찾기 라이브</text>
+<rect x="31" y="146" width="428" height="103" rx="13" fill="#1D1E19" stroke="#404036" stroke-opacity=".85"/>
+<rect x="39" y="154" width="143" height="87" rx="9" fill="#292A23"/>
+<path d="M39 221l32-30 27 16 32-34 52 31v37H39z" fill="#11120F" opacity=".72"/><circle cx="83" cy="180" r="16" fill="#B9B28C" opacity=".4"/>
+<rect x="46" y="160" width="39" height="15" rx="8" fill="#e55767"/><text x="52" y="171" font-size="7" font-weight="800" fill="#ffffff">LIVE</text>
+<text x="195" y="173" class="uiText" fill="#EEEDE3">이상혁 (Faker)</text><text x="195" y="190" class="uiSmall" fill="#EEEDE3" opacity=".66">CHZZK · 리그 오브 레전드</text>
+<text x="195" y="210" class="uiSmall" fill="#B9B28C">●</text><text x="207" y="210" class="uiSmall" fill="#EEEDE3" opacity=".74">시청자 12,504명</text>
+<rect x="195" y="220" width="75" height="19" rx="9" fill="#B9B28C"/><text x="211" y="233" class="uiSmall" fill="#11120F" font-weight="700">방송 보기 ↗</text>
+<rect x="31" y="260" width="428" height="39" rx="11" fill="#292A23" stroke="#404036" stroke-opacity=".8"/><circle cx="48" cy="279" r="6" fill="none" stroke="#EEEDE3" stroke-opacity=".65" stroke-width="1.5"/><path d="M52 283l5 5" stroke="#EEEDE3" stroke-opacity=".65" stroke-width="1.5"/><text x="66" y="283" class="uiSmall" fill="#EEEDE3" opacity=".63">방송인, 제목 또는 태그 검색</text><path d="M31 261h428" stroke="#EEEDE3" stroke-opacity=".09"/>
+<rect x="20" y="350" width="65" height="24" rx="6" fill="#11120F" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="20" y="391" class="role">배경</text><text x="20" y="408" class="hex">#11120F</text>
+<rect x="95" y="350" width="65" height="24" rx="6" fill="#1D1E19" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="95" y="391" class="role">패널</text><text x="95" y="408" class="hex">#1D1E19</text>
+<rect x="170" y="350" width="65" height="24" rx="6" fill="#292A23" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="170" y="391" class="role">글래스</text><text x="170" y="408" class="hex">#292A23</text>
+<rect x="245" y="350" width="65" height="24" rx="6" fill="#404036" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="245" y="391" class="role">테두리</text><text x="245" y="408" class="hex">#404036</text>
+<rect x="320" y="350" width="65" height="24" rx="6" fill="#EEEDE3" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="320" y="391" class="role">글자</text><text x="320" y="408" class="hex">#EEEDE3</text>
+<rect x="395" y="350" width="65" height="24" rx="6" fill="#B9B28C" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="395" y="391" class="role">포인트</text><text x="395" y="408" class="hex">#B9B28C</text>
+</g>
+<g transform="translate(555 625)">
+<rect width="490" height="465" rx="18" fill="#1a1b1d" stroke="#ffffff" stroke-opacity=".08"/>
+<text x="20" y="31" class="name">다크 코코아 · 코퍼</text><text x="20" y="51" class="note">부드럽고 조금 더 따뜻한 톤</text>
+<rect x="17" y="67" width="456" height="263" rx="15" fill="#15110E" stroke="#49372A" stroke-opacity=".75"/>
+<rect x="25" y="75" width="440" height="38" rx="11" fill="#211A15" stroke="#49372A" stroke-opacity=".7"/>
+<rect x="36" y="85" width="18" height="18" rx="9" fill="#CF9360"/><text x="41" y="98" font-size="10" font-weight="800" fill="#15110E">R</text>
+<text x="60" y="99" class="uiText" fill="#F0E6D9">Raider</text>
+<rect x="155" y="81" width="205" height="26" rx="13" fill="#30231A" stroke="#49372A" stroke-opacity=".65"/>
+<rect x="159" y="84" width="68" height="20" rx="10" fill="#CF9360"/><text x="171" y="98" class="uiSmall" fill="#15110E" font-weight="700">라이브</text><text x="239" y="98" class="uiSmall" fill="#F0E6D9" opacity=".78">리캡</text><text x="302" y="98" class="uiSmall" fill="#F0E6D9" opacity=".78">상태</text>
+<text x="36" y="135" class="uiSmall" fill="#CF9360" letter-spacing="1.3">TODAY’S PICK</text><text x="131" y="135" class="uiSmall" fill="#F0E6D9" opacity=".58">즐겨찾기 라이브</text>
+<rect x="31" y="146" width="428" height="103" rx="13" fill="#211A15" stroke="#49372A" stroke-opacity=".85"/>
+<rect x="39" y="154" width="143" height="87" rx="9" fill="#30231A"/>
+<path d="M39 221l32-30 27 16 32-34 52 31v37H39z" fill="#15110E" opacity=".72"/><circle cx="83" cy="180" r="16" fill="#CF9360" opacity=".4"/>
+<rect x="46" y="160" width="39" height="15" rx="8" fill="#e55767"/><text x="52" y="171" font-size="7" font-weight="800" fill="#ffffff">LIVE</text>
+<text x="195" y="173" class="uiText" fill="#F0E6D9">이상혁 (Faker)</text><text x="195" y="190" class="uiSmall" fill="#F0E6D9" opacity=".66">CHZZK · 리그 오브 레전드</text>
+<text x="195" y="210" class="uiSmall" fill="#CF9360">●</text><text x="207" y="210" class="uiSmall" fill="#F0E6D9" opacity=".74">시청자 12,504명</text>
+<rect x="195" y="220" width="75" height="19" rx="9" fill="#CF9360"/><text x="211" y="233" class="uiSmall" fill="#15110E" font-weight="700">방송 보기 ↗</text>
+<rect x="31" y="260" width="428" height="39" rx="11" fill="#30231A" stroke="#49372A" stroke-opacity=".8"/><circle cx="48" cy="279" r="6" fill="none" stroke="#F0E6D9" stroke-opacity=".65" stroke-width="1.5"/><path d="M52 283l5 5" stroke="#F0E6D9" stroke-opacity=".65" stroke-width="1.5"/><text x="66" y="283" class="uiSmall" fill="#F0E6D9" opacity=".63">방송인, 제목 또는 태그 검색</text><path d="M31 261h428" stroke="#F0E6D9" stroke-opacity=".09"/>
+<rect x="20" y="350" width="65" height="24" rx="6" fill="#15110E" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="20" y="391" class="role">배경</text><text x="20" y="408" class="hex">#15110E</text>
+<rect x="95" y="350" width="65" height="24" rx="6" fill="#211A15" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="95" y="391" class="role">패널</text><text x="95" y="408" class="hex">#211A15</text>
+<rect x="170" y="350" width="65" height="24" rx="6" fill="#30231A" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="170" y="391" class="role">글래스</text><text x="170" y="408" class="hex">#30231A</text>
+<rect x="245" y="350" width="65" height="24" rx="6" fill="#49372A" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="245" y="391" class="role">테두리</text><text x="245" y="408" class="hex">#49372A</text>
+<rect x="320" y="350" width="65" height="24" rx="6" fill="#F0E6D9" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="320" y="391" class="role">글자</text><text x="320" y="408" class="hex">#F0E6D9</text>
+<rect x="395" y="350" width="65" height="24" rx="6" fill="#CF9360" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="395" y="391" class="role">포인트</text><text x="395" y="408" class="hex">#CF9360</text>
+</g>
+<g transform="translate(1070 625)">
+<rect width="490" height="465" rx="18" fill="#1a1b1d" stroke="#ffffff" stroke-opacity=".08"/>
+<text x="20" y="31" class="name">옵시디언 · 소프트 코랄</text><text x="20" y="51" class="note">중성 바탕에 작은 붉은 포인트</text>
+<rect x="17" y="67" width="456" height="263" rx="15" fill="#101114" stroke="#3E414A" stroke-opacity=".75"/>
+<rect x="25" y="75" width="440" height="38" rx="11" fill="#191A20" stroke="#3E414A" stroke-opacity=".7"/>
+<rect x="36" y="85" width="18" height="18" rx="9" fill="#DC887E"/><text x="41" y="98" font-size="10" font-weight="800" fill="#101114">R</text>
+<text x="60" y="99" class="uiText" fill="#EFF0F3">Raider</text>
+<rect x="155" y="81" width="205" height="26" rx="13" fill="#2A2C33" stroke="#3E414A" stroke-opacity=".65"/>
+<rect x="159" y="84" width="68" height="20" rx="10" fill="#DC887E"/><text x="171" y="98" class="uiSmall" fill="#101114" font-weight="700">라이브</text><text x="239" y="98" class="uiSmall" fill="#EFF0F3" opacity=".78">리캡</text><text x="302" y="98" class="uiSmall" fill="#EFF0F3" opacity=".78">상태</text>
+<text x="36" y="135" class="uiSmall" fill="#DC887E" letter-spacing="1.3">TODAY’S PICK</text><text x="131" y="135" class="uiSmall" fill="#EFF0F3" opacity=".58">즐겨찾기 라이브</text>
+<rect x="31" y="146" width="428" height="103" rx="13" fill="#191A20" stroke="#3E414A" stroke-opacity=".85"/>
+<rect x="39" y="154" width="143" height="87" rx="9" fill="#2A2C33"/>
+<path d="M39 221l32-30 27 16 32-34 52 31v37H39z" fill="#101114" opacity=".72"/><circle cx="83" cy="180" r="16" fill="#DC887E" opacity=".4"/>
+<rect x="46" y="160" width="39" height="15" rx="8" fill="#e55767"/><text x="52" y="171" font-size="7" font-weight="800" fill="#ffffff">LIVE</text>
+<text x="195" y="173" class="uiText" fill="#EFF0F3">이상혁 (Faker)</text><text x="195" y="190" class="uiSmall" fill="#EFF0F3" opacity=".66">CHZZK · 리그 오브 레전드</text>
+<text x="195" y="210" class="uiSmall" fill="#DC887E">●</text><text x="207" y="210" class="uiSmall" fill="#EFF0F3" opacity=".74">시청자 12,504명</text>
+<rect x="195" y="220" width="75" height="19" rx="9" fill="#DC887E"/><text x="211" y="233" class="uiSmall" fill="#101114" font-weight="700">방송 보기 ↗</text>
+<rect x="31" y="260" width="428" height="39" rx="11" fill="#2A2C33" stroke="#3E414A" stroke-opacity=".8"/><circle cx="48" cy="279" r="6" fill="none" stroke="#EFF0F3" stroke-opacity=".65" stroke-width="1.5"/><path d="M52 283l5 5" stroke="#EFF0F3" stroke-opacity=".65" stroke-width="1.5"/><text x="66" y="283" class="uiSmall" fill="#EFF0F3" opacity=".63">방송인, 제목 또는 태그 검색</text><path d="M31 261h428" stroke="#EFF0F3" stroke-opacity=".09"/>
+<rect x="20" y="350" width="65" height="24" rx="6" fill="#101114" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="20" y="391" class="role">배경</text><text x="20" y="408" class="hex">#101114</text>
+<rect x="95" y="350" width="65" height="24" rx="6" fill="#191A20" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="95" y="391" class="role">패널</text><text x="95" y="408" class="hex">#191A20</text>
+<rect x="170" y="350" width="65" height="24" rx="6" fill="#2A2C33" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="170" y="391" class="role">글래스</text><text x="170" y="408" class="hex">#2A2C33</text>
+<rect x="245" y="350" width="65" height="24" rx="6" fill="#3E414A" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="245" y="391" class="role">테두리</text><text x="245" y="408" class="hex">#3E414A</text>
+<rect x="320" y="350" width="65" height="24" rx="6" fill="#EFF0F3" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="320" y="391" class="role">글자</text><text x="320" y="408" class="hex">#EFF0F3</text>
+<rect x="395" y="350" width="65" height="24" rx="6" fill="#DC887E" stroke="#ffffff" stroke-opacity=".12"/>
+<text x="395" y="391" class="role">포인트</text><text x="395" y="408" class="hex">#DC887E</text>
+</g>
+<text x="43" y="1084" fill="#858178" font-size="11" letter-spacing="1">대시보드 전체를 그린 목업이 아니라, 같은 UI 요소에 다른 팔레트를 입힌 비교입니다.</text></svg>

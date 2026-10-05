@@ -161,6 +161,26 @@ public sealed class RecapTests
         Assert.False(recap.HasVeteranBadge);
         Assert.Empty(recap.Channels);
         Assert.Empty(recap.Months);
+        Assert.Empty(recap.RecentHomeDays);
+    }
+
+    [Fact]
+    public void RecentHomeDaysUseTheLastSevenBroadcastDays()
+    {
+        var broadcasts = Enumerable.Range(1, 9)
+            .Select(day => new DateOnly(2026, 9, day))
+            .ToImmutableArray();
+        var recap = ViewerRecap.ForViewer(
+            "me",
+            [
+                Day("home", "me", 2026, 9, 3, 1),
+                Day("home", "me", 2026, 9, 8, 1),
+            ],
+            broadcasts,
+            [],
+            Names());
+
+        Assert.Equal("TFFFFTF", string.Concat(recap.RecentHomeDays.Select(day => day ? "T" : "F")));
     }
 
     [Fact]
