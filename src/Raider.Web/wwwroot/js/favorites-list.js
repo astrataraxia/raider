@@ -189,13 +189,13 @@ export function startFavorites() {
           return a.streamerName.localeCompare(b.streamerName);
         });
         items.forEach((fav) => {
-          const item = document.createElement(fav.status === "live" ? "button" : "div");
+          const item = document.createElement("button");
           item.className = `favorite-item is-${fav.status}`;
           item.draggable = true;
           item.dataset.platform = fav.platform;
           item.dataset.channelId = fav.channelId;
+          item.type = "button";
           if (fav.status === "live") {
-            item.type = "button";
             item.addEventListener("click", () => {
               item.dispatchEvent(new CustomEvent("raider:feature", {
                 bubbles: true,
