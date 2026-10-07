@@ -1,74 +1,72 @@
 // 즐겨찾기 CHZZK 채팅의 날짜 건수와 방송일을 SQLite에 저장한다.
 using System.Collections.Immutable;
-using System.Globalization;
-using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 namespace Raider.Web.Recap;
 
 public sealed class ChatCountStore
 {
     private const int MaximumAttempts = 3;
-    private readonly string databasePath;
-    private readonly string connectionString;
+    private readonly ChatCountDbContext dbContext;
 
     public ChatCountStore(string databasePath)
     {
-        if (string.IsNullOrWhiteSpace(databasePath))
-        {
-            throw new ArgumentException("A database path is required.", nameof(databasePath));
-        }
-
-        this.databasePath = databasePath;
-        connectionString = new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            DefaultTimeout = 2,
-        }.ToString();
+        dbContext = new ChatCountDbContext(databasePath);
     }
 
-    public Task InitializeAsync(CancellationToken cancellationToken)
+    public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        var directory = Path.GetDirectoryName(Path.GetFullPath(databasePath));
-        if (directory is not null)
+        for (var attempt = 1; ; attempt++)
         {
-            Directory.CreateDirectory(directory);
-        }
-
-        return ExecuteAsync(
-            async connection =>
+            try
             {
-                await using var command = connection.CreateCommand();
-                command.CommandText =
-                    """
-                    CREATE TABLE IF NOT EXISTS chat_day_counts (
-                        channel_id TEXT NOT NULL,
-                        sender_channel_id TEXT NOT NULL,
-                        date_kst TEXT NOT NULL,
-                        count INTEGER NOT NULL,
-                        PRIMARY KEY (channel_id, sender_channel_id, date_kst)
-                    );
-                    CREATE TABLE IF NOT EXISTS broadcast_days (
-                        channel_id TEXT NOT NULL,
-                        date_kst TEXT NOT NULL,
-                        PRIMARY KEY (channel_id, date_kst)
-                    );
-                    """;
-                await command.ExecuteNonQueryAsync(cancellationToken);
-                return true;
-            },
-            cancellationToken);
+                await dbContext.Database.EnsureCreatedAsync(cancellationToken);
+
+                // Migration: add tables if they don't exist (for existing databases with favorites table)
+                try
+                {
+                    var connection = dbContext.Database.GetDbConnection();
+                    await connection.OpenAsync(cancellationToken);
+                    await using var command = connection.CreateCommand();
+                    command.CommandText =
+                        """
+                        CREATE TABLE IF NOT EXISTS chat_day_counts (
+                            channel_id TEXT NOT NULL,
+                            sender_channel_id TEXT NOT NULL,
+                            date_kst TEXT NOT NULL,
+                            count INTEGER NOT NULL,
+                            PRIMARY KEY (channel_id, sender_channel_id, date_kst)
+                        );
+                        CREATE TABLE IF NOT EXISTS broadcast_days (
+                            channel_id TEXT NOT NULL,
+                            date_kst TEXT NOT NULL,
+                            PRIMARY KEY (channel_id, date_kst)
+                        );
+                        """;
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+                }
+                catch (Microsoft.Data.Sqlite.SqliteException)
+                {
+                    // Tables already exist, ignore
+                }
+
+                return;
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException exception) when (exception.SqliteErrorCode is 5 or 6 && attempt < MaximumAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(25 * attempt), cancellationToken);
+            }
+        }
     }
 
     public Task AddChatAsync(string channelId, string senderChannelId, DateOnly date, CancellationToken cancellationToken)
         => AddChatCountsAsync([new ChatCountDelta(channelId, senderChannelId, date, 1)], cancellationToken);
 
-    public Task AddChatCountsAsync(IReadOnlyList<ChatCountDelta> counts, CancellationToken cancellationToken)
+    public async Task AddChatCountsAsync(IReadOnlyList<ChatCountDelta> counts, CancellationToken cancellationToken)
     {
         if (counts.Count == 0)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         foreach (var count in counts)
@@ -81,152 +79,142 @@ public sealed class ChatCountStore
             }
         }
 
-        return ExecuteAsync(
-            async connection =>
-            {
-                await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
-                foreach (var count in counts)
-                {
-                    await using var command = connection.CreateCommand();
-                    command.Transaction = transaction;
-                    command.CommandText =
-                        """
-                        INSERT INTO chat_day_counts (channel_id, sender_channel_id, date_kst, count)
-                        VALUES ($channelId, $senderChannelId, $date, $count)
-                        ON CONFLICT(channel_id, sender_channel_id, date_kst) DO UPDATE SET
-                            count = count + $count;
-                        """;
-                    command.Parameters.AddWithValue("$channelId", count.ChannelId);
-                    command.Parameters.AddWithValue("$senderChannelId", count.SenderChannelId);
-                    command.Parameters.AddWithValue("$date", FormatDate(count.Date));
-                    command.Parameters.AddWithValue("$count", count.Count);
-                    await command.ExecuteNonQueryAsync(cancellationToken);
-                }
-
-                await transaction.CommitAsync(cancellationToken);
-                return true;
-            },
-            cancellationToken);
-    }
-
-    public Task RecordBroadcastDayAsync(string channelId, DateOnly date, CancellationToken cancellationToken)
-    {
-        RequireId(channelId, nameof(channelId));
-        return ExecuteAsync(
-            async connection =>
-            {
-                await using var command = connection.CreateCommand();
-                command.CommandText =
-                    """
-                    INSERT INTO broadcast_days (channel_id, date_kst)
-                    VALUES ($channelId, $date)
-                    ON CONFLICT(channel_id, date_kst) DO NOTHING;
-                    """;
-                command.Parameters.AddWithValue("$channelId", channelId);
-                command.Parameters.AddWithValue("$date", FormatDate(date));
-                await command.ExecuteNonQueryAsync(cancellationToken);
-                return true;
-            },
-            cancellationToken);
-    }
-
-    public Task<ImmutableArray<ChatDayCount>> ListViewerDaysAsync(string senderChannelId, CancellationToken cancellationToken)
-    {
-        RequireId(senderChannelId, nameof(senderChannelId));
-        return ExecuteAsync(
-            async connection =>
-            {
-                await using var command = connection.CreateCommand();
-                command.CommandText =
-                    """
-                    SELECT channel_id, sender_channel_id, date_kst, count
-                    FROM chat_day_counts
-                    WHERE sender_channel_id = $senderChannelId
-                    ORDER BY date_kst, channel_id;
-                    """;
-                command.Parameters.AddWithValue("$senderChannelId", senderChannelId);
-                await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-                var rows = ImmutableArray.CreateBuilder<ChatDayCount>();
-                while (await reader.ReadAsync(cancellationToken))
-                {
-                    rows.Add(new ChatDayCount(
-                        reader.GetString(0),
-                        reader.GetString(1),
-                        ParseDate(reader.GetString(2)),
-                        reader.GetInt32(3)));
-                }
-
-                return rows.ToImmutable();
-            },
-            cancellationToken);
-    }
-
-    public Task<ImmutableArray<DateOnly>> ListBroadcastDaysAsync(string channelId, CancellationToken cancellationToken)
-    {
-        RequireId(channelId, nameof(channelId));
-        return ExecuteAsync(
-            async connection =>
-            {
-                await using var command = connection.CreateCommand();
-                command.CommandText =
-                    """
-                    SELECT date_kst
-                    FROM broadcast_days
-                    WHERE channel_id = $channelId
-                    ORDER BY date_kst;
-                    """;
-                command.Parameters.AddWithValue("$channelId", channelId);
-                await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-                var rows = ImmutableArray.CreateBuilder<DateOnly>();
-                while (await reader.ReadAsync(cancellationToken))
-                {
-                    rows.Add(ParseDate(reader.GetString(0)));
-                }
-
-                return rows.ToImmutable();
-            },
-            cancellationToken);
-    }
-
-    public Task<ImmutableArray<ChannelFirstSeen>> ListFirstSeenAsync(string channelId, CancellationToken cancellationToken)
-    {
-        RequireId(channelId, nameof(channelId));
-        return ExecuteAsync(
-            async connection =>
-            {
-                await using var command = connection.CreateCommand();
-                command.CommandText =
-                    """
-                    SELECT sender_channel_id, MIN(date_kst)
-                    FROM chat_day_counts
-                    WHERE channel_id = $channelId
-                    GROUP BY sender_channel_id
-                    ORDER BY MIN(date_kst), sender_channel_id;
-                    """;
-                command.Parameters.AddWithValue("$channelId", channelId);
-                await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-                var rows = ImmutableArray.CreateBuilder<ChannelFirstSeen>();
-                while (await reader.ReadAsync(cancellationToken))
-                {
-                    rows.Add(new ChannelFirstSeen(reader.GetString(0), ParseDate(reader.GetString(1))));
-                }
-
-                return rows.ToImmutable();
-            },
-            cancellationToken);
-    }
-
-    private async Task<T> ExecuteAsync<T>(Func<SqliteConnection, Task<T>> action, CancellationToken cancellationToken)
-    {
         for (var attempt = 1; ; attempt++)
         {
             try
             {
-                await using var connection = new SqliteConnection(connectionString);
-                await connection.OpenAsync(cancellationToken);
-                return await action(connection);
+                await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+                foreach (var count in counts)
+                {
+                    var existing = await dbContext.ChatDayCounts.FindAsync(
+                        new object[] { count.ChannelId, count.SenderChannelId, count.Date },
+                        cancellationToken);
+
+                    if (existing is not null)
+                    {
+                        existing.Count += count.Count;
+                    }
+                    else
+                    {
+                        dbContext.ChatDayCounts.Add(new ChatDayCount(
+                            count.ChannelId,
+                            count.SenderChannelId,
+                            count.Date,
+                            count.Count));
+                    }
+                }
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return;
             }
-            catch (SqliteException exception) when (exception.SqliteErrorCode is 5 or 6 && attempt < MaximumAttempts)
+            catch (Microsoft.Data.Sqlite.SqliteException exception) when (exception.SqliteErrorCode is 5 or 6 && attempt < MaximumAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(25 * attempt), cancellationToken);
+            }
+        }
+    }
+
+    public async Task RecordBroadcastDayAsync(string channelId, DateOnly date, CancellationToken cancellationToken)
+    {
+        RequireId(channelId, nameof(channelId));
+
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                var existing = await dbContext.BroadcastDays.FindAsync(
+                    new object[] { channelId, date },
+                    cancellationToken);
+
+                if (existing is null)
+                {
+                    dbContext.BroadcastDays.Add(new BroadcastDay(channelId, date));
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+
+                return;
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException exception) when (exception.SqliteErrorCode is 5 or 6 && attempt < MaximumAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(25 * attempt), cancellationToken);
+            }
+        }
+    }
+
+    public async Task<ImmutableArray<ChatDayCount>> ListViewerDaysAsync(string senderChannelId, CancellationToken cancellationToken)
+    {
+        RequireId(senderChannelId, nameof(senderChannelId));
+
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                var results = await dbContext.ChatDayCounts
+                    .Where(c => c.SenderChannelId == senderChannelId)
+                    .OrderBy(c => c.Date)
+                    .ThenBy(c => c.ChannelId)
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+
+                return results.ToImmutableArray();
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException exception) when (exception.SqliteErrorCode is 5 or 6 && attempt < MaximumAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(25 * attempt), cancellationToken);
+            }
+        }
+    }
+
+    public async Task<ImmutableArray<DateOnly>> ListBroadcastDaysAsync(string channelId, CancellationToken cancellationToken)
+    {
+        RequireId(channelId, nameof(channelId));
+
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                var results = await dbContext.BroadcastDays
+                    .Where(b => b.ChannelId == channelId)
+                    .OrderBy(b => b.Date)
+                    .AsNoTracking()
+                    .Select(b => b.Date)
+                    .ToListAsync(cancellationToken);
+
+                return results.ToImmutableArray();
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException exception) when (exception.SqliteErrorCode is 5 or 6 && attempt < MaximumAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(25 * attempt), cancellationToken);
+            }
+        }
+    }
+
+    public async Task<ImmutableArray<ChannelFirstSeen>> ListFirstSeenAsync(string channelId, CancellationToken cancellationToken)
+    {
+        RequireId(channelId, nameof(channelId));
+
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                var results = await dbContext.ChatDayCounts
+                    .Where(c => c.ChannelId == channelId)
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+
+                var grouped = results
+                    .GroupBy(c => c.SenderChannelId)
+                    .Select(g => new ChannelFirstSeen(
+                        g.Key,
+                        g.Min(c => c.Date)))
+                    .OrderBy(c => c.FirstSeen)
+                    .ThenBy(c => c.SenderChannelId)
+                    .ToImmutableArray();
+
+                return grouped;
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException exception) when (exception.SqliteErrorCode is 5 or 6 && attempt < MaximumAttempts)
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(25 * attempt), cancellationToken);
             }
@@ -240,10 +228,4 @@ public sealed class ChatCountStore
             throw new ArgumentException("A non-empty id is required.", name);
         }
     }
-
-    private static string FormatDate(DateOnly date)
-        => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-    private static DateOnly ParseDate(string value)
-        => DateOnly.ParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 }
