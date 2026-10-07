@@ -5,37 +5,12 @@ namespace Raider.Web.Favorites;
 
 public class FavoriteDbContext : DbContext
 {
-    private readonly string databasePath;
-
-    public FavoriteDbContext(string databasePath)
+    public FavoriteDbContext(DbContextOptions<FavoriteDbContext> options)
+        : base(options)
     {
-        if (string.IsNullOrWhiteSpace(databasePath))
-        {
-            throw new ArgumentException("A database path is required.", nameof(databasePath));
-        }
-
-        this.databasePath = databasePath;
     }
 
     public DbSet<Favorite> Favorites => Set<Favorite>();
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        var directory = Path.GetDirectoryName(Path.GetFullPath(databasePath));
-        if (directory is not null)
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        optionsBuilder.UseSqlite(
-            new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
-            {
-                DataSource = databasePath,
-                Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadWriteCreate,
-                Pooling = false,
-                DefaultTimeout = 2,
-            }.ToString());
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

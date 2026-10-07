@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
+using Raider.Web;
 using Raider.Web.Chzzk;
 using Raider.Web.Collection;
 using Raider.Web.Configuration;
@@ -58,8 +60,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization();
 builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
-builder.Services.AddSingleton(services => new FavoriteStore(ResolveDatabasePath(services.GetRequiredService<IConfiguration>())));
-builder.Services.AddSingleton(services => new ChatCountStore(ResolveDatabasePath(services.GetRequiredService<IConfiguration>())));
+builder.Services.AddPooledDbContextFactory<FavoriteDbContext>((services, options) =>
+    options.UseRaiderSqlite(ResolveDatabasePath(services.GetRequiredService<IConfiguration>())));
+builder.Services.AddPooledDbContextFactory<ChatCountDbContext>((services, options) =>
+    options.UseRaiderSqlite(ResolveDatabasePath(services.GetRequiredService<IConfiguration>())));
+builder.Services.AddSingleton<FavoriteStore>();
+builder.Services.AddSingleton<ChatCountStore>();
 builder.Services.AddSingleton<FavoriteCatalog>();
 builder.Services.AddSingleton<OauthStateStore>();
 builder.Services.AddHttpClient<ChzzkClient>(client =>
