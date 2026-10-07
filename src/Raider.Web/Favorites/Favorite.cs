@@ -3,4 +3,24 @@ using Raider.Web.Live;
 
 namespace Raider.Web.Favorites;
 
-public sealed record Favorite(Platform Platform, string ChannelId, string StreamerName, string Category = "기본");
+public sealed class Favorite
+{
+    public Platform Platform { get; set; }
+    public string ChannelId { get; set; } = string.Empty;
+    public string StreamerName { get; set; } = string.Empty;
+    public string Category { get; set; } = "기본";
+    public DateTimeOffset CreatedAtUtc { get; set; }
+    public DateTimeOffset UpdatedAtUtc { get; set; }
+
+    public Favorite() { }
+
+    public Favorite(Platform platform, string channelId, string streamerName, string category = "기본")
+    {
+        Platform = platform;
+        ChannelId = channelId;
+        StreamerName = streamerName;
+        Category = category;
+        CreatedAtUtc = DateTimeOffset.UtcNow;
+        UpdatedAtUtc = DateTimeOffset.UtcNow;
+    }
+}

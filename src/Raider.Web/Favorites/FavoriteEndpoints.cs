@@ -121,7 +121,7 @@ public static class FavoriteEndpoints
             return (default, Results.BadRequest());
         }
 
-        if (!FavoriteStore.TryParsePlatform(platform, out var parsedPlatform)
+        if (!FavoriteDbContext.TryParsePlatform(platform, out var parsedPlatform)
             || string.IsNullOrWhiteSpace(channelId)
             || channelId.Length > 256)
         {

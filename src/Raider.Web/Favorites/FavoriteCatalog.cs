@@ -45,7 +45,7 @@ public sealed class FavoriteCatalog(FavoriteStore store, SnapshotStore snapshots
         var status = isDelayed ? "delayed" : stream is null ? "offline" : "live";
 
         return new FavoriteView(
-            FavoriteStore.FormatPlatform(favorite.Platform),
+            FavoriteDbContext.FormatPlatform(favorite.Platform),
             favorite.ChannelId,
             favorite.StreamerName,
             status,

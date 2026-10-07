@@ -47,7 +47,7 @@ public sealed record FeaturedPick(
                 var favorite = byChannel[(stream.Platform, stream.ChannelId)];
                 var line = stream.Tags.Length > 0 ? stream.Tags[0] : favorite.Category;
                 return new FeaturedPick(
-                    FavoriteStore.FormatPlatform(stream.Platform),
+                    FavoriteDbContext.FormatPlatform(stream.Platform),
                     stream.Platform switch
                     {
                         Raider.Web.Live.Platform.Chzzk => "CHZZK",
