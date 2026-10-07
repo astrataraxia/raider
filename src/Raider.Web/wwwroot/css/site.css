@@ -73,7 +73,7 @@ a {
   margin: 0 auto;
   padding: 8px;
   display: grid;
-  grid-template-columns: 278px minmax(0, 1fr);
+  grid-template-columns: 240px minmax(0, 1fr);
   align-items: start;
   gap: 12px;
 }

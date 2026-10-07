@@ -195,15 +195,26 @@ export function startFavorites() {
           item.dataset.platform = fav.platform;
           item.dataset.channelId = fav.channelId;
           item.type = "button";
-          if (fav.status === "live") {
-            item.addEventListener("click", () => {
+          let dragged = false;
+          item.addEventListener("click", () => {
+            if (dragged) {
+              dragged = false;
+              return;
+            }
+
+            if (fav.watchUrl) {
+              window.open(fav.watchUrl, "_blank", "noopener,noreferrer");
+            }
+
+            if (fav.status === "live") {
               item.dispatchEvent(new CustomEvent("raider:feature", {
                 bubbles: true,
                 detail: { platform: fav.platform, channelId: fav.channelId },
               }));
-            });
-          }
+            }
+          });
           item.addEventListener("dragstart", (event) => {
+            dragged = true;
             event.dataTransfer.setData("text/plain", JSON.stringify({
               type: "streamer",
               platform: fav.platform,

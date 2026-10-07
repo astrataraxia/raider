@@ -17,7 +17,7 @@ public sealed class SnapshotStore
             .Distinct()
             .ToFrozenDictionary(
                 platform => platform,
-                platform => new PlatformCollectionState(platform, [], null, null, null, false, null));
+                platform => new PlatformCollectionState(platform, [], null, null, null, false, null, []));
         completeStreams = states.Keys.ToDictionary(platform => platform, _ => ImmutableArray<LiveStream>.Empty);
         current = Build(states, DateTimeOffset.MinValue, 0);
     }
@@ -39,7 +39,7 @@ public sealed class SnapshotStore
             }
 
             var states = snapshot.Platforms.ToDictionary();
-            states[platform] = new PlatformCollectionState(platform, streams, completedAt, completedAt, null, false, duration);
+            states[platform] = new PlatformCollectionState(platform, streams, completedAt, completedAt, null, false, duration, streams);
             completeStreams[platform] = streams;
             Interlocked.Exchange(ref current, Build(states.ToFrozenDictionary(), completedAt, snapshot.Version + 1));
             return true;

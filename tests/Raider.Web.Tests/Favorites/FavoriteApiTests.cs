@@ -61,7 +61,32 @@ public sealed class FavoriteApiTests : IDisposable
 
         var favorites = await client.GetFromJsonAsync<FavoriteResponse[]>("/api/favorites");
 
-        Assert.Equal("delayed", Assert.Single(favorites!).Status);
+        var delayed = Assert.Single(favorites!);
+        Assert.Equal("delayed", delayed.Status);
+        Assert.Equal("https://example.invalid/live", delayed.WatchUrl);
+    }
+
+    [Fact]
+    public async Task PartialCollectionKeepsThePreviousFavoriteStatusUntilItFinishes()
+    {
+        snapshots.ApplySuccess(Platform.Chzzk, [Stream("live", "channel-1", "Alpha")], DateTimeOffset.UtcNow);
+        snapshots.ApplySuccess(Platform.Soop, [], DateTimeOffset.UtcNow.AddTicks(1));
+        var token = await AntiForgeryTokenAsync();
+        await PutFavoriteAsync("channel-1", token);
+        snapshots.ApplyPartial(Platform.Chzzk, [], DateTimeOffset.UtcNow.AddTicks(2));
+
+        var during = await client.GetFromJsonAsync<FavoriteResponse[]>("/api/favorites");
+
+        var kept = Assert.Single(during!);
+        Assert.Equal("live", kept.Status);
+        Assert.Equal("https://example.invalid/live", kept.WatchUrl);
+
+        snapshots.ApplySuccess(Platform.Chzzk, [], DateTimeOffset.UtcNow.AddTicks(3));
+        var after = await client.GetFromJsonAsync<FavoriteResponse[]>("/api/favorites");
+
+        var finished = Assert.Single(after!);
+        Assert.Equal("offline", finished.Status);
+        Assert.Equal("https://chzzk.naver.com/live/channel-1", finished.WatchUrl);
     }
 
     [Fact]
@@ -92,6 +117,8 @@ public sealed class FavoriteApiTests : IDisposable
         var result = Assert.IsType<FavoriteResponse[]>(favorites);
         Assert.Equal(["live", "offline"], result.Select(favorite => favorite.Status));
         Assert.Equal(["Beta", "Alpha"], result.Select(favorite => favorite.StreamerName));
+        Assert.Equal("https://example.invalid/beta-new", result[0].WatchUrl);
+        Assert.Equal("https://chzzk.naver.com/live/alpha", result[1].WatchUrl);
     }
 
     private async Task<string> AntiForgeryTokenAsync()

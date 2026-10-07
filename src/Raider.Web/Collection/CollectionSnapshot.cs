@@ -12,7 +12,8 @@ public sealed record PlatformCollectionState(
     DateTimeOffset? LastAttemptAt,
     PlatformError? Error,
     bool IsPartial,
-    TimeSpan? LastDuration)
+    TimeSpan? LastDuration,
+    ImmutableArray<LiveStream> SettledStreams)
 {
     public bool AttemptCompleted => LastAttemptAt is not null;
 }

@@ -11,7 +11,8 @@ public sealed class FavoriteCatalog(FavoriteStore store, SnapshotStore snapshots
     public async Task<ImmutableArray<FavoriteView>> ListAsync(CancellationToken cancellationToken)
     {
         var snapshot = snapshots.Current;
-        var streams = snapshot.Live.Streams
+        var streams = snapshot.Platforms.Values
+            .SelectMany(state => state.IsPartial ? state.SettledStreams : state.Streams)
             .GroupBy(stream => (stream.Platform, stream.ChannelId))
             .ToDictionary(group => group.Key, group => group.First());
         var favorites = await store.ListAsync(cancellationToken);
@@ -37,10 +38,10 @@ public sealed class FavoriteCatalog(FavoriteStore store, SnapshotStore snapshots
         Dictionary<(Platform Platform, string ChannelId), LiveStream> streams)
     {
         var state = snapshot.Platforms[favorite.Platform];
-        var isDelayed = state.IsPartial
-            || state.Error is not null
+        var isDelayed = !state.IsPartial && (
+            state.Error is not null
             || state.LastSuccessAt is null
-            || timeProvider.GetUtcNow() - state.LastSuccessAt > CollectionSnapshot.StaleAfter;
+            || timeProvider.GetUtcNow() - state.LastSuccessAt > CollectionSnapshot.StaleAfter);
         streams.TryGetValue((favorite.Platform, favorite.ChannelId), out var stream);
         var status = isDelayed ? "delayed" : stream is null ? "offline" : "live";
 
@@ -49,9 +50,24 @@ public sealed class FavoriteCatalog(FavoriteStore store, SnapshotStore snapshots
             favorite.ChannelId,
             favorite.StreamerName,
             status,
-            status == "live" ? stream?.WatchUrl : null,
+            stream?.WatchUrl ?? ChannelPage(favorite.Platform, favorite.ChannelId),
             status == "live" ? stream?.ViewerCount : null,
             favorite.Category);
+    }
+
+    private static string? ChannelPage(Platform platform, string channelId)
+    {
+        if (string.IsNullOrWhiteSpace(channelId))
+        {
+            return null;
+        }
+
+        return platform switch
+        {
+            Platform.Chzzk => $"https://chzzk.naver.com/live/{channelId}",
+            Platform.Soop => $"https://www.sooplive.com/station/{channelId}",
+            _ => null,
+        };
     }
 }
 
