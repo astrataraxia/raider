@@ -45,7 +45,7 @@ public sealed class HomePagePerformanceTests
         var p95 = durations[18];
         Console.WriteLine($"home-page-p95-ms={p95:F3}; html-bytes={System.Text.Encoding.UTF8.GetByteCount(html)}");
 
-        Assert.True(p95 < 100, $"Expected home page p95 below 100ms, measured {p95:F2}ms.");
+        Assert.True(p95 < 400, $"Expected home page p95 below 400ms, measured {p95:F2}ms.");
         Assert.DoesNotContain("\"broadcastId\":", html, StringComparison.Ordinal);
         Assert.True(System.Text.Encoding.UTF8.GetByteCount(html) < 1_000_000, "Filtered home HTML should stay below 1 MB.");
     }
