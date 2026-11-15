@@ -320,23 +320,30 @@ export function startFavorites() {
   }
 
   const addCategoryBtn = document.querySelector(".favorites-add-category");
-  if (addCategoryBtn) {
-    addCategoryBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const entered = prompt("새 카테고리 이름을 입력하세요:");
-      if (!entered) {
+  const categoryDialog = document.getElementById("category-dialog");
+  const categoryName = document.getElementById("category-name");
+  if (addCategoryBtn && categoryDialog instanceof HTMLDialogElement && categoryName instanceof HTMLInputElement) {
+    categoryDialog.addEventListener("close", () => {
+      if (categoryDialog.returnValue !== "confirm") {
         return;
       }
-      const newCat = entered.trim();
+
+      const newCat = categoryName.value.trim();
       if (!newCat || newCat.length > 100) {
         return;
       }
+
       const customCategories = readList(storageKeys.customCategories);
       if (!customCategories.includes(newCat)) {
         customCategories.push(newCat);
         writeJson(storageKeys.customCategories, customCategories);
         render();
       }
+    });
+    addCategoryBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      categoryName.value = "";
+      categoryDialog.showModal();
     });
   }
 

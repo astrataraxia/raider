@@ -47,6 +47,12 @@ public sealed class HomePageTests : IDisposable
         Assert.Contains("data-channel-id=\"channel-alpha\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Alpha 즐겨찾기 추가\"", html, StringComparison.Ordinal);
         Assert.Contains("class=\"favorites-sidebar\"", html, StringComparison.Ordinal);
+        Assert.Contains("class=\"skip-link\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"color-scheme\" content=\"dark\"", html, StringComparison.Ordinal);
+        Assert.Contains("<search>", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"category-dialog\"", html, StringComparison.Ordinal);
+        Assert.Contains("stream-card-link", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<object>", html, StringComparison.Ordinal);
         Assert.Contains(">one<", html, StringComparison.Ordinal);
         Assert.Contains(">three<", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">four<", html, StringComparison.Ordinal);
@@ -66,7 +72,7 @@ public sealed class HomePageTests : IDisposable
         Assert.Equal(9, loadings.Length);
         Assert.Equal(IndexModel.EagerThumbnailCount, loadings.Count(value => value == "eager"));
         Assert.Equal("lazy", Assert.Single(loadings.Skip(IndexModel.EagerThumbnailCount)));
-        Assert.Equal(IndexModel.EagerThumbnailCount, Regex.Matches(html, "fetchpriority=\"high\"").Count);
+        Assert.Single(Regex.Matches(html, "fetchpriority=\"high\""));
     }
 
     [Fact]
@@ -303,7 +309,10 @@ public sealed class HomePageTests : IDisposable
         Assert.DoesNotContain("channel-filler-0", block, StringComparison.Ordinal);
         Assert.Contains("data-broadcast-id=\"high\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("data-broadcast-id=\"low\"", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("loading=\"", block, StringComparison.Ordinal);
+        Assert.Single(Regex.Matches(block, "fetchpriority=\"high\""));
+        Assert.Single(Regex.Matches(block, "loading=\"eager\""));
+        Assert.Contains("loading=\"lazy\"", block, StringComparison.Ordinal);
+        Assert.Single(Regex.Matches(html, "fetchpriority=\"high\""));
         Assert.Single(Regex.Matches(html, "type=\"module\""));
         Assert.Contains("type=\"importmap\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("DOMContentLoaded", html, StringComparison.Ordinal);

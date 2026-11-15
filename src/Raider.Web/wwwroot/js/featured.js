@@ -6,7 +6,7 @@ export function startFeatured() {
     return [...document.querySelectorAll("[data-featured-slide]")];
   }
 
-  function show(index) {
+  function show(index, announce) {
     const nodes = slides();
     if (nodes.length === 0) {
       return;
@@ -41,6 +41,11 @@ export function startFeatured() {
     const count = document.querySelector("[data-featured-count]");
     if (count) {
       count.textContent = `${next + 1} / ${nodes.length}`;
+    }
+
+    const status = document.querySelector("[data-featured-status]");
+    if (announce && status) {
+      status.textContent = `${next + 1}번째 즐겨찾기, ${nodes.length}개 중`;
     }
 
     document.querySelectorAll(".favorite-item.is-picked").forEach((row) => {
@@ -79,7 +84,7 @@ export function startFeatured() {
 
     const nodes = slides();
     const current = nodes.findIndex((node) => `${node.dataset.platform}:${node.dataset.channelId}` === selectedKey);
-    show((current < 0 ? 0 : current) + Number(step.dataset.step));
+    show((current < 0 ? 0 : current) + Number(step.dataset.step), true);
   });
 
   document.addEventListener("raider:feature", (event) => {
@@ -87,7 +92,7 @@ export function startFeatured() {
     const key = `${detail.platform}:${detail.channelId}`;
     const index = slides().findIndex((node) => `${node.dataset.platform}:${node.dataset.channelId}` === key);
     if (index >= 0) {
-      show(index);
+      show(index, true);
     }
   });
 

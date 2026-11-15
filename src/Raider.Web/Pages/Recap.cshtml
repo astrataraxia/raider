@@ -15,17 +15,20 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="text-scale" content="scale" />
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1.3.8" />
 </head>
 <body>
+    <a class="skip-link" href="#page-title">본문으로 건너뛰기</a>
     <div class="visually-hidden" data-antiforgery-token>@Html.AntiForgeryToken()</div>
     <partial name="_SiteHeader" model="header" />
     <main class="recap-page">
         <header class="page-intro">
             <p class="eyebrow">RECAP</p>
-            <h1>나의 채팅 리캡</h1>
+            <h1 id="page-title" tabindex="-1">나의 채팅 리캡</h1>
             @if (!string.IsNullOrWhiteSpace(Model.ViewerName))
             {
                 <p>@Model.ViewerName</p>
@@ -108,8 +111,9 @@
                 <section class="recap-card">
                     <h2>채널</h2>
                     <table class="recap-table">
+                        <caption class="visually-hidden">채널별 채팅 수</caption>
                         <thead>
-                            <tr><th>채널</th><th>채팅</th><th>비중</th></tr>
+                            <tr><th scope="col">채널</th><th scope="col">채팅</th><th scope="col">비중</th></tr>
                         </thead>
                         <tbody>
                         @foreach (var channel in recap.Channels)

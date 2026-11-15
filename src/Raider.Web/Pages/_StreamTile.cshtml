@@ -4,18 +4,23 @@
     var platform = Model.Platform.ToString().ToUpperInvariant();
     var platformClass = Model.Platform.ToString().ToLowerInvariant();
     var alt = $"{Model.StreamerName}의 방송 썸네일";
+    var priority = ViewData["PriorityThumbnail"] as bool? == true;
+    var eager = priority || ViewData["EagerThumbnail"] as bool? == true;
 }
 <article class="stream-card" data-broadcast-id="@Model.BroadcastId" data-platform="@platformClass" data-channel-id="@Model.ChannelId" data-streamer-name="@Model.StreamerName">
     <button type="button" class="favorite-toggle" aria-label="@Model.StreamerName 즐겨찾기 추가" aria-pressed="false" title="즐겨찾기 추가">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.92 1.06-6.2L3 9.53l6.22-.9L12 3z"/></svg>
     </button>
-    <a class="stream-card-link" href="@Model.WatchUrl" target="_blank" rel="noopener noreferrer" aria-label="@Model.StreamerName 방송 보기, 외부 링크">
-        <div class="thumbnail">
+    <div class="thumbnail">
         @if (Model.ThumbnailUrl is not null)
         {
-            @if (ViewData["EagerThumbnail"] as bool? == true)
+            @if (priority)
             {
                 <img src="@Model.ThumbnailUrl" alt="@alt" loading="eager" fetchpriority="high" decoding="async" />
+            }
+            else if (eager)
+            {
+                <img src="@Model.ThumbnailUrl" alt="@alt" loading="eager" decoding="async" />
             }
             else
             {
@@ -35,19 +40,18 @@
                 <span class="platform-badge @platformClass">@platform</span>
                 <strong>@Model.StreamerName</strong>
             </span>
-            <h3 class="tile-title">@Model.Title</h3>
+            <h3 class="tile-title">
+                <a class="stream-card-link" href="@Model.WatchUrl" target="_blank" rel="noopener noreferrer">@Model.Title<span class="visually-hidden">, @Model.StreamerName 방송, 외부 링크</span></a>
+            </h3>
             @if (!Model.Tags.IsEmpty)
             {
                 <div class="card-tags" aria-label="방송 태그">
                     @foreach (var tag in Model.Tags.Take(3))
                     {
-                        <object>
-                            <a class="card-tag-link" href="@Url.Page("/Index", new { platform = Model.Platform.ToString().ToLowerInvariant(), tag = tag })">@tag</a>
-                        </object>
+                        <a class="card-tag-link" href="@Url.Page("/Index", new { platform = Model.Platform.ToString().ToLowerInvariant(), tag = tag })">@tag</a>
                     }
                 </div>
             }
         </div>
-        </div>
-    </a>
+    </div>
 </article>

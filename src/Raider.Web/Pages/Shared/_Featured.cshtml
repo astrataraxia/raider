@@ -15,6 +15,7 @@
             <span class="slide-count" data-featured-count>1 / @Model.Length</span>
             <button type="button" data-step="1" aria-label="다음 즐겨찾기">›</button>
         </div>
+        <p class="visually-hidden" role="status" data-featured-status></p>
     </div>
     <div class="featured-deck @mosaic" data-featured-slides data-count="@Model.Length">
         @for (var index = 0; index < Model.Length; index++)
@@ -38,7 +39,14 @@
                     <span class="featured-media">
                         @if (!string.IsNullOrWhiteSpace(pick.ThumbnailUrl))
                         {
-                            <img class="featured-photo" src="@pick.ThumbnailUrl" alt="" />
+                            @if (index == 0)
+                            {
+                                <img class="featured-photo" src="@pick.ThumbnailUrl" alt="" loading="eager" fetchpriority="high" decoding="async" />
+                            }
+                            else
+                            {
+                                <img class="featured-photo" src="@pick.ThumbnailUrl" alt="" loading="lazy" decoding="async" />
+                            }
                         }
                         else
                         {

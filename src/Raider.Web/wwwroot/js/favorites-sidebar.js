@@ -13,6 +13,11 @@ export function bindSidebar(elements) {
     writeFlag(storageKeys.sidebarCollapsed, collapsed);
   }
 
+  function clearDialog() {
+    sidebar.removeAttribute("role");
+    sidebar.removeAttribute("aria-modal");
+  }
+
   function setMobileOpen(open) {
     sidebar.classList.toggle("is-mobile-open", open);
     document.body.classList.toggle("favorites-drawer-open", open);
@@ -21,7 +26,12 @@ export function bindSidebar(elements) {
     sidebar.inert = !open;
     pageShell.inert = open;
     siteHeader.inert = open;
-    if (!open) {
+    if (open) {
+      sidebar.setAttribute("role", "dialog");
+      sidebar.setAttribute("aria-modal", "true");
+      collapse.focus();
+    } else {
+      clearDialog();
       mobileToggle.focus();
     }
   }
@@ -29,6 +39,9 @@ export function bindSidebar(elements) {
   function syncViewport() {
     if (mobileQuery.matches) {
       sidebar.inert = !sidebar.classList.contains("is-mobile-open");
+      if (!sidebar.classList.contains("is-mobile-open")) {
+        clearDialog();
+      }
       return;
     }
 
@@ -39,6 +52,7 @@ export function bindSidebar(elements) {
     sidebar.inert = false;
     pageShell.inert = false;
     siteHeader.inert = false;
+    clearDialog();
   }
 
   collapse.addEventListener("click", () => {
